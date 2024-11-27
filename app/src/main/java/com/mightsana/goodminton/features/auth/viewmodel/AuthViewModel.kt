@@ -8,7 +8,7 @@ import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-import com.mightsana.goodminton.OneViewModel
+import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.REGISTER
 import com.mightsana.goodminton.model.ext.clip
 import com.mightsana.goodminton.model.ext.noSpace
@@ -25,7 +25,7 @@ abstract class AuthViewModel(
     accountService: AccountService,
     appRepository: AppRepository,
     application: Application,
-): OneViewModel(accountService, appRepository, application) {
+): MyViewModel(accountService, appRepository, application) {
     protected val _email = MutableStateFlow("")
     val email = _email.asStateFlow()
 

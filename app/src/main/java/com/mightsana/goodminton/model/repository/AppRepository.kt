@@ -9,7 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.mightsana.goodminton.model.repository.friends.Friend
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
 import com.mightsana.goodminton.model.repository.friends.Friendship
-import com.mightsana.goodminton.model.repository.users.OneUser
+import com.mightsana.goodminton.model.repository.users.MyUser
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -20,7 +20,7 @@ open class AppRepository @Inject constructor() {
     private val friendRequestsCollection = db.collection("friendRequests")
     private val friendsCollection = db.collection("friends")
 
-    fun createUser(userData: OneUser) {
+    fun createUser(userData: MyUser) {
         usersCollection
             .document(userData.uid)
             .set(userData)
@@ -46,7 +46,7 @@ open class AppRepository @Inject constructor() {
     suspend fun searchByUsername(
         currentUsername: String,
         usernameToSearch: String
-    ): List<OneUser>? {
+    ): List<MyUser>? {
         val usernameFiltered = usernameToSearch.lowercase().trim()
         Log.d("OneRepository", usernameFiltered)
         Log.d("OneRepository", currentUsername)
@@ -64,7 +64,7 @@ open class AppRepository @Inject constructor() {
         Log.d("OneRepository", "not null")
 
         return query.documents.mapNotNull {
-            it.toObject(OneUser::class.java)
+            it.toObject(MyUser::class.java)
         }
     }
     suspend fun isUserRegistered(userId: String): Boolean {
@@ -81,12 +81,12 @@ open class AppRepository @Inject constructor() {
             .await()
             .isEmpty
     }
-    suspend fun getUserProfile(uid: String): OneUser {
+    suspend fun getUserProfile(uid: String): MyUser {
         return usersCollection
             .document(uid)
             .get()
             .await()
-            .toObject(OneUser::class.java)!!
+            .toObject(MyUser::class.java)!!
     }
     suspend fun isFriendRequestSent(
         currentUserId: String,
@@ -242,19 +242,19 @@ open class AppRepository @Inject constructor() {
     }
 
 
-    suspend fun getUser(uid: String, onUserUpdate: (OneUser) -> Unit) {
+    suspend fun getUser(uid: String, onUserUpdate: (MyUser) -> Unit) {
         onUserUpdate(
             usersCollection
                 .document(uid)
                 .get()
                 .await()
-                .toObject(OneUser::class.java)!!
+                .toObject(MyUser::class.java)!!
         )
     }
 
     private var userListener: ListenerRegistration? = null
 
-    fun observeUser(uid: String, onUserUpdate: (OneUser) -> Unit) {
+    fun observeUser(uid: String, onUserUpdate: (MyUser) -> Unit) {
         userListener?.remove()
 
         userListener = usersCollection
@@ -264,12 +264,12 @@ open class AppRepository @Inject constructor() {
                     return@addSnapshotListener
                 }
                 if (snapshot != null && snapshot.exists()) {
-                    val user = snapshot.toObject(OneUser::class.java)!!
+                    val user = snapshot.toObject(MyUser::class.java)!!
                     Log.d("OneRepository", user.toString())
                     onUserUpdate(user)
                 } else {
                     Log.d("OneRepository", "User not found")
-                    onUserUpdate(OneUser())
+                    onUserUpdate(MyUser())
                 }
             }
     }

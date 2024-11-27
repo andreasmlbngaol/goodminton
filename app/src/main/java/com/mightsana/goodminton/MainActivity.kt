@@ -13,9 +13,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mightsana.goodminton.features.auth.model.AuthCheck
 import com.mightsana.goodminton.features.auth.model.authGraph
+import com.mightsana.goodminton.features.main.MainScreen
 import com.mightsana.goodminton.model.ext.ExitWithDoublePress
 import com.mightsana.goodminton.model.service.AccountService
 import com.mightsana.goodminton.ui.theme.AppTheme
@@ -58,6 +60,10 @@ class MainActivity : ComponentActivity() {
                                     defaultWebClientId = getString(R.string.default_web_client_id),
                                     startDestination = authStart
                                 )
+
+                                composable(MAIN) {
+                                    MainScreen(navController = navController)
+                                }
                             }
                         }
                     }

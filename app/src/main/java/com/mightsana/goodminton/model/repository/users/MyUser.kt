@@ -1,6 +1,6 @@
 package com.mightsana.goodminton.model.repository.users
 
-data class OneUser(
+data class MyUser(
     val uid: String = "",
     val name: String = "",
     val nickname: String = "",

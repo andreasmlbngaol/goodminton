@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-abstract class OneViewModel(
+abstract class MyViewModel(
     protected val accountService: AccountService,
     protected val appRepository: AppRepository,
     protected val application: Application

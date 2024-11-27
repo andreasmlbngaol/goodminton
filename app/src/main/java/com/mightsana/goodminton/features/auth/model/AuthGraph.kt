@@ -1,6 +1,5 @@
 package com.mightsana.goodminton.features.auth.model
 
-import androidx.compose.material3.Text
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -10,7 +9,10 @@ import com.mightsana.goodminton.EMAIL_VERIFICATION
 import com.mightsana.goodminton.REGISTER
 import com.mightsana.goodminton.SIGN_IN
 import com.mightsana.goodminton.SIGN_UP
+import com.mightsana.goodminton.features.auth.email_verification.EmailVerificationScreen
+import com.mightsana.goodminton.features.auth.register.RegisterScreen
 import com.mightsana.goodminton.features.auth.sign_in.SignInScreen
+import com.mightsana.goodminton.features.auth.sign_up.SignUpScreen
 
 fun NavGraphBuilder.authGraph(
     navController: NavHostController,
@@ -31,15 +33,24 @@ fun NavGraphBuilder.authGraph(
         }
 
         composable(SIGN_UP) {
-            Text("Sign Up")
+            SignUpScreen(
+                navController = navController,
+                mainRoute = mainRoute,
+                defaultWebClientId = defaultWebClientId
+            )
         }
 
         composable(EMAIL_VERIFICATION) {
-            Text("Email Verification")
+            EmailVerificationScreen(
+                navController = navController
+            )
         }
 
         composable(REGISTER) {
-            Text("Register")
+            RegisterScreen(
+                navController = navController,
+                mainRoute = mainRoute
+            )
         }
     }
 

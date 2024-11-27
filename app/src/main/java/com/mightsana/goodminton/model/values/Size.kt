@@ -7,4 +7,5 @@ object Size {
     val padding = 16.dp
     val smallPadding = 8.dp
     val extraSmallPadding = 4.dp
+    val NotRounded = 0.dp
 }
