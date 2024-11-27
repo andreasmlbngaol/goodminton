@@ -7,8 +7,8 @@ import com.google.firebase.FirebaseNetworkException
 import com.mightsana.goodminton.EMAIL_VERIFICATION
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.REGISTER
-import com.mightsana.goodminton.features.auth.AuthViewModel
-import com.mightsana.goodminton.features.auth.FormValidationResult
+import com.mightsana.goodminton.features.auth.viewmodel.AuthViewModel
+import com.mightsana.goodminton.features.auth.viewmodel.FormValidationResult
 import com.mightsana.goodminton.model.ext.clip
 import com.mightsana.goodminton.model.ext.toast
 import com.mightsana.goodminton.model.repository.AppRepository

@@ -1,4 +1,4 @@
-package com.mightsana.goodminton.features.auth
+package com.mightsana.goodminton.features.auth.viewmodel
 
 import android.app.Application
 import android.util.Log
