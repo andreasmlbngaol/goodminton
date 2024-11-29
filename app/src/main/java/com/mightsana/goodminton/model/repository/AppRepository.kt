@@ -1,15 +1,22 @@
 package com.mightsana.goodminton.model.repository
 
 import android.util.Log
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
+import com.mightsana.goodminton.features.main.model.League
+import com.mightsana.goodminton.features.main.model.LeagueParticipants
+import com.mightsana.goodminton.features.main.model.Role
+import com.mightsana.goodminton.features.main.model.Status
 import com.mightsana.goodminton.model.repository.friends.Friend
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
 import com.mightsana.goodminton.model.repository.friends.Friendship
 import com.mightsana.goodminton.model.repository.users.MyUser
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -19,6 +26,8 @@ open class AppRepository @Inject constructor() {
     private val usersCollection = db.collection("users")
     private val friendRequestsCollection = db.collection("friendRequests")
     private val friendsCollection = db.collection("friends")
+    private val leaguesCollection = db.collection("leagues")
+    private val leagueParticipantsCollection = db.collection("leagueParticipants")
 
     fun createUser(userData: MyUser) {
         usersCollection
@@ -310,5 +319,74 @@ open class AppRepository @Inject constructor() {
                 .documents[0]
                 .id
         )
+    }
+
+    fun addLeagueParticipant(
+        leagueId: String,
+        leagueParticipant: LeagueParticipants
+    ) {
+        val newParticipantDoc = leagueParticipantsCollection.document()
+        val generatedId = newParticipantDoc.id
+
+        newParticipantDoc
+            .set(leagueParticipant.copy(id = generatedId))
+    }
+
+    suspend fun createNewLeague(
+        league: League
+    ) {
+        val newLeagueDoc = leaguesCollection.document()
+        val generatedId = newLeagueDoc.id
+
+        newLeagueDoc
+            .set(league.copy(id = generatedId))
+            .await()
+        
+        addLeagueParticipant(
+            generatedId,
+            LeagueParticipants(
+                leagueId = generatedId,
+                userId = league.createdById,
+                role = Role.Creator
+            )
+        )
+    }
+
+    private suspend fun getLeagueIdsByUserId(userId: String): List<String> {
+        return try {
+            leagueParticipantsCollection
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("status", Status.Active)
+                .get()
+                .await()
+                .map { it.getString("leagueId")!! }
+                .filter {it.isNotEmpty()}
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private suspend fun getLeaguesByIds(leagueIds: List<String>): List<League> {
+        val batchSize = 10
+        val batches = leagueIds.chunked(batchSize)
+
+        Log.d("OneRepository", leagueIds.toString())
+        return coroutineScope {
+            val leagueDeferreds = batches.map { batch ->
+                async {
+                    leaguesCollection
+                        .whereIn(FieldPath.documentId(), batch)
+                        .get()
+                        .await()
+                        .toObjects(League::class.java)
+                }
+            }
+
+            leagueDeferreds.flatMap { it.await() }
+        }
+    }
+
+    suspend fun getLeaguesByUserId(userId: String): List<League> {
+        return getLeaguesByIds(getLeagueIdsByUserId(userId))
     }
 }

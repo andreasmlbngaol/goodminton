@@ -32,3 +32,12 @@ class MainViewModel @Inject constructor(
         }
     }
 }
+
+sealed class FormValidationResult {
+    data object Valid: FormValidationResult()
+
+    sealed class NewLeagueResult: FormValidationResult() {
+        data class NameError(val message: String): NewLeagueResult()
+        data class MatchPointsError(val message: String): NewLeagueResult()
+    }
+}

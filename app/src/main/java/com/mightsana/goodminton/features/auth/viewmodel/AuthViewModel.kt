@@ -67,7 +67,6 @@ abstract class AuthViewModel(
     protected fun setEmailErrorMessage(message: String?) {
         _emailErrorMessage.value = message
         if(!message.isNullOrBlank()) setEmailError(true) else setEmailError(false)
-
     }
 
     private val _passwordErrorMessage = MutableStateFlow<String?>(null)

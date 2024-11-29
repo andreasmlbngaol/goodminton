@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -60,6 +63,8 @@ import com.mightsana.goodminton.SIGN_IN
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.model.ext.onGesture
 import com.mightsana.goodminton.model.ext.onTap
+import com.mightsana.goodminton.model.ext.showDate
+import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.MyImage
 import com.mightsana.goodminton.view.MyTextField
 import kotlinx.coroutines.launch
@@ -72,10 +77,11 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val user by viewModel.user.collectAsState()
-    val expanded by viewModel.searchExpanded.collectAsState()
-    val query by viewModel.searchQuery.collectAsState()
+    val leagues by viewModel.leagues.collectAsState()
+    val searchExpanded by viewModel.searchExpanded.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     val horizontalPadding by animateDpAsState(
-        if (expanded) 0.dp else 16.dp,
+        if (searchExpanded) 0.dp else 16.dp,
         animationSpec = tween(300),
         label = ""
     )
@@ -99,15 +105,15 @@ fun HomeScreen(
                         .fillMaxWidth(),
                     inputField = {
                         SearchBarDefaults.InputField(
-                            query = query,
+                            query = searchQuery,
                             onQueryChange = { viewModel.onSearchQueryChange(it) },
                             onSearch = { viewModel.collapseSearch() },
-                            expanded = expanded,
+                            expanded = searchExpanded,
                             onExpandedChange = { viewModel.onSearchExpandedChange(it) },
                             placeholder = { Text("Search...") },
                             leadingIcon = {
                                 AnimatedContent(
-                                    expanded,
+                                    searchExpanded,
                                     label = ""
                                 ) {
                                     if (!it)
@@ -130,7 +136,7 @@ fun HomeScreen(
                                         )
                                 }
                             },
-                            trailingIcon = if (!expanded) {
+                            trailingIcon = if (!searchExpanded) {
                                 {
                                     IconButton(
                                         {}
@@ -140,6 +146,9 @@ fun HomeScreen(
                                             modifier = Modifier
                                                 .clip(CircleShape)
                                                 .onGesture(
+                                                    onTap = {
+                                                      viewModel.comingSoon()
+                                                    },
                                                     onLongPress = {
                                                         viewModel.onSignOut {
                                                             appNavController.navigateAndPopUp(
@@ -155,86 +164,114 @@ fun HomeScreen(
                             } else null,
                         )
                     },
-                    expanded = expanded,
+                    expanded = searchExpanded,
                     onExpandedChange = { viewModel.onSearchExpandedChange(it) },
                 ) {
                     Column(Modifier.verticalScroll(rememberScrollState())) {
-                        repeat(20) { idx ->
-                            val resultText = "Suggestion $idx"
-                            ListItem(
-                                headlineContent = { Text(resultText) },
-                                supportingContent = { Text("Additional info") },
-                                leadingContent = {
-                                    Icon(
-                                        Icons.Filled.Star,
-                                        contentDescription = null
-                                    )
-                                },
-                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                modifier =
-                                Modifier
-                                    .clickable {
-                                        viewModel.collapseSearch()
-                                    }
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                            )
+                        if (searchQuery.isNotEmpty()) {
+                            leagues.filter {it.name.contains(searchQuery, true)}.forEach {
+                                ListItem(
+                                    headlineContent = { Text(it.name) },
+                                    supportingContent = { Text(it.createdById) },
+                                    leadingContent = {
+                                        Icon(
+                                            Icons.Filled.Star,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                    modifier = Modifier
+                                        .clickable {
+                                            viewModel.toast("${it.name} Clicked!")
+                                            viewModel.collapseSearch()
+                                        }
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text("New League") },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                onClick = {
-                    scope.launch {
-                        sheetState.show()
-                        viewModel.onBottomSheetExpandedChange(true)
+            AnimatedVisibility(!searchExpanded) {
+                ExtendedFloatingActionButton(
+                    text = { Text("New League") },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    onClick = {
+                        scope.launch {
+                            sheetState.show()
+                            viewModel.onBottomSheetExpandedChange(true)
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(350.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(top = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(top = 16.dp)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(100) {
+            items(leagues.sortedByDescending { it.createdAt }) {
                 Card(
-                    shape = MaterialTheme.shapes.small,
-                    modifier = Modifier
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.clickable {
+                        viewModel.toast("${it.name} Clicked!")
+                    }
                 ) {
-                    Text("Test ${it + 1}", modifier = Modifier.padding(16.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            it.name,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            it.createdAt.showDate(),
+                            maxLines = 1,
+                            overflow = Ellipsis
+                        )
+                    }
                 }
             }
         }
     }
 
+    // Bottom Drawer Sheet
     if(viewModel.bottomSheetExpanded.collectAsState().value) {
         ModalBottomSheet(
             onDismissRequest = {
                 scope.launch {
                     sheetState.hide()
                     viewModel.onBottomSheetExpandedChange(false)
+                    viewModel.resetErrors()
                 }
             },
             sheetState = sheetState
         ) {
             val isDouble by viewModel.isDouble.collectAsState()
             val matchPoints by viewModel.matchPoints.collectAsState()
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                ,
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
                     modifier = Modifier
-                        .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                         .widthIn(max = 350.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -248,15 +285,24 @@ fun HomeScreen(
                     )
 
                     // League Name
+                    val nameErrorMessage by viewModel.nameErrorMessage.collectAsState()
                     MyTextField(
+                        isError = nameErrorMessage != null,
                         label = { Text("League Name") },
                         value = viewModel.leagueName.collectAsState().value,
                         onValueChange = { viewModel.updateLeagueName(it) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        supportingText = nameErrorMessage?.let {
+                            {
+                                ErrorSupportingText(message = it)
+                            }
+                        }
                     )
 
                     // Match Points
+                    val matchPointsErrorMessage by viewModel.matchPointsErrorMessage.collectAsState()
                     MyTextField(
+                        isError = matchPointsErrorMessage != null,
                         label = { Text("Match Points") },
                         value = if(matchPoints == 0) "" else matchPoints.toString() ,
                         onValueChange = { viewModel.updateMatchPoints(it)},
@@ -265,7 +311,12 @@ fun HomeScreen(
                             autoCorrectEnabled = false,
                             keyboardType = KeyboardType.Number
                         ),
-                        placeholder = { Text("21") }
+                        placeholder = { Text("21") },
+                        supportingText = matchPointsErrorMessage?.let {
+                            {
+                                ErrorSupportingText(message = it)
+                            }
+                        }
                     )
 
                     // Deuce
@@ -321,7 +372,9 @@ fun HomeScreen(
                             )
                             Switch(
                                 checked = viewModel.isFixedDouble.collectAsState().value,
-                                onCheckedChange = { viewModel.toggleFixedDouble() }
+                                onCheckedChange = {
+                                    viewModel.toggleFixedDouble()
+                                }
                             )
                         }
                     }
@@ -335,7 +388,15 @@ fun HomeScreen(
                             onClick = { viewModel.resetForm() }
                         ) { Text("Reset") }
                         Button(
-                            onClick = { viewModel.addLeague() },
+                            onClick = {
+                                viewModel.addLeague {
+                                    scope.launch {
+                                        sheetState.hide()
+                                        viewModel.onBottomSheetExpandedChange(false)
+                                        viewModel.resetForm()
+                                    }
+                                }
+                            }
                         ) {
                             Text("Save")
                         }
