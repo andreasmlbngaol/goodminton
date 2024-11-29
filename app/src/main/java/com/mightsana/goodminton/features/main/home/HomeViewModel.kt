@@ -27,11 +27,55 @@ class HomeViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _selectedItem = MutableStateFlow("Home")
-    val selectedItem = _selectedItem.asStateFlow()
+    private val _bottomSheetExpanded = MutableStateFlow(false)
+    val bottomSheetExpanded = _bottomSheetExpanded.asStateFlow()
 
-    fun onSelectItem(item: String) {
-        _selectedItem.value = item
+    private val _leagueName = MutableStateFlow("")
+    val leagueName = _leagueName.asStateFlow()
+
+    private val _matchPoints = MutableStateFlow(0)
+    val matchPoints = _matchPoints.asStateFlow()
+
+    private val _deuceEnabled = MutableStateFlow(true)
+    val deuceEnabled = _deuceEnabled.asStateFlow()
+
+    private val _isDouble = MutableStateFlow(false)
+    val isDouble = _isDouble.asStateFlow()
+
+    private val _isFixedDouble = MutableStateFlow(true)
+    val isFixedDouble = _isFixedDouble.asStateFlow()
+
+    fun updateLeagueName(name: String) {
+        _leagueName.value = name
+    }
+
+    fun updateMatchPoints(points: String) {
+        points.toIntOrNull()?.let {
+            _matchPoints.value = it
+        }
+    }
+
+    fun toggleDeuce() {
+        _deuceEnabled.value = !_deuceEnabled.value
+    }
+
+    fun toggleFixedDouble() {
+        _isFixedDouble.value = !_isFixedDouble.value
+    }
+
+    fun toggleDouble() {
+        _isDouble.value = !_isDouble.value
+    }
+
+    fun resetForm() {
+        _leagueName.value = ""
+        _matchPoints.value = 0
+        _deuceEnabled.value = true
+        _isDouble.value = false
+        _isFixedDouble.value = true
+    }
+    fun onBottomSheetExpandedChange(expanded: Boolean) {
+        _bottomSheetExpanded.value = expanded
     }
 
     fun onSearchQueryChange(query: String) {
@@ -46,8 +90,9 @@ class HomeViewModel @Inject constructor(
         _searchExpanded.value = false
     }
 
-    private val _friendRequestReceivedCount = MutableStateFlow(0)
-    val friendRequestReceivedCount = _friendRequestReceivedCount.asStateFlow()
+    fun addLeague() {
+//        appRepository.addNewLeague()
+    }
 
     private fun observeUser() {
         viewModelScope.launch {
@@ -59,8 +104,5 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeUser()
-        appRepository.observeFriendRequestReceivedCount(accountService.currentUserId) {
-            _friendRequestReceivedCount.value = it
-        }
     }
 }

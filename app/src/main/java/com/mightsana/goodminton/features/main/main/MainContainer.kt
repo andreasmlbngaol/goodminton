@@ -1,9 +1,10 @@
 package com.mightsana.goodminton.features.main.main
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,8 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -40,6 +42,7 @@ import com.mightsana.goodminton.features.main.home.HomeScreen
 import com.mightsana.goodminton.features.main.model.NavigationItem
 import com.mightsana.goodminton.features.main.settings.SettingsScreen
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
+import com.mightsana.goodminton.view.MyImage
 import kotlinx.coroutines.launch
 
 const val HOME = "Home"
@@ -47,7 +50,7 @@ const val NOTIFICATIONS = "Notifications"
 const val SETTINGS = "Settings"
 
 @Composable
-fun MainScreen(
+fun MainContainer(
     appNavController: NavHostController,
     viewModel: MainViewModel = hiltViewModel()
 ) {
@@ -103,17 +106,24 @@ fun MainScreen(
         drawerContent = {
             ModalDrawerSheet(
                 drawerState = drawerState,
-                drawerShape = RectangleShape
             ) {
                 Column(
                     modifier = Modifier
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    Row(
+                        verticalAlignment = CenterVertically,
+                    ) {
+                        MyImage(painterResource(
+                            R.drawable.ic_launcher_foreground),
+                            modifier = Modifier.height(100.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    }
                     navigationGroups.forEach { group ->
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(8.dp))

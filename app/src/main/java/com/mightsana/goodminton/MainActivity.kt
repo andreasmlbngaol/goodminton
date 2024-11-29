@@ -1,6 +1,5 @@
 package com.mightsana.goodminton
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,7 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mightsana.goodminton.features.auth.model.AuthCheck
 import com.mightsana.goodminton.features.auth.model.authGraph
-import com.mightsana.goodminton.features.main.main.MainScreen
+import com.mightsana.goodminton.features.main.main.MainContainer
 import com.mightsana.goodminton.model.ext.ExitWithDoublePress
 import com.mightsana.goodminton.model.service.AccountService
 import com.mightsana.goodminton.ui.theme.AppTheme
@@ -34,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
         val isDynamicColorEnabled = sharedPreferences.getBoolean(PREF_DYNAMIC_COLOR, false)
 
         enableEdgeToEdge()
@@ -71,7 +70,7 @@ class MainActivity : ComponentActivity() {
                                 )
 
                                 composable(MAIN) {
-                                    MainScreen(appNavController = navController)
+                                    MainContainer(appNavController = navController)
                                 }
                             }
                         }
