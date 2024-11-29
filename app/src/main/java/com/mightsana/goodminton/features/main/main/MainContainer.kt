@@ -39,7 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.home.HomeScreen
-import com.mightsana.goodminton.features.main.model.NavigationItem
+import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.features.main.settings.SettingsScreen
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.view.MyImage

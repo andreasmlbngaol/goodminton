@@ -1,6 +1,7 @@
 package com.mightsana.goodminton.features.main.model
 
 import com.google.firebase.Timestamp
+import com.mightsana.goodminton.model.repository.users.MyUser
 
 data class LeagueParticipants(
     val id: String = "",
@@ -11,6 +12,11 @@ data class LeagueParticipants(
     val participateAt: Timestamp = Timestamp.now()
 )
 
+@Suppress("unused")
+data class LeagueParticipantsUI(
+    val info: LeagueParticipants,
+    val user: MyUser
+)
 @Suppress("unused")
 enum class Role {
     Creator, Admin, Player, Spectator

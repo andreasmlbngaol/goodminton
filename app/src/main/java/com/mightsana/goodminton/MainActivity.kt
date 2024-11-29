@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mightsana.goodminton.features.auth.model.AuthCheck
 import com.mightsana.goodminton.features.auth.model.authGraph
+import com.mightsana.goodminton.features.main.detail.DetailContainer
 import com.mightsana.goodminton.features.main.main.MainContainer
 import com.mightsana.goodminton.model.ext.ExitWithDoublePress
 import com.mightsana.goodminton.model.service.AccountService
@@ -72,6 +73,15 @@ class MainActivity : ComponentActivity() {
                                 composable(MAIN) {
                                     MainContainer(appNavController = navController)
                                 }
+
+                                composable("$LEAGUE_DETAIL/{leagueId}") {
+                                    val leagueId = it.arguments!!.getString("leagueId")
+
+                                    DetailContainer(
+                                        leagueId = leagueId!!,
+                                        appNavController = navController
+                                    )
+                                }
                             }
                         }
                     }
@@ -86,6 +96,7 @@ const val SIGN_UP = "SignUp"
 const val EMAIL_VERIFICATION = "EmailVerification"
 const val REGISTER = "Register"
 const val MAIN = "Main"
+const val LEAGUE_DETAIL = "LeagueDetail"
 const val AUTH_GRAPH = "AuthGraph"
 const val PREF_NAME = "user_preferences"
 const val PREF_DYNAMIC_COLOR = "dynamic_color_enabled"

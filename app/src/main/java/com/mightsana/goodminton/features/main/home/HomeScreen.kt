@@ -58,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.mightsana.goodminton.LEAGUE_DETAIL
 import com.mightsana.goodminton.MAIN
 import com.mightsana.goodminton.SIGN_IN
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
@@ -182,8 +183,8 @@ fun HomeScreen(
                                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                                     modifier = Modifier
                                         .clickable {
-                                            viewModel.toast("${it.name} Clicked!")
                                             viewModel.collapseSearch()
+                                            appNavController.navigate("$LEAGUE_DETAIL/${it.id}")
                                         }
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -223,7 +224,7 @@ fun HomeScreen(
                 Card(
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.clickable {
-                        viewModel.toast("${it.name} Clicked!")
+                        appNavController.navigate("$LEAGUE_DETAIL/${it.id}")
                     }
                 ) {
                     Column(

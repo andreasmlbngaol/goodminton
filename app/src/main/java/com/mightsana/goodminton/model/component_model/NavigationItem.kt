@@ -1,4 +1,4 @@
-package com.mightsana.goodminton.features.main.model
+package com.mightsana.goodminton.model.component_model
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector

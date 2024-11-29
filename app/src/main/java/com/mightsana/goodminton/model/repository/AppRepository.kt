@@ -386,7 +386,78 @@ open class AppRepository @Inject constructor() {
         }
     }
 
+    suspend fun getUsersByIds(userIds: List<String>): List<MyUser> {
+        val batchSize = 10
+        val batches = userIds.chunked(batchSize)
+
+        return coroutineScope {
+            val userDeferreds = batches.map { batch ->
+                async {
+                    usersCollection
+                        .whereIn(FieldPath.documentId(), batch)
+                        .get()
+                        .await()
+                        .toObjects(MyUser::class.java)
+                }
+            }
+
+            userDeferreds.flatMap { it.await() }
+        }
+    }
+
     suspend fun getLeaguesByUserId(userId: String): List<League> {
         return getLeaguesByIds(getLeagueIdsByUserId(userId))
+    }
+
+    private var leagueInfoListener: ListenerRegistration? = null
+
+    fun observeLeagueInfo(
+        leagueId: String,
+        onLeagueInfoUpdate: (League) -> Unit
+    ) {
+        leagueInfoListener?.remove()
+
+        leagueInfoListener = leaguesCollection
+            .document(leagueId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val league = snapshot.toObject(League::class.java)!!
+                    onLeagueInfoUpdate(league)
+                } else {
+                    Log.d("OneRepository", "User not found")
+                    onLeagueInfoUpdate(League())
+                }
+            }
+    }
+
+    private var leagueParticipantsListener: ListenerRegistration? = null
+
+    fun observeLeagueParticipants(
+        leagueId: String,
+        onLeagueParticipantsUpdate: (List<LeagueParticipants>) -> Unit
+    ) {
+        leagueParticipantsListener?.remove()
+
+        leagueParticipantsListener = leagueParticipantsCollection
+            .whereEqualTo("leagueId", leagueId)
+            .whereEqualTo("status", Status.Active)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val leagueParticipants = snapshot.documents.mapNotNull {
+                        it.toObject(LeagueParticipants::class.java)
+                    }
+
+                    onLeagueParticipantsUpdate(leagueParticipants)
+                } else {
+                    onLeagueParticipantsUpdate(emptyList())
+                }
+            }
+
     }
 }
