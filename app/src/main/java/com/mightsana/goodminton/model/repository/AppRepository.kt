@@ -9,6 +9,7 @@ import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueParticipants
+import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.features.main.model.Status
 import com.mightsana.goodminton.model.repository.friends.Friend
@@ -28,6 +29,7 @@ open class AppRepository @Inject constructor() {
     private val friendsCollection = db.collection("friends")
     private val leaguesCollection = db.collection("leagues")
     private val leagueParticipantsCollection = db.collection("leagueParticipants")
+    private val participantStatsCollection = db.collection("participantStats")
 
     fun createUser(userData: MyUser) {
         usersCollection
@@ -321,8 +323,7 @@ open class AppRepository @Inject constructor() {
         )
     }
 
-    fun addLeagueParticipant(
-        leagueId: String,
+    private suspend fun addLeagueParticipant(
         leagueParticipant: LeagueParticipants
     ) {
         val newParticipantDoc = leagueParticipantsCollection.document()
@@ -330,6 +331,18 @@ open class AppRepository @Inject constructor() {
 
         newParticipantDoc
             .set(leagueParticipant.copy(id = generatedId))
+            .await()
+    }
+
+    private suspend fun addParticipantStats(
+        participantStats: ParticipantStats
+    ) {
+        val newStatsDoc = participantStatsCollection.document()
+        val generatedId = newStatsDoc.id
+
+        newStatsDoc
+            .set(participantStats.copy(id = generatedId))
+            .await()
     }
 
     suspend fun createNewLeague(
@@ -341,13 +354,19 @@ open class AppRepository @Inject constructor() {
         newLeagueDoc
             .set(league.copy(id = generatedId))
             .await()
-        
+
         addLeagueParticipant(
-            generatedId,
             LeagueParticipants(
                 leagueId = generatedId,
                 userId = league.createdById,
                 role = Role.Creator
+            )
+        )
+
+        addParticipantStats(
+            ParticipantStats(
+                leagueId = generatedId,
+                userId = league.createdById
             )
         )
     }
@@ -361,6 +380,19 @@ open class AppRepository @Inject constructor() {
                 .await()
                 .map { it.getString("leagueId")!! }
                 .filter {it.isNotEmpty()}
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private suspend fun getPublicLeagueIds(): List<String> {
+        return try {
+            leaguesCollection
+                .whereEqualTo("private", false)
+                .get()
+                .await()
+                .map { it.getString("id")!! }
+                .filter { it.isNotEmpty() }
         } catch (e: Exception) {
             emptyList()
         }
@@ -405,8 +437,66 @@ open class AppRepository @Inject constructor() {
         }
     }
 
+    suspend fun getStatsByUserIds(userIds: List<String>): List<ParticipantStats> {
+        val batchSize = 10
+        val batches = userIds.chunked(batchSize)
+
+        return coroutineScope {
+            val statsDeferreds = batches.map { batch ->
+                async {
+                    participantStatsCollection
+                        .whereIn("userId", batch)
+                        .get()
+                        .await()
+                        .toObjects(ParticipantStats::class.java)
+                }
+            }
+            statsDeferreds.flatMap { it.await() }
+        }
+    }
+
+    fun getLeaguesByUserIdAndPublic(userId: String): List<League> {
+        val leagueList = mutableListOf<League>()
+        val leagueIds = mutableSetOf<String>()
+
+        leagueParticipantsCollection
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { participantSnapshot ->
+                for (document in participantSnapshot) {
+                    val leagueId = document.getString("leagueId")
+                    leagueId?.let { leagueIds.add(leagueId) }
+                }
+
+                leaguesCollection
+                    .whereEqualTo("isPrivate", false)
+                    .get()
+                    .addOnSuccessListener { publicLeagueSnapshot ->
+                        for (document in publicLeagueSnapshot) {
+                            val leagueId = document.id
+                            if (!leagueIds.contains(leagueId)) {
+                                leagueIds.add(leagueId)
+                            }
+                        }
+
+                        for (leagueId in leagueIds) {
+                            leaguesCollection
+                                .document(leagueId)
+                                .get()
+                                .addOnSuccessListener { leagueDoc ->
+                                    val league = leagueDoc.toObject(League::class.java)
+                                    league?.let { leagueList.add(it) }
+                                }
+                        }
+                    }
+            }
+        return leagueList
+    }
+
     suspend fun getLeaguesByUserId(userId: String): List<League> {
-        return getLeaguesByIds(getLeagueIdsByUserId(userId))
+        val userLeagueIds = getLeagueIdsByUserId(userId).toSet()
+        val publicLeagueIds = getPublicLeagueIds().toSet()
+        return getLeaguesByIds(userLeagueIds.union(publicLeagueIds).toList())
     }
 
     private var leagueInfoListener: ListenerRegistration? = null
@@ -458,6 +548,14 @@ open class AppRepository @Inject constructor() {
                     onLeagueParticipantsUpdate(emptyList())
                 }
             }
+
+    }
+
+    fun observeParticipantStats(
+        leagueId: String,
+        userId: String,
+        onParticipantStatsUpdate: (List<ParticipantStats>) -> Unit
+    ) {
 
     }
 }

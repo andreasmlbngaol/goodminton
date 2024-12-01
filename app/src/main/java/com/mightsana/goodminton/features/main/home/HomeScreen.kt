@@ -263,6 +263,7 @@ fun HomeScreen(
         ) {
             val isDouble by viewModel.isDouble.collectAsState()
             val matchPoints by viewModel.matchPoints.collectAsState()
+            val isPrivate by viewModel.isPrivate.collectAsState()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -319,6 +320,28 @@ fun HomeScreen(
                             }
                         }
                     )
+
+                    // Visibility
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .onTap { viewModel.togglePrivate() }
+                    ) {
+                        Text(
+                            text = "Public"
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = isPrivate,
+                            onCheckedChange = { viewModel.togglePrivate() }
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "Private"
+                        )
+                    }
 
                     // Deuce
                     Row(

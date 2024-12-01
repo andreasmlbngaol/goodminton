@@ -14,8 +14,9 @@ data class LeagueParticipants(
 
 @Suppress("unused")
 data class LeagueParticipantsUI(
-    val info: LeagueParticipants,
-    val user: MyUser
+    val info: LeagueParticipants = LeagueParticipants(),
+    val user: MyUser = MyUser(),
+    val stats: ParticipantStats = ParticipantStats()
 )
 @Suppress("unused")
 enum class Role {

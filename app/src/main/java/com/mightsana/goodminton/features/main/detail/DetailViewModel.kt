@@ -1,12 +1,12 @@
 package com.mightsana.goodminton.features.main.detail
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.features.main.model.League
-import com.mightsana.goodminton.features.main.model.LeagueParticipants
+import com.mightsana.goodminton.features.main.model.LeagueParticipantsUI
 import com.mightsana.goodminton.model.repository.AppRepository
-import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,11 +27,30 @@ class DetailViewModel @Inject constructor(
     private val _leagueInfo = MutableStateFlow(League())
     val leagueInfo: StateFlow<League> = _leagueInfo
 
-    private val _leagueParticipants = MutableStateFlow(listOf<MyUser>())
-    val leagueParticipants = _leagueParticipants.asStateFlow()
+    private val _leagueParticipantsUI = MutableStateFlow(listOf<LeagueParticipantsUI>())
+    val leagueParticipantsUI = _leagueParticipantsUI.asStateFlow()
 
-    private val _participationInfo = MutableStateFlow(listOf<LeagueParticipants>())
-    val participationInfo = _participationInfo.asStateFlow()
+    private fun observeLeagueParticipantsUI(leagueId: String) {
+        appRepository.observeLeagueParticipants(leagueId) { participantsIds ->
+            viewModelScope.launch {
+                val users = appRepository.getUsersByIds(participantsIds.map { it.userId })
+                Log.d("DetailViewModel", "users: $users")
+                val stats = appRepository.getStatsByUserIds(participantsIds.map { it.userId })
+                Log.d("DetailViewModel", "stats: $stats")
+                val participantsUI = participantsIds.map { participant ->
+                    val user = users.find { it.uid == participant.userId }
+                    val stat = stats.find { it.userId == participant.userId }
+                    user?.let { usr ->
+                        stat?.let { stt ->
+                            LeagueParticipantsUI(participant, usr, stt)
+                        }
+                    }
+                }
+                _leagueParticipantsUI.value = participantsUI.filterNotNull()
+            }
+        }
+    }
+
 
     private fun observeLeagueInfo(leagueId: String) {
         appRepository.observeLeagueInfo(leagueId) {
@@ -40,24 +59,9 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    private fun getLeagueParticipantsUser(leagueParticipants: List<LeagueParticipants>) {
-        viewModelScope.launch {
-            _leagueParticipants.value = appRepository.getUsersByIds(
-                leagueParticipants.map { it.userId }
-            )
-        }
-    }
-
-    private fun observeLeagueParticipants(leagueId: String) {
-        appRepository.observeLeagueParticipants(leagueId) {
-            _participationInfo.value = it
-            getLeagueParticipantsUser(it)
-        }
-    }
-
     fun observeLeague(leagueId: String) {
         observeLeagueInfo(leagueId)
-        observeLeagueParticipants(leagueId)
+        observeLeagueParticipantsUI(leagueId)
     }
 
     fun onSelectItem(index: Int) {

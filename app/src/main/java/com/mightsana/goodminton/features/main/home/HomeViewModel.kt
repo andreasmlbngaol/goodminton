@@ -57,6 +57,13 @@ class HomeViewModel @Inject constructor(
     private val _matchPointsErrorMessage = MutableStateFlow<String?>(null)
     val matchPointsErrorMessage = _matchPointsErrorMessage.asStateFlow()
 
+    private val _isPrivate = MutableStateFlow(true)
+    val isPrivate = _isPrivate.asStateFlow()
+
+    fun togglePrivate() {
+        _isPrivate.value = !_isPrivate.value
+    }
+
     fun updateLeagueName(name: String) {
         _leagueName.value = name
     }
@@ -152,6 +159,7 @@ class HomeViewModel @Inject constructor(
                         matchPoints = _matchPoints.value,
                         deuceEnabled = _deuceEnabled.value,
                         isDouble = _isDouble.value,
+                        isPrivate = _isPrivate.value,
                         isFixedDouble = if (_isDouble.value) _isFixedDouble.value else null,
                         createdById = _user.value.uid
                     )
