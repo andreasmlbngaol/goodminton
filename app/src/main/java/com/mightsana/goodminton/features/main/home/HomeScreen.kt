@@ -62,6 +62,7 @@ import com.mightsana.goodminton.LEAGUE_DETAIL
 import com.mightsana.goodminton.MAIN
 import com.mightsana.goodminton.SIGN_IN
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
+import com.mightsana.goodminton.model.ext.navigateSingleTop
 import com.mightsana.goodminton.model.ext.onGesture
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDate
@@ -224,7 +225,7 @@ fun HomeScreen(
                 Card(
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.clickable {
-                        appNavController.navigate("$LEAGUE_DETAIL/${it.id}")
+                        appNavController.navigateSingleTop("$LEAGUE_DETAIL/${it.id}")
                     }
                 ) {
                     Column(

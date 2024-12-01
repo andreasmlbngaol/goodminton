@@ -9,5 +9,6 @@ data class NavigationItem(
     val label: String,
     val route: String,
     val badgeCount: Int? = null,
+    val fab: @Composable (() -> Unit)? = null,
     val content: @Composable () -> Unit = {}
 )

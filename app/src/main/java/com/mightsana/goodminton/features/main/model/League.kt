@@ -6,10 +6,10 @@ data class League(
     val id: String = "",
     val name: String = "",
     val matchPoints: Int = 0,
-    val isPrivate: Boolean = true,
+    val private: Boolean = true,
     val deuceEnabled: Boolean = true,
-    val isDouble: Boolean = false,
-    val isFixedDouble: Boolean? = null,
+    val double: Boolean = false,
+    val fixedDouble: Boolean? = null,
     val createdById: String = "",
     val createdAt: Timestamp = Timestamp.now()
 )

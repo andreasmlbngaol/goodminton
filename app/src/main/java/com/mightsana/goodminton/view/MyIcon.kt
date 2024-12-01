@@ -10,11 +10,14 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FlipCameraAndroid
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Man
 import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.NoAccounts
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Person2
@@ -58,6 +61,9 @@ fun MyIcon(
 
 @Suppress("unused")
 object MyIcons {
+    val Flip: ImageVector = Icons.Default.FlipCameraAndroid
+    val Copy: ImageVector = Icons.Default.CopyAll
+    val Anonymous: ImageVector = Icons.Default.NoAccounts
     val Gallery: ImageVector = Icons.Default.PhotoAlbum
     val Camera: ImageVector = Icons.Default.Camera
     val Edit: ImageVector = Icons.Outlined.Edit

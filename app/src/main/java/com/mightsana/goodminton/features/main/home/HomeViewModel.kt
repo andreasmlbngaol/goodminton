@@ -158,9 +158,9 @@ class HomeViewModel @Inject constructor(
                         name = _leagueName.clip(),
                         matchPoints = _matchPoints.value,
                         deuceEnabled = _deuceEnabled.value,
-                        isDouble = _isDouble.value,
-                        isPrivate = _isPrivate.value,
-                        isFixedDouble = if (_isDouble.value) _isFixedDouble.value else null,
+                        double = _isDouble.value,
+                        private = _isPrivate.value,
+                        fixedDouble = if (_isDouble.value) _isFixedDouble.value else null,
                         createdById = _user.value.uid
                     )
                 )

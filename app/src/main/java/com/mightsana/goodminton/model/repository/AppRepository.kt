@@ -9,6 +9,7 @@ import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueParticipants
+import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.features.main.model.Status
@@ -30,6 +31,7 @@ open class AppRepository @Inject constructor() {
     private val leaguesCollection = db.collection("leagues")
     private val leagueParticipantsCollection = db.collection("leagueParticipants")
     private val participantStatsCollection = db.collection("participantStats")
+    private val matchesCollection = db.collection("matches")
 
     fun createUser(userData: MyUser) {
         usersCollection
@@ -551,11 +553,88 @@ open class AppRepository @Inject constructor() {
 
     }
 
-    fun observeParticipantStats(
+    suspend fun changeParticipantRole(
         leagueId: String,
         userId: String,
-        onParticipantStatsUpdate: (List<ParticipantStats>) -> Unit
+        newRole: String
     ) {
+        leagueParticipantsCollection
+            .whereEqualTo("leagueId", leagueId)
+            .whereEqualTo("userId", userId)
+            .get()
+            .await()
+            .documents[0]
+            .reference
+            .update("role", newRole)
+            .await()
+    }
 
+    private var matchListener: ListenerRegistration? = null
+
+    fun observeMatches(
+        leagueId: String,
+        onMatchesUpdate: (List<Match>) -> Unit
+    ) {
+        matchListener?.remove()
+
+        matchListener = matchesCollection
+            .whereEqualTo("leagueId", leagueId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val matches = snapshot.documents.mapNotNull {
+                        it.toObject(Match::class.java)
+                    }
+                    onMatchesUpdate(matches)
+                } else {
+                    onMatchesUpdate(emptyList())
+                }
+            }
+    }
+
+    suspend fun updateLeagueDiscipline(
+        leagueId: String,
+        isDouble: Boolean
+    ) {
+        leaguesCollection
+            .document(leagueId)
+            .update("double", isDouble)
+            .await()
+
+        if(!isDouble) { updateLeagueFixedDouble(leagueId, null) }
+        else { updateLeagueFixedDouble(leagueId, false) }
+    }
+
+    suspend fun updateLeagueFixedDouble(
+        leagueId: String,
+        fixedDouble: Boolean?
+    ) {
+        leaguesCollection
+            .document(leagueId)
+            .update("fixedDouble", fixedDouble)
+            .await()
+    }
+
+    suspend fun updateLeagueDeuce(
+        leagueId: String,
+        deuceEnabled: Boolean
+    ) {
+        leaguesCollection
+            .document(leagueId)
+            .update("deuceEnabled", deuceEnabled)
+            .await()
+    }
+
+    suspend fun updateLeagueVisibility(
+        leagueId: String,
+        isPrivate: Boolean
+    ) {
+        leaguesCollection
+            .document(leagueId)
+            .update("private", isPrivate)
+            .await()
     }
 }
