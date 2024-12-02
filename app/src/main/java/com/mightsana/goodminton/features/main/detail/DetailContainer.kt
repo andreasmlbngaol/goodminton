@@ -39,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mightsana.goodminton.features.main.detail.info.LeagueInfoScreen
 import com.mightsana.goodminton.features.main.detail.participants.ParticipantsScreen
+import com.mightsana.goodminton.features.main.detail.standings.StandingsScreen
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.view.MyIcon
@@ -69,7 +70,10 @@ fun DetailContainer(
             label = STANDINGS,
             route = STANDINGS,
             iconSelected = Icons.Filled.Leaderboard,
-            iconUnselected = Icons.Outlined.Leaderboard
+            iconUnselected = Icons.Outlined.Leaderboard,
+            content = {
+                StandingsScreen(viewModel = viewModel)
+            }
         ),
         NavigationItem(
             label = PARTICIPANTS,

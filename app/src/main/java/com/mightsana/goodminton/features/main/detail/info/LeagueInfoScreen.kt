@@ -1,13 +1,16 @@
 package com.mightsana.goodminton.features.main.detail.info
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -24,6 +27,7 @@ import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDateTime
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
+import com.mightsana.goodminton.view.MyTextField
 
 @Composable
 @Suppress("unused")
@@ -32,10 +36,12 @@ fun LeagueInfoScreen(
 ) {
     val uid = viewModel.user.collectAsState().value.uid
     val participantsUI by viewModel.leagueParticipantsUI.collectAsState()
+    val currentUserRole = participantsUI.find { it.user.uid == uid }?.info?.role
     val leagueInfo by viewModel.leagueInfo.collectAsState()
     val matches by viewModel.matches.collectAsState()
-    val currentUserRole = participantsUI.find { it.user.uid == uid }?.info?.role
     val clipboardManager = LocalClipboardManager.current
+    val changeNameDialogVisible by viewModel.changeNameDialogVisible.collectAsState()
+    val changeMatchPointsDialogVisible by viewModel.changeMatchPointsDialogVisible.collectAsState()
 
     Column(
         modifier = Modifier
@@ -49,9 +55,7 @@ fun LeagueInfoScreen(
                 if (currentUserRole == Role.Creator) {
                     MyIcon(
                         MyIcons.Edit,
-                        modifier = Modifier.onTap {
-
-                        }
+                        modifier = Modifier.onTap { viewModel.showChangeNameDialog() }
                     )
                 } else {
                     MyIcon(
@@ -79,15 +83,17 @@ fun LeagueInfoScreen(
         )
 
         // Double Fixed
-        leagueInfo.fixedDouble?.let { fixedDouble ->
+        if(leagueInfo.fixedDouble != null) {
             InfoItem(
                 title = "Fixed Double",
-                value = if(fixedDouble) "Yes" else "No",
+                value = if(leagueInfo.fixedDouble!!) "Yes" else "No",
                 icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                     {
                         MyIcon(
                             MyIcons.Flip,
-                            modifier = Modifier.onTap { viewModel.updateLeagueFixedDouble(!fixedDouble) }
+                            modifier = Modifier.onTap {
+                                viewModel.updateLeagueFixedDouble(!leagueInfo.fixedDouble!!)
+                            }
                         )
                     }
                 } else null
@@ -103,7 +109,7 @@ fun LeagueInfoScreen(
                     MyIcon(
                         MyIcons.Edit,
                         modifier = Modifier.onTap {
-
+                            viewModel.showChangeMatchPointsDialog()
                         }
                     )
                 }
@@ -155,10 +161,83 @@ fun LeagueInfoScreen(
         // Created At
         InfoItem(
             title = "Time Created",
-            value = leagueInfo.createdAt.showDateTime(),
-            bottomLine = false
+            value = leagueInfo.createdAt.showDateTime()
         )
     }
+
+    // League Name Dialog
+    AnimatedVisibility(changeNameDialogVisible) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.dismissChangeNameDialog()
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.updateLeagueName() }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        viewModel.dismissChangeNameDialog()
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            },
+            title = {
+                Text("League Name")
+            },
+            text = {
+                MyTextField(
+                    value = viewModel.leagueName.collectAsState().value,
+                    onValueChange = { viewModel.changeLeagueName(it) },
+                    placeholder = { Text(leagueInfo.name) }
+                )
+            }
+        )
+    }
+
+    // Match Points Dialog
+    AnimatedVisibility(changeMatchPointsDialogVisible) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.dismissChangeMatchPointsDialog()
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updateLeagueMatchPoints()
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        viewModel.dismissChangeMatchPointsDialog()
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            },
+            title = {
+                Text("Match Points")
+            },
+            text = {
+                val matchPoints by viewModel.matchPoints.collectAsState()
+                MyTextField(
+                    value = if(matchPoints != 0) matchPoints.toString() else "",
+                    onValueChange = { viewModel.changeMatchPoints(it) },
+                    placeholder = { Text(leagueInfo.matchPoints.toString()) }
+                )
+            }
+        )
+    }
+
 }
 
 @Composable
@@ -166,7 +245,7 @@ fun InfoItem(
     title: String,
     value: String,
     icon: @Composable (() -> Unit)? = null,
-    bottomLine: Boolean = true,
+//    bottomLine: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     //League ID
@@ -192,6 +271,6 @@ fun InfoItem(
             }
         }
     )
-    if(bottomLine)
-        HorizontalDivider()
+//    if(bottomLine)
+//        HorizontalDivider()
 }

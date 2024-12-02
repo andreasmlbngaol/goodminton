@@ -11,6 +11,7 @@ import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -144,4 +145,73 @@ class DetailViewModel @Inject constructor(
             appRepository.updateLeagueVisibility(_leagueInfo.value.id, newVisibility)
         }
     }
+
+    private val _leagueName = MutableStateFlow("")
+    val leagueName = _leagueName.asStateFlow()
+
+    private val _changeNameDialogVisible = MutableStateFlow(false)
+    val changeNameDialogVisible = _changeNameDialogVisible.asStateFlow()
+
+    fun changeLeagueName(newName: String) {
+        _leagueName.value = newName
+    }
+
+    fun dismissChangeNameDialog() {
+        _changeNameDialogVisible.value = false
+    }
+
+    fun showChangeNameDialog() {
+        _changeNameDialogVisible.value = true
+    }
+
+    fun updateLeagueName() {
+        if(_leagueName.value.isEmpty()) {
+            dismissChangeNameDialog()
+        } else {
+            viewModelScope.launch {
+                appRepository.updateLeagueName(_leagueInfo.value.id, _leagueName.value)
+                dismissChangeNameDialog()
+                delay(500)
+                _leagueName.value = ""
+            }
+        }
+    }
+
+    private val _matchPoints = MutableStateFlow(0)
+    val matchPoints = _matchPoints.asStateFlow()
+
+    private val _changeMatchPointsDialogVisible = MutableStateFlow(false)
+    val changeMatchPointsDialogVisible = _changeMatchPointsDialogVisible.asStateFlow()
+
+    fun changeMatchPoints(newMatchPoints: String) {
+        if(newMatchPoints.isEmpty()) {
+            _matchPoints.value = 0
+        } else {
+            newMatchPoints.toIntOrNull()?.let {
+                _matchPoints.value = it
+            }
+        }
+    }
+
+    fun dismissChangeMatchPointsDialog() {
+        _changeMatchPointsDialogVisible.value = false
+    }
+
+    fun showChangeMatchPointsDialog() {
+        _changeMatchPointsDialogVisible.value = true
+    }
+
+    fun updateLeagueMatchPoints() {
+        if(_matchPoints.value == 0) {
+            dismissChangeMatchPointsDialog()
+        } else {
+            viewModelScope.launch {
+                appRepository.updateMatchPoints(_leagueInfo.value.id, _matchPoints.value)
+                dismissChangeMatchPointsDialog()
+                delay(500)
+                _matchPoints.value = 0
+            }
+        }
+    }
+
 }

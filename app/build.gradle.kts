@@ -58,10 +58,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.hilt.android)
-    implementation(libs.firebase.auth.ktx)
     implementation(libs.androidx.ui.text.google.fonts)
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -73,22 +70,27 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
 
-
+    // Hilt Dependency Injection
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
-
-    implementation(libs.firebase.auth)
-
     // Auth
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.auth.ktx)
     implementation(libs.google.googleid)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
 
+    // Firestore
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.firestore)
+
+    // AsyncImage
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // Rebirth App
     implementation (libs.process.phoenix)
 }
 

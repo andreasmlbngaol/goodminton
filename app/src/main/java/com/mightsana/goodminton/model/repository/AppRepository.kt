@@ -637,4 +637,24 @@ open class AppRepository @Inject constructor() {
             .update("private", isPrivate)
             .await()
     }
+
+    suspend fun updateLeagueName(
+        leagueId: String,
+        newName: String
+    ) {
+        leaguesCollection
+            .document(leagueId)
+            .update("name", newName)
+            .await()
+    }
+
+    suspend fun updateMatchPoints(
+        leagueId: String,
+        newMatchPoints: Int
+    ) {
+        leaguesCollection
+            .document(leagueId)
+            .update("matchPoints", newMatchPoints)
+            .await()
+    }
 }

@@ -80,11 +80,11 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
                         )
                     },
                     trailingContent = {
-                        if (currentUserRole == Role.Creator) {
+                        if (currentUserRole == Role.Creator && participant.info.role != Role.Creator) {
                             OutlinedButton(
                                 onClick = { viewModel.toggleParticipantsRoleExpanded(participant.user.uid) },
                                 contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
-                                enabled = participant.info.role != Role.Creator
+//                                enabled = participant.info.role != Role.Creator
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -129,15 +129,15 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
                             Text(
                                 participant.info.role.name,
                                 maxLines = 1,
-                                style = MaterialTheme.typography.titleSmall,
+                                style = MaterialTheme.typography.titleMedium,
                                 overflow = Ellipsis
                             )
                         }
                     }
                 )
-                Text("League ID: ${participant.info.leagueId}", maxLines = 1)
-                Text("Uid: ${participant.info.id}", maxLines = 1)
-                Text("Uid: ${participant.info.id}", maxLines = 1)
+//                Text("League ID: ${participant.info.leagueId}", maxLines = 1)
+//                Text("Uid: ${participant.info.id}", maxLines = 1)
+//                Text("Uid: ${participant.info.id}", maxLines = 1)
 //            Text("Name: ${participant.user.name}", maxLines = 1)
 //            Text("Nickname: ${participant.user.nickname}", maxLines = 1)
 //            Text("Username: ${participant.user.username}", maxLines = 1)
