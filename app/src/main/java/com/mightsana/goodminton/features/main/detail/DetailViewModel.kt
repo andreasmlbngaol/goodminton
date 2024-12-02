@@ -51,9 +51,7 @@ class DetailViewModel @Inject constructor(
         appRepository.observeLeagueParticipants(leagueId) { participantsIds ->
             viewModelScope.launch {
                 val users = appRepository.getUsersByIds(participantsIds.map { it.userId })
-                Log.d("DetailViewModel", "users: $users")
                 val stats = appRepository.getStatsByUserIds(participantsIds.map { it.userId })
-                Log.d("DetailViewModel", "stats: $stats")
                 val participantsUI = participantsIds.map { participant ->
                     val user = users.find { it.uid == participant.userId }
                     val stat = stats.find { it.userId == participant.userId }
@@ -211,6 +209,27 @@ class DetailViewModel @Inject constructor(
                 delay(500)
                 _matchPoints.value = 0
             }
+        }
+    }
+
+    private val _deleteLeagueDialogVisible = MutableStateFlow(false)
+    val deleteLeagueDialogVisible = _deleteLeagueDialogVisible.asStateFlow()
+
+    fun dismissDeleteLeagueDialog() {
+        _deleteLeagueDialogVisible.value = false
+    }
+
+    fun showDeleteLeagueDialog() {
+        _deleteLeagueDialogVisible.value = true
+    }
+
+    fun deleteLeague(
+        onNavigateToHome: () -> Unit
+    ) {
+        viewModelScope.launch {
+            appRepository.deleteLeague(_leagueInfo.value.id)
+            dismissDeleteLeagueDialog()
+            onNavigateToHome()
         }
     }
 

@@ -42,7 +42,9 @@ import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.home.HomeScreen
 import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.features.main.settings.SettingsScreen
+import com.mightsana.goodminton.features.main.social.SocialScreen
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
+import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
 import kotlinx.coroutines.launch
 
@@ -68,6 +70,19 @@ fun MainContainer(
                 route = HOME,
                 content = {
                     HomeScreen(
+                        drawerState = drawerState,
+                        appNavController = appNavController
+                    )
+                }
+            ),
+            NavigationItem(
+                iconSelected = MyIcons.SocialSelected,
+                iconUnselected = MyIcons.SocialUnselected,
+                label = "Social",
+                route = "Social",
+                badgeCount = viewModel.friendRequestReceivedCount.collectAsState().value,
+                content = {
+                    SocialScreen(
                         drawerState = drawerState,
                         appNavController = appNavController
                     )

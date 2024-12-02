@@ -187,6 +187,12 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeUser()
-        loadLeagues()
+    }
+
+    fun deleteLeague(leagueId: String) {
+        viewModelScope.launch {
+            appRepository.deleteLeague(leagueId)
+            loadLeagues()
+        }
     }
 }

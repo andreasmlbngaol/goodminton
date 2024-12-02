@@ -1,6 +1,7 @@
 package com.mightsana.goodminton.model.repository
 
 import android.util.Log
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.QuerySnapshot
@@ -17,9 +18,11 @@ import com.mightsana.goodminton.model.repository.friends.Friend
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
 import com.mightsana.goodminton.model.repository.friends.Friendship
 import com.mightsana.goodminton.model.repository.users.MyUser
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @Suppress("unused")
@@ -137,20 +140,20 @@ open class AppRepository @Inject constructor() {
             isFriendRequestReceived
         )
     }
-    suspend fun getFriendList(uid: String): List<Friend>? {
-        val friendshipSnapshot = getFriendshipSnapshot(uid)
-
-        if(friendshipSnapshot.isEmpty) return null
-
-        return friendshipSnapshot.documents.mapNotNull { document ->
-            val users = document.get("users") as List<*>
-            val friendUid = users.first { it != uid }
-            Friend(
-                friendUid as String,
-                document.getTimestamp("startedAt")!!
-            )
-        }
-    }
+//    suspend fun getFriendList(uid: String): List<Friend>? {
+//        val friendshipSnapshot = getFriendshipSnapshot(uid)
+//
+//        if(friendshipSnapshot.isEmpty) return null
+//
+//        return friendshipSnapshot.documents.mapNotNull { document ->
+//            val users = document.get("users") as List<*>
+//            val friendUid = users.first { it != uid }
+//            Friend(
+//                friendUid as String,
+//                document.getTimestamp("startedAt")!!
+//            )
+//        }
+//    }
     suspend fun getFriendCount(uid: String): Int = getFriendshipSnapshot(uid).size()
 
     fun observeFriendRequestsReceived(
@@ -657,4 +660,69 @@ open class AppRepository @Inject constructor() {
             .update("matchPoints", newMatchPoints)
             .await()
     }
+
+    suspend fun deleteLeague(
+        leagueId: String
+    ) {
+        withContext(Dispatchers.IO) {  // Pindahkan ke thread latar belakang
+            try {
+                val leaguesRef = leaguesCollection.document(leagueId)
+                val participantsQuery = leagueParticipantsCollection.whereEqualTo("leagueId", leagueId).get().await()
+                val statsQuery = participantStatsCollection.whereEqualTo("leagueId", leagueId).get().await()
+                val matchesQuery = matchesCollection.whereEqualTo("leagueId", leagueId).get().await()
+
+                db.runBatch { batch ->
+                    // Hapus league
+                    batch.delete(leaguesRef)
+
+                    // Hapus semua peserta liga
+                    for (document in participantsQuery.documents) {
+                        batch.delete(document.reference)
+                    }
+
+                    // Hapus semua statistik peserta
+                    for (document in statsQuery.documents) {
+                        batch.delete(document.reference)
+                    }
+
+                    // Hapus semua pertandingan
+                    for (document in matchesQuery.documents) {
+                        batch.delete(document.reference)
+                    }
+                }.await()
+
+                Log.d("Firestore", "Semua data league berhasil dihapus.")
+            } catch (e: Exception) {
+                Log.e("Firestore", "Gagal menghapus data league: ", e)
+            }
+        }
+    }
+
+
+    private var friendsListener: ListenerRegistration? = null
+
+    fun observeFriends(
+        userId: String,
+        onFriendsUpdate: (List<Friend>) -> Unit
+    ) {
+        friendsListener?.remove()
+
+        friendsListener = friendsCollection
+            .whereArrayContains("ids", userId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val friends = snapshot.documents.mapNotNull {
+                        it.toObject(Friend::class.java)
+                    }
+                    onFriendsUpdate(friends)
+                } else {
+                    onFriendsUpdate(emptyList())
+                }
+            }
+
+    }
+
 }

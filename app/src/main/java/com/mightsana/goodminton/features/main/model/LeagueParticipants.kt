@@ -1,6 +1,8 @@
 package com.mightsana.goodminton.features.main.model
 
 import com.google.firebase.Timestamp
+import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
+import com.mightsana.goodminton.model.repository.friends.Friend
 import com.mightsana.goodminton.model.repository.users.MyUser
 
 data class LeagueParticipants(

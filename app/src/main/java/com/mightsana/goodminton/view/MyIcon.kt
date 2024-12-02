@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FlipCameraAndroid
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Man
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.NoAccounts
 import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.PeopleAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Person2
 import androidx.compose.material.icons.filled.PhotoAlbum
@@ -35,6 +37,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.PeopleAlt
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.Icon
@@ -61,6 +64,9 @@ fun MyIcon(
 
 @Suppress("unused")
 object MyIcons {
+    val SocialSelected: ImageVector = Icons.Filled.PeopleAlt
+    val SocialUnselected: ImageVector = Icons.Outlined.PeopleAlt
+    val Delete: ImageVector = Icons.Filled.Delete
     val Flip: ImageVector = Icons.Default.FlipCameraAndroid
     val Copy: ImageVector = Icons.Default.CopyAll
     val Anonymous: ImageVector = Icons.Default.NoAccounts

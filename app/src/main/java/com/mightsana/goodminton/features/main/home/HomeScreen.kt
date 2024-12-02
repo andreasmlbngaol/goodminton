@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -45,6 +46,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,12 +63,16 @@ import androidx.navigation.NavHostController
 import com.mightsana.goodminton.LEAGUE_DETAIL
 import com.mightsana.goodminton.MAIN
 import com.mightsana.goodminton.SIGN_IN
+import com.mightsana.goodminton.features.profile.model.PROFILE
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.model.ext.navigateSingleTop
 import com.mightsana.goodminton.model.ext.onGesture
+import com.mightsana.goodminton.model.ext.onLongPress
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDate
 import com.mightsana.goodminton.view.ErrorSupportingText
+import com.mightsana.goodminton.view.MyIcon
+import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
 import com.mightsana.goodminton.view.MyTextField
 import kotlinx.coroutines.launch
@@ -78,6 +84,10 @@ fun HomeScreen(
     appNavController: NavHostController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.loadLeagues()
+    }
+
     val user by viewModel.user.collectAsState()
     val leagues by viewModel.leagues.collectAsState()
     val searchExpanded by viewModel.searchExpanded.collectAsState()
@@ -141,25 +151,12 @@ fun HomeScreen(
                             trailingIcon = if (!searchExpanded) {
                                 {
                                     IconButton(
-                                        {}
+                                        { appNavController.navigate(PROFILE) }
                                     ) {
                                         MyImage(
                                             user.profilePhotoUrl,
                                             modifier = Modifier
                                                 .clip(CircleShape)
-                                                .onGesture(
-                                                    onTap = {
-                                                      viewModel.comingSoon()
-                                                    },
-                                                    onLongPress = {
-                                                        viewModel.onSignOut {
-                                                            appNavController.navigateAndPopUp(
-                                                                SIGN_IN,
-                                                                MAIN
-                                                            )
-                                                        }
-                                                    }
-                                                )
                                         )
                                     }
                                 }
@@ -228,22 +225,28 @@ fun HomeScreen(
                         appNavController.navigateSingleTop("$LEAGUE_DETAIL/${it.id}")
                     }
                 ) {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            it.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Text(
-                            it.createdAt.showDate(),
-                            maxLines = 1,
-                            overflow = Ellipsis
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                it.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                maxLines = 1,
+                                overflow = Ellipsis
+                            )
+                            Text(
+                                it.createdAt.showDate(),
+                                maxLines = 1,
+                                overflow = Ellipsis
+                            )
+                        }
                     }
                 }
             }

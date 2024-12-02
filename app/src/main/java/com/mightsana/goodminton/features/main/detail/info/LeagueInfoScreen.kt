@@ -8,10 +8,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,7 +34,8 @@ import com.mightsana.goodminton.view.MyTextField
 @Composable
 @Suppress("unused")
 fun LeagueInfoScreen(
-    viewModel: DetailViewModel
+    viewModel: DetailViewModel,
+    onNavigateToHome: () -> Unit
 ) {
     val uid = viewModel.user.collectAsState().value.uid
     val participantsUI by viewModel.leagueParticipantsUI.collectAsState()
@@ -42,10 +45,12 @@ fun LeagueInfoScreen(
     val clipboardManager = LocalClipboardManager.current
     val changeNameDialogVisible by viewModel.changeNameDialogVisible.collectAsState()
     val changeMatchPointsDialogVisible by viewModel.changeMatchPointsDialogVisible.collectAsState()
+    val deleteLeagueDialogVisible by viewModel.deleteLeagueDialogVisible.collectAsState()
 
     Column(
         modifier = Modifier
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // League Name
         InfoItem(
@@ -163,6 +168,20 @@ fun LeagueInfoScreen(
             title = "Time Created",
             value = leagueInfo.createdAt.showDateTime()
         )
+
+        // Delete Button
+        if(currentUserRole == Role.Creator) {
+            val containerColor = MaterialTheme.colorScheme.errorContainer
+            Button(
+                onClick = { viewModel.showDeleteLeagueDialog() },
+                colors = ButtonDefaults.buttonColors().copy(
+                    containerColor = containerColor,
+                    contentColor = contentColorFor(containerColor)
+                )
+            ) {
+                Text("Delete")
+            }
+        }
     }
 
     // League Name Dialog
@@ -238,6 +257,41 @@ fun LeagueInfoScreen(
         )
     }
 
+    // Delete League
+    AnimatedVisibility(deleteLeagueDialogVisible) {
+        val containerColor = MaterialTheme.colorScheme.errorContainer
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissDeleteLeagueDialog() },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteLeague {
+                            onNavigateToHome()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors().copy(
+                        containerColor = containerColor,
+                        contentColor = contentColorFor(containerColor)
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { viewModel.dismissDeleteLeagueDialog() }
+                ) {
+                    Text("Cancel")
+                }
+            },
+            title = {
+                Text("Delete League")
+            },
+            text = {
+                Text("Are you sure you want to delete this league?")
+            }
+        )
+    }
 }
 
 @Composable

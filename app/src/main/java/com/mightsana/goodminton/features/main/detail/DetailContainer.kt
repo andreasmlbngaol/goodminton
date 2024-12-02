@@ -111,7 +111,9 @@ fun DetailContainer(
             iconSelected = Icons.Filled.Info,
             iconUnselected = Icons.Outlined.Info,
             content = {
-                LeagueInfoScreen(viewModel = viewModel)
+                LeagueInfoScreen(viewModel = viewModel) {
+                    appNavController.popBackStack()
+                }
             }
         )
     )

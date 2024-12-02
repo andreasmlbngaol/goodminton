@@ -20,6 +20,7 @@ import com.mightsana.goodminton.features.auth.model.AuthCheck
 import com.mightsana.goodminton.features.auth.model.authGraph
 import com.mightsana.goodminton.features.main.detail.DetailContainer
 import com.mightsana.goodminton.features.main.main.MainContainer
+import com.mightsana.goodminton.features.profile.model.profileGraph
 import com.mightsana.goodminton.model.ext.ExitWithDoublePress
 import com.mightsana.goodminton.model.service.AccountService
 import com.mightsana.goodminton.ui.theme.AppTheme
@@ -70,6 +71,10 @@ class MainActivity : ComponentActivity() {
                                     startDestination = authStart
                                 )
 
+                                profileGraph(
+                                    navController = navController
+                                )
+
                                 composable(MAIN) {
                                     MainContainer(appNavController = navController)
                                 }
@@ -82,6 +87,7 @@ class MainActivity : ComponentActivity() {
                                         appNavController = navController
                                     )
                                 }
+
                             }
                         }
                     }

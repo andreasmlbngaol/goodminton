@@ -1,5 +1,9 @@
 package com.mightsana.goodminton.model.repository.users
 
+import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
+import com.mightsana.goodminton.model.repository.friends.Friend
+import com.mightsana.goodminton.model.repository.friends.FriendUI
+
 data class MyUser(
     val uid: String = "",
     val name: String = "",
@@ -14,4 +18,10 @@ data class MyUser(
     val address: String? = null,
     val createdAt: Long = 0L,
     val verified: Boolean = false
+)
+
+data class MyUserUI(
+    val info: MyUser = MyUser(),
+    val friends: List<FriendUI> = emptyList(),
+    val friendRequests: List<FriendRequest> = emptyList()
 )
