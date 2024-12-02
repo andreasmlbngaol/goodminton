@@ -14,6 +14,7 @@ import com.mightsana.goodminton.model.service.AccountService
 fun AuthCheck(
     mainRoute: String,
     accountService: AccountService,
+    appRepository: AppRepository,
     onAuthenticationResult: (String, String) -> Unit
 ) {
     LaunchedEffect(Unit) {
@@ -25,7 +26,7 @@ fun AuthCheck(
                 onAuthenticationResult(AUTH_GRAPH, SIGN_IN)
             } else if (!accountService.isEmailVerified()) {
                 onAuthenticationResult(AUTH_GRAPH, EMAIL_VERIFICATION)
-            } else if(!AppRepository().isUserRegistered(accountService.currentUserId)) {
+            } else if(!appRepository.isUserRegistered(accountService.currentUserId)) {
                 onAuthenticationResult(AUTH_GRAPH, REGISTER)
             } else {
                 onAuthenticationResult(mainRoute, REGISTER)

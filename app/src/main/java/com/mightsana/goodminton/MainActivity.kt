@@ -22,6 +22,7 @@ import com.mightsana.goodminton.features.main.detail.DetailContainer
 import com.mightsana.goodminton.features.main.main.MainContainer
 import com.mightsana.goodminton.features.profile.model.profileGraph
 import com.mightsana.goodminton.model.ext.ExitWithDoublePress
+import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.service.AccountService
 import com.mightsana.goodminton.ui.theme.AppTheme
 import com.mightsana.goodminton.view.Loader
@@ -32,6 +33,9 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var accountService: AccountService
+
+    @Inject
+    lateinit var appRepository: AppRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +52,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 var navStart: String? by remember { mutableStateOf(null) }
                 var authStart by remember { mutableStateOf(SIGN_IN) }
-                AuthCheck(MAIN, accountService) { nav, auth ->
+                AuthCheck(
+                    MAIN,
+                    accountService,
+                    appRepository
+                ) { nav, auth ->
                     navStart = nav
                     authStart = auth
                 }

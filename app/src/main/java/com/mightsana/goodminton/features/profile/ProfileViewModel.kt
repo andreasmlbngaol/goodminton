@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
-import com.mightsana.goodminton.features.main.model.LeagueParticipantsUI
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.friends.FriendUI
 import com.mightsana.goodminton.model.repository.users.MyUser
@@ -30,10 +29,6 @@ abstract class ProfileViewModel(
 
     fun dismissProfilePicture() {
         _profilePictureExpanded.value = false
-    }
-
-    suspend fun getFriendCount(uid: String): Int {
-        return appRepository.getFriendCount(uid)
     }
 
     protected val _friendsUI = MutableStateFlow<List<FriendUI>>(emptyList())

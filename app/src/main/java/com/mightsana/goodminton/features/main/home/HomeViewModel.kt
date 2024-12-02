@@ -181,7 +181,7 @@ class HomeViewModel @Inject constructor(
 
     fun loadLeagues() {
         viewModelScope.launch {
-            _leagues.value = appRepository.getLeaguesByUserId(accountService.currentUserId)
+            _leagues.value = appRepository.getUserAndPublicLeagues(accountService.currentUserId)
         }
     }
 

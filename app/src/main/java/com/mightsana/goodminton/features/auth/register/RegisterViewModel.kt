@@ -158,7 +158,7 @@ class RegisterViewModel @Inject constructor(
 
     fun register(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            appRepository.createUser(
+            appRepository.createNewUser(
                 MyUser(
                     uid = accountService.currentUserId,
                     name = _fullName.value,

@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mightsana.goodminton.features.main.detail.info.LeagueInfoScreen
+import com.mightsana.goodminton.features.main.detail.matches.MatchesScreen
 import com.mightsana.goodminton.features.main.detail.participants.ParticipantsScreen
 import com.mightsana.goodminton.features.main.detail.standings.StandingsScreen
 import com.mightsana.goodminton.features.main.model.Role
@@ -56,7 +57,7 @@ fun DetailContainer(
         viewModel.observeLeague(leagueId)
     }
     val user by viewModel.user.collectAsState()
-    val leagueInfo by viewModel.leagueInfo.collectAsState()
+    val leagueJoint by viewModel.leagueJoint.collectAsState()
     val participantsUI by viewModel.leagueParticipantsUI.collectAsState()
 
     val navItems = listOf(
@@ -64,7 +65,10 @@ fun DetailContainer(
             label = MATCH,
             route = MATCH,
             iconSelected = Icons.Filled.Schedule,
-            iconUnselected = Icons.Outlined.Schedule
+            iconUnselected = Icons.Outlined.Schedule,
+            content = {
+                MatchesScreen(viewModel = viewModel)
+            }
         ),
         NavigationItem(
             label = STANDINGS,
@@ -125,7 +129,7 @@ fun DetailContainer(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(leagueInfo.name) },
+                title = { Text(leagueJoint.name) },
                 navigationIcon = {
                     IconButton(
                         onClick = {

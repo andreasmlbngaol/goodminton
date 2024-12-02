@@ -8,6 +8,11 @@ data class Friend(
     val startedAt: Timestamp = Timestamp.now()
 )
 
+data class FriendJoint(
+    val users: List<MyUser> = emptyList(),
+    val startedAt: Timestamp = Timestamp.now()
+)
+
 data class FriendUI(
     val info: MyUser = MyUser(),
     val data: Friend = Friend()

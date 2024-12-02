@@ -1,6 +1,7 @@
 package com.mightsana.goodminton.model.di
 
 import com.mightsana.goodminton.model.repository.AppRepository
+import com.mightsana.goodminton.model.repository.AppRepositoryImpl
 import com.mightsana.goodminton.model.service.AccountService
 import com.mightsana.goodminton.model.service.FirebaseAccountService
 import dagger.Module
@@ -18,5 +19,5 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOneRepository(): AppRepository = AppRepository()
+    fun provideOneRepository(): AppRepository = AppRepositoryImpl()
 }

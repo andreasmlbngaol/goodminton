@@ -1,11 +1,9 @@
 package com.mightsana.goodminton.features.main.model
 
 import com.google.firebase.Timestamp
-import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
-import com.mightsana.goodminton.model.repository.friends.Friend
 import com.mightsana.goodminton.model.repository.users.MyUser
 
-data class LeagueParticipants(
+data class LeagueParticipant(
     val id: String = "",
     val leagueId: String = "",
     val userId: String = "",
@@ -14,18 +12,25 @@ data class LeagueParticipants(
     val participateAt: Timestamp = Timestamp.now()
 )
 
-@Suppress("unused")
-data class LeagueParticipantsUI(
-    val info: LeagueParticipants = LeagueParticipants(),
+data class LeagueParticipantJoint(
+    val id: String = "",
+    val league: League = League(),
+    val user: MyUser = MyUser(),
+    val role: Role = Role.Player,
+    val status: Status = Status.Active,
+    val participateAt: Timestamp = Timestamp.now(),
+)
+
+data class LeagueParticipantUI(
+    val info: LeagueParticipant = LeagueParticipant(),
     val user: MyUser = MyUser(),
     val stats: ParticipantStats = ParticipantStats()
 )
-@Suppress("unused")
+
 enum class Role {
     Creator, Admin, Player, Spectator
 }
 
-@Suppress("unused")
 enum class Status {
-    Pending, Active
+    Pending, Active, Invited
 }

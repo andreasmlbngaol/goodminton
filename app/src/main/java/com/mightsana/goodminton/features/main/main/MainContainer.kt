@@ -80,7 +80,7 @@ fun MainContainer(
                 iconUnselected = MyIcons.SocialUnselected,
                 label = "Social",
                 route = "Social",
-                badgeCount = viewModel.friendRequestReceivedCount.collectAsState().value,
+                badgeCount = viewModel.friendRequestSent.collectAsState().value.size,
                 content = {
                     SocialScreen(
                         drawerState = drawerState,
@@ -93,7 +93,7 @@ fun MainContainer(
                 iconUnselected = Icons.Outlined.Notifications,
                 label = NOTIFICATIONS,
                 route = NOTIFICATIONS,
-                badgeCount = viewModel.friendRequestReceivedCount.collectAsState().value
+                badgeCount = viewModel.friendRequestReceived.collectAsState().value.size
             )
         ),
 

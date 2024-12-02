@@ -5,7 +5,9 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.features.main.model.League
-import com.mightsana.goodminton.features.main.model.LeagueParticipantsUI
+import com.mightsana.goodminton.features.main.model.LeagueJoint
+import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
+import com.mightsana.goodminton.features.main.model.LeagueParticipantUI
 import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.users.MyUser
@@ -41,23 +43,38 @@ class DetailViewModel @Inject constructor(
     private val _selectedItem = MutableStateFlow(0)
     val selectedItem: StateFlow<Int> = _selectedItem
 
-    private val _leagueInfo = MutableStateFlow(League())
-    val leagueInfo: StateFlow<League> = _leagueInfo
+    private val _leagueJoint = MutableStateFlow(LeagueJoint())
+    val leagueJoint: StateFlow<LeagueJoint> = _leagueJoint
 
-    private val _leagueParticipantsUI = MutableStateFlow(listOf<LeagueParticipantsUI>())
+    private fun observeLeagueJoint(leagueId: String) {
+        appRepository.observeLeagueJoint(leagueId) {
+            _leagueJoint.value = it
+        }
+    }
+
+    private val _leagueParticipantsUI = MutableStateFlow(listOf<LeagueParticipantUI>())
     val leagueParticipantsUI = _leagueParticipantsUI.asStateFlow()
+
+    private val _leagueParticipantsJoint = MutableStateFlow(listOf<LeagueParticipantJoint>())
+    val leagueParticipantsJoint = _leagueParticipantsJoint.asStateFlow()
+
+    private fun observeLeagueParticipantsJoint(leagueId: String) {
+        appRepository.observeLeagueParticipantsJoint(leagueId) { participants ->
+            _leagueParticipantsJoint.value = participants
+        }
+    }
 
     private fun observeLeagueParticipantsUI(leagueId: String) {
         appRepository.observeLeagueParticipants(leagueId) { participantsIds ->
             viewModelScope.launch {
                 val users = appRepository.getUsersByIds(participantsIds.map { it.userId })
-                val stats = appRepository.getStatsByUserIds(participantsIds.map { it.userId })
+                val stats = appRepository.getParticipantStatsByParticipantIds(participantsIds.map { it.userId })
                 val participantsUI = participantsIds.map { participant ->
                     val user = users.find { it.uid == participant.userId }
                     val stat = stats.find { it.userId == participant.userId }
                     user?.let { usr ->
                         stat?.let { stt ->
-                            LeagueParticipantsUI(participant, usr, stt)
+                            LeagueParticipantUI(participant, usr, stt)
                         }
                     }
                 }
@@ -67,21 +84,16 @@ class DetailViewModel @Inject constructor(
     }
 
 
-    private fun observeLeagueInfo(leagueId: String) {
-        appRepository.observeLeagueInfo(leagueId) {
-            _leagueInfo.value = it
-
-        }
-    }
-
     private fun observeMatches(leagueId: String) {
         appRepository.observeMatches(leagueId) {
             _matches.value = it
         }
     }
     fun observeLeague(leagueId: String) {
-        observeLeagueInfo(leagueId)
-        observeLeagueParticipantsUI(leagueId)
+//        observeLeagueInfo(leagueId)
+        observeLeagueJoint(leagueId)
+        observeLeagueParticipantsJoint(leagueId)
+//        observeLeagueParticipantsUI(leagueId)
         observeMatches(leagueId)
     }
 
@@ -100,7 +112,7 @@ class DetailViewModel @Inject constructor(
         newRole: String
     ) {
         viewModelScope.launch {
-            appRepository.changeParticipantRole(leagueId, userId, newRole)
+            appRepository.updateParticipantRole(leagueId, userId, newRole)
         }
     }
 
@@ -122,25 +134,26 @@ class DetailViewModel @Inject constructor(
     // League Info
     fun updateLeagueDiscipline(newDouble: Boolean) {
         viewModelScope.launch {
-            appRepository.updateLeagueDiscipline(_leagueInfo.value.id, newDouble)
+            Log.d("DetailViewModel", "updateLeagueDiscipline: $newDouble")
+            appRepository.updateLeagueDiscipline(_leagueJoint.value.id, newDouble)
         }
     }
 
     fun updateLeagueFixedDouble(newFixed: Boolean) {
         viewModelScope.launch {
-            appRepository.updateLeagueFixedDouble(_leagueInfo.value.id, newFixed)
+            appRepository.updateLeagueFixedDouble(_leagueJoint.value.id, newFixed)
         }
     }
 
     fun updateLeagueDeuce(newDeuce: Boolean) {
         viewModelScope.launch {
-            appRepository.updateLeagueDeuce(_leagueInfo.value.id, newDeuce)
+            appRepository.updateLeagueDeuceEnabled(_leagueJoint.value.id, newDeuce)
         }
     }
 
     fun updateLeagueVisibility(newVisibility: Boolean) {
         viewModelScope.launch {
-            appRepository.updateLeagueVisibility(_leagueInfo.value.id, newVisibility)
+            appRepository.updateLeagueVisibility(_leagueJoint.value.id, newVisibility)
         }
     }
 
@@ -167,7 +180,7 @@ class DetailViewModel @Inject constructor(
             dismissChangeNameDialog()
         } else {
             viewModelScope.launch {
-                appRepository.updateLeagueName(_leagueInfo.value.id, _leagueName.value)
+                appRepository.updateLeagueName(_leagueJoint.value.id, _leagueName.value)
                 dismissChangeNameDialog()
                 delay(500)
                 _leagueName.value = ""
@@ -204,7 +217,7 @@ class DetailViewModel @Inject constructor(
             dismissChangeMatchPointsDialog()
         } else {
             viewModelScope.launch {
-                appRepository.updateMatchPoints(_leagueInfo.value.id, _matchPoints.value)
+                appRepository.updateLeagueMatchPoints(_leagueJoint.value.id, _matchPoints.value)
                 dismissChangeMatchPointsDialog()
                 delay(500)
                 _matchPoints.value = 0
@@ -227,7 +240,7 @@ class DetailViewModel @Inject constructor(
         onNavigateToHome: () -> Unit
     ) {
         viewModelScope.launch {
-            appRepository.deleteLeague(_leagueInfo.value.id)
+            appRepository.deleteLeague(_leagueJoint.value.id)
             dismissDeleteLeagueDialog()
             onNavigateToHome()
         }

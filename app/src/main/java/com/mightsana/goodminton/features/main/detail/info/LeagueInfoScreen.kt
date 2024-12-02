@@ -38,9 +38,9 @@ fun LeagueInfoScreen(
     onNavigateToHome: () -> Unit
 ) {
     val uid = viewModel.user.collectAsState().value.uid
-    val participantsUI by viewModel.leagueParticipantsUI.collectAsState()
-    val currentUserRole = participantsUI.find { it.user.uid == uid }?.info?.role
-    val leagueInfo by viewModel.leagueInfo.collectAsState()
+    val participantJoint by viewModel.leagueParticipantsJoint.collectAsState()
+    val currentUserRole = participantJoint.find { it.user.uid == uid }?.role
+    val leagueJoint by viewModel.leagueJoint.collectAsState()
     val matches by viewModel.matches.collectAsState()
     val clipboardManager = LocalClipboardManager.current
     val changeNameDialogVisible by viewModel.changeNameDialogVisible.collectAsState()
@@ -55,7 +55,7 @@ fun LeagueInfoScreen(
         // League Name
         InfoItem(
             title = "League Name",
-            value = leagueInfo.name,
+            value = leagueJoint.name,
             icon = {
                 if (currentUserRole == Role.Creator) {
                     MyIcon(
@@ -66,7 +66,7 @@ fun LeagueInfoScreen(
                     MyIcon(
                         MyIcons.Copy,
                         modifier = Modifier.onTap {
-                            clipboardManager.setText(AnnotatedString(leagueInfo.name))
+                            clipboardManager.setText(AnnotatedString(leagueJoint.name))
                         }
                     )
                 }
@@ -76,28 +76,28 @@ fun LeagueInfoScreen(
         // Discipline
         InfoItem(
             title = "Discipline",
-            value = if(leagueInfo.double) "Double" else "Single",
+            value = if(leagueJoint.double) "Double" else "Single",
             icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Flip,
-                        modifier = Modifier.onTap { viewModel.updateLeagueDiscipline(!leagueInfo.double) }
+                        modifier = Modifier.onTap { viewModel.updateLeagueDiscipline(!leagueJoint.double) }
                     )
                 }
             } else null
         )
 
         // Double Fixed
-        if(leagueInfo.fixedDouble != null) {
+        if(leagueJoint.fixedDouble != null) {
             InfoItem(
                 title = "Fixed Double",
-                value = if(leagueInfo.fixedDouble!!) "Yes" else "No",
+                value = if(leagueJoint.fixedDouble!!) "Yes" else "No",
                 icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                     {
                         MyIcon(
                             MyIcons.Flip,
                             modifier = Modifier.onTap {
-                                viewModel.updateLeagueFixedDouble(!leagueInfo.fixedDouble!!)
+                                viewModel.updateLeagueFixedDouble(!leagueJoint.fixedDouble!!)
                             }
                         )
                     }
@@ -108,7 +108,7 @@ fun LeagueInfoScreen(
         // League Match Points
         InfoItem(
             title = "Match Points",
-            value = leagueInfo.matchPoints.toString(),
+            value = leagueJoint.matchPoints.toString(),
             icon = if (currentUserRole == Role.Creator && matches.isEmpty()) {
                 {
                     MyIcon(
@@ -124,12 +124,12 @@ fun LeagueInfoScreen(
         // Deuce
         InfoItem(
             title = "Deuce",
-            value = if(leagueInfo.deuceEnabled) "Yes" else "No",
+            value = if(leagueJoint.deuceEnabled) "Yes" else "No",
             icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Flip,
-                        modifier = Modifier.onTap { viewModel.updateLeagueDeuce(!leagueInfo.deuceEnabled) }
+                        modifier = Modifier.onTap { viewModel.updateLeagueDeuce(!leagueJoint.deuceEnabled) }
                     )
                 }
             } else null
@@ -138,12 +138,12 @@ fun LeagueInfoScreen(
         // Visibility
         InfoItem(
             title = "Visibility",
-            value = if(leagueInfo.private) "Private" else "Public",
+            value = if(leagueJoint.private) "Private" else "Public",
             icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Flip,
-                        modifier = Modifier.onTap { viewModel.updateLeagueVisibility(!leagueInfo.private) }
+                        modifier = Modifier.onTap { viewModel.updateLeagueVisibility(!leagueJoint.private) }
                     )
                 }
             } else null
@@ -152,12 +152,12 @@ fun LeagueInfoScreen(
         //League ID
         InfoItem(
             title = "ID",
-            value = leagueInfo.id,
+            value = leagueJoint.id,
             icon = {
                 MyIcon(
                     MyIcons.Copy,
                     modifier = Modifier.onTap {
-                        clipboardManager.setText(AnnotatedString(leagueInfo.id))
+                        clipboardManager.setText(AnnotatedString(leagueJoint.id))
                     }
                 )
             }
@@ -166,8 +166,15 @@ fun LeagueInfoScreen(
         // Created At
         InfoItem(
             title = "Time Created",
-            value = leagueInfo.createdAt.showDateTime()
+            value = leagueJoint.createdAt.showDateTime()
         )
+
+        // Created By
+        InfoItem(
+            title = "Creator",
+            value = leagueJoint.createdBy.name
+        )
+
 
         // Delete Button
         if(currentUserRole == Role.Creator) {
@@ -213,7 +220,7 @@ fun LeagueInfoScreen(
                 MyTextField(
                     value = viewModel.leagueName.collectAsState().value,
                     onValueChange = { viewModel.changeLeagueName(it) },
-                    placeholder = { Text(leagueInfo.name) }
+                    placeholder = { Text(leagueJoint.name) }
                 )
             }
         )
@@ -251,7 +258,7 @@ fun LeagueInfoScreen(
                 MyTextField(
                     value = if(matchPoints != 0) matchPoints.toString() else "",
                     onValueChange = { viewModel.changeMatchPoints(it) },
-                    placeholder = { Text(leagueInfo.matchPoints.toString()) }
+                    placeholder = { Text(leagueJoint.matchPoints.toString()) }
                 )
             }
         )

@@ -36,9 +36,9 @@ import com.mightsana.goodminton.view.MyImage
 @Suppress("unused")
 fun ParticipantsScreen(viewModel: DetailViewModel) {
     val uid = viewModel.user.collectAsState().value.uid
-    val participantsUI by viewModel.leagueParticipantsUI.collectAsState()
+    val participantJoint by viewModel.leagueParticipantsJoint.collectAsState()
+    val currentUserRole = participantJoint.find { it.user.uid == uid }?.role
     val roleDropdownExpanded by viewModel.participantsRoleExpanded.collectAsState()
-    val currentUserRole = participantsUI.find { it.user.uid == uid }?.info?.role
 
     Column(
         modifier = Modifier
@@ -46,15 +46,15 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
             .padding(bottom = 150.dp)
     ) {
 
-        participantsUI
+        participantJoint
             .sortedWith(
                 compareBy(
-                    { it.info.role.ordinal },
+                    { it.role.ordinal },
                     { it.user.name }
                 )
             )
             .forEachIndexed { index, participant ->
-                val isDropdownExpanded = roleDropdownExpanded[participant.info.userId] ?: false
+                val isDropdownExpanded = roleDropdownExpanded[participant.user.uid] ?: false
 
                 ListItem(
                     leadingContent = {
@@ -80,17 +80,17 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
                         )
                     },
                     trailingContent = {
-                        if (currentUserRole == Role.Creator && participant.info.role != Role.Creator) {
+                        if (currentUserRole == Role.Creator && participant.role != Role.Creator) {
                             OutlinedButton(
                                 onClick = { viewModel.toggleParticipantsRoleExpanded(participant.user.uid) },
                                 contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
-//                                enabled = participant.info.role != Role.Creator
+//                                enabled = participant.role != Role.Creator
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text(participant.info.role.name)
+                                    Text(participant.role.name)
                                     MyIcon(if (isDropdownExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown)
                                 }
                             }
@@ -115,19 +115,19 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
                                         },
                                         onClick = {
                                             viewModel.changeParticipantRole(
-                                                leagueId = participant.info.leagueId,
-                                                userId = participant.info.userId,
+                                                leagueId = participant.league.id,
+                                                userId = participant.user.uid,
                                                 newRole = role.name
                                             )
                                             viewModel.dismissParticipantsRoleExpanded(participant.user.uid)
                                         },
-                                        enabled = role != Role.Creator || role != participant.info.role
+//                                        enabled = role != Role.Creator || role != participant.role
                                     )
                                 }
                             }
                         } else {
                             Text(
-                                participant.info.role.name,
+                                participant.role.name,
                                 maxLines = 1,
                                 style = MaterialTheme.typography.titleMedium,
                                 overflow = Ellipsis
