@@ -20,10 +20,13 @@ import com.mightsana.goodminton.features.main.model.Status
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.friends.Friend
+import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -76,6 +79,12 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             }
             userDeferreds.flatMap { it.await() }
         }
+    override suspend fun getUser(userId: String): MyUser =
+        usersCollection
+            .document(userId)
+            .get()
+            .await()
+            .toObject(MyUser::class.java)!!
     override fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot) -> Unit) {
         usersCollection
             .document(userId)
@@ -173,6 +182,27 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         } catch (e: Exception) {
             emptyList()
         }
+    override suspend fun getLeague(leagueId: String): League =
+        leaguesCollection
+            .document(leagueId)
+            .get()
+            .await()
+            .toObject(League::class.java)!!
+    override suspend fun getLeagueJoint(leagueId: String): LeagueJoint {
+        val league = getLeague(leagueId)
+        val creator = getUser(league.createdById)
+        return LeagueJoint(
+            id = league.id,
+            name = league.name,
+            matchPoints = league.matchPoints,
+            private = league.private,
+            deuceEnabled = league.deuceEnabled,
+            double = league.double,
+            fixedDouble = league.fixedDouble,
+            createdBy = creator,
+            createdAt = league.createdAt
+        )
+    }
     override suspend fun getPublicLeagueIds(): List<String> =
         try {
             leaguesCollection
@@ -218,29 +248,31 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
     override fun observeLeagueJoint(leagueId: String, onLeagueUpdate: (LeagueJoint) -> Unit) {
         observeLeagueSnapshot(leagueId) {
-            val league = it.toObject(League::class.java)!!
-            observeUserJoint(league.createdById) { creator ->
-                onLeagueUpdate(
-                    LeagueJoint(
-                        id = league.id,
-                        name = league.name,
-                        matchPoints = league.matchPoints,
-                        private = league.private,
-                        deuceEnabled = league.deuceEnabled,
-                        double = league.double,
-                        fixedDouble = league.fixedDouble,
-                        createdBy = creator,
-                        createdAt = league.createdAt
+            CoroutineScope(Dispatchers.IO).launch {
+                val league = it.toObject(League::class.java)!!
+                val creator = getUser(league.createdById)
+
+                launch(Dispatchers.Main) {
+                    onLeagueUpdate(
+                        LeagueJoint(
+                            id = league.id,
+                            name = league.name,
+                            matchPoints = league.matchPoints,
+                            private = league.private,
+                            deuceEnabled = league.deuceEnabled,
+                            double = league.double,
+                            fixedDouble = league.fixedDouble,
+                            createdBy = creator,
+                            createdAt = league.createdAt
+                        )
                     )
-                )
+                }
             }
         }
     }
 
     // Edit League Data
     override suspend fun updateLeagueDiscipline(leagueId: String, double: Boolean) {
-        Log.d("DetailViewModel", "leagueId: $leagueId")
-        Log.d("DetailViewModel", "updateLeagueDiscipline: $double")
         leaguesCollection
             .document(leagueId)
             .update("double", double)
@@ -328,26 +360,25 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             }
     }
     override fun observeLeagueParticipantsJoint(leagueId: String, onParticipantsUpdate: (List<LeagueParticipantJoint>) -> Unit) {
-        observeLeagueJoint(leagueId) { leagueJoint ->
-            observeLeagueParticipantsSnapshot(leagueId) { participantsSnapshot ->
-                val participants = mutableListOf<LeagueParticipantJoint>()
-                participantsSnapshot.forEach { participantSnapshot ->
-                    val participant = participantSnapshot.toObject(LeagueParticipant::class.java)
-                    observeUserJoint(participant.userId) { user ->
-                        participants.add(
+        observeLeagueParticipantsSnapshot(leagueId) { participantsSnapshot ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val participants = participantsSnapshot.map { it.toObject(LeagueParticipant::class.java) }
+                val leagueJoint = getLeagueJoint(leagueId)
+                val users = getUsersByIds(participants.map { it.userId }).associateBy { it.uid }
+
+                launch(Dispatchers.Main) {
+                    onParticipantsUpdate(
+                        participants.map { participant ->
                             LeagueParticipantJoint(
                                 id = participant.id,
                                 league = leagueJoint,
-                                user = user,
+                                user = users[participant.userId]!!,
                                 role = participant.role,
                                 status = participant.status,
                                 participateAt = participant.participateAt
                             )
-                        )
-                        if (participants.size == participantsSnapshot.size())
-                            onParticipantsUpdate(participants.toList())
-
-                    }
+                        }
+                    )
                 }
             }
         }
@@ -396,42 +427,31 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             }
     }
     override fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit) {
-        observeLeagueJoint(leagueId) { leagueJoint ->
-            Log.d("AppRepositoryImpl", "leagueJoint: $leagueJoint")
-            observeMatchesSnapshot(leagueId) { matchesSnapshot ->
-                Log.d("AppRepositoryImpl", "matchesSnapshot: $matchesSnapshot")
-                val matches = mutableListOf<MatchJoint>()
-                matchesSnapshot.forEach { matchSnapshot ->
-                    Log.d("AppRepositoryImpl", "matchSnapshot: $matchSnapshot")
-                    val match = matchSnapshot.toObject(Match::class.java)
-                    val allUserIds = match.team1Ids + match.team2Ids
-                    Log.d("AppRepositoryImpl", "allUserIds: $allUserIds")
+        observeMatchesSnapshot(leagueId) { matchesSnapshot ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val matches = matchesSnapshot.map { it.toObject(Match::class.java) }
+                val leagueJoint = getLeagueJoint(leagueId)
 
-                    observeUsersJoint(allUserIds) { users ->
-                        Log.d("AppRepositoryImpl", "users: $users")
-                        val team1Users = users.filter { it.uid in match.team1Ids }
-                        val team2Users = users.filter { it.uid in match.team2Ids }
+                val matchesJoint = matches.map { match ->
+                    val team1Users = getUsersByIds(match.team1Ids)
+                    val team2Users = getUsersByIds(match.team2Ids)
 
-                        matches.add(
-                            MatchJoint(
-                                id = match.id,
-                                league = leagueJoint,
-                                team1 = team1Users,
-                                team2 = team2Users,
-                                team1Score = match.team1Score,
-                                team2Score = match.team2Score,
-                                startedAt = match.startedAt,
-                                finishedAt = match.finishedAt,
-                                duration = match.duration,
-                                status = match.status
-                            )
-                        )
-                        Log.d("AppRepositoryImpl", "matches: $matches")
+                    MatchJoint(
+                        id = match.id,
+                        league = leagueJoint,
+                        team1 = team1Users,
+                        team2 = team2Users,
+                        team1Score = match.team1Score,
+                        team2Score = match.team2Score,
+                        startedAt = match.startedAt,
+                        finishedAt = match.finishedAt,
+                        duration = match.duration,
+                        status = match.status
+                    )
+                }
 
-                        if (matches.size == matchesSnapshot.size())
-                            onMatchesUpdate(matches.toList())
-
-                    }
+                launch(Dispatchers.Main) {
+                    onMatchesUpdate(matchesJoint)
                 }
             }
         }
@@ -439,6 +459,44 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
 
     // Retrieve Friends Data
     private var friendsListener: ListenerRegistration? = null
+    override fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot) -> Unit) {
+        friendsCollection
+            .whereArrayContains("usersIds", userId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty)
+                    onFriendsSnapshotUpdate(snapshot)
+                else
+                    Log.d("AppRepositoryImpl", "Friends snapshot is null or does not exist")
+            }
+    }
+    override fun observeFriendsJoint(userId: String, onFriendsUpdate: (List<FriendJoint>) -> Unit) {
+        observeFriendsSnapshot(userId) { friendsSnapshot ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val friends = friendsSnapshot.map { it.toObject(Friend::class.java) }
+                val allUserIds = friends.flatMap { it.usersIds }.distinct().filterNot { it == userId }
+                val usersMap = getUsersByIds(allUserIds).associateBy { it.uid }
+                val friendsJoint = friends.mapNotNull { friend ->
+                    val otherUserId = friend.usersIds.firstOrNull { it != userId }
+                    otherUserId?.let { otherId ->
+                        val user = usersMap[otherId]
+                        user?.let {
+                            FriendJoint(
+                                id = friend.id,
+                                user = it,
+                                startedAt = friend.startedAt
+                            )
+                        }
+                    }
+                }
+                launch(Dispatchers.Main) {
+                    onFriendsUpdate(friendsJoint)
+                }
+            }
+        }
+    }
     override fun observeFriends(userId: String, onFriendsUpdate: (List<Friend>) -> Unit) {
         friendsListener?.remove()
         friendsListener = friendsCollection

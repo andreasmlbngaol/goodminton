@@ -13,6 +13,7 @@ import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.friends.Friend
+import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
 
 interface AppRepository {
@@ -27,6 +28,7 @@ interface AppRepository {
 
     // Retrieve User Data
     suspend fun getUsersByIds(ids: List<String>): List<MyUser>
+    suspend fun getUser(userId: String): MyUser
     fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot) -> Unit)
     fun observeUserJoint(userId: String, onUserUpdate: (MyUser) -> Unit)
     fun observeUsersSnapshot(userIds: List<String>, onUsersUpdate: (QuerySnapshot) -> Unit)
@@ -39,6 +41,8 @@ interface AppRepository {
 
     // Retrieve League Data
     suspend fun getLeagueIdsByUserId(userId: String): List<String>
+    suspend fun getLeague(leagueId: String): League
+    suspend fun getLeagueJoint(leagueId: String): LeagueJoint
     suspend fun getPublicLeagueIds(): List<String>
     suspend fun getLeagueByIds(ids: List<String>): List<League>
     suspend fun getUserAndPublicLeagues(userId: String): List<League>
@@ -69,6 +73,8 @@ interface AppRepository {
     fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit)
 
     // Retrieve Friends Data
+    fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot) -> Unit)
+    fun observeFriendsJoint(userId: String, onFriendsUpdate: (List<FriendJoint>) -> Unit)
     fun observeFriends(userId: String, onFriendsUpdate: (List<Friend>) -> Unit)
 
     // Retrieve Friend Requests Data

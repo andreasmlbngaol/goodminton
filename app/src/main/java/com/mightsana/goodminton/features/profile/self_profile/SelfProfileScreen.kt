@@ -47,13 +47,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.mightsana.goodminton.MAIN
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.SIGN_IN
-import com.mightsana.goodminton.features.profile.model.PROFILE
 import com.mightsana.goodminton.model.ext.navigateAndPopAll
-import com.mightsana.goodminton.model.ext.navigateAndPopUp
-import com.mightsana.goodminton.model.ext.navigateSingleTop
 import com.mightsana.goodminton.model.ext.onLongPress
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.view.Loader
@@ -71,7 +67,7 @@ fun SelfProfileScreen(
     viewModel: SelfProfileViewModel = hiltViewModel()
 ) {
     val user by viewModel.user.collectAsState()
-    val friendsUI by viewModel.friendsUI.collectAsState()
+    val friendsJoint by viewModel.friendsJoint.collectAsState()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val profilePictureExpanded by viewModel.profilePictureExpanded.collectAsState()
@@ -95,9 +91,9 @@ fun SelfProfileScreen(
         label = ""
     )
 
-    LaunchedEffect(Unit) {
-        viewModel.refreshUserListener()
-    }
+//    LaunchedEffect(Unit) {
+//        viewModel.refreshUserListener()
+//    }
 
     Loader(viewModel.isLoading.collectAsState().value) {
         Scaffold(
@@ -182,7 +178,7 @@ fun SelfProfileScreen(
                                         viewModel.comingSoon()
                                     }
                             ) {
-                                Text(viewModel.friendsUI.collectAsState().value.size.toString())
+                                Text(friendsJoint.size.toString())
                                 Text("Friends")
                             }
                         }

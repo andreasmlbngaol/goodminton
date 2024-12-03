@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.model.repository.AppRepository
+import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.repository.friends.FriendUI
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
@@ -31,38 +32,19 @@ abstract class ProfileViewModel(
         _profilePictureExpanded.value = false
     }
 
-    protected val _friendsUI = MutableStateFlow<List<FriendUI>>(emptyList())
-    val friendsUI = _friendsUI.asStateFlow()
+    protected val _friendsJoint = MutableStateFlow<List<FriendJoint>>(emptyList())
+    val friendsJoint = _friendsJoint.asStateFlow()
 
-    protected fun observeFriendsUI(userId: String) {
-        appRepository.observeFriends(userId) { friendsList ->
+    protected fun observeFriendsJoint(userId: String) {
+        appRepository.observeFriendsJoint(userId) {
             viewModelScope.launch {
-                val friends = appRepository.getUsersByIds(
-                    friendsList.map { friend ->
-                        friend.ids.first { it != userId }
-                    }
-                )
-                val friendsUI = friendsList.map { friend ->
-                    val info = friends.find { it1 ->
-                        it1.uid == friend.ids.first { it != userId }
-                    }
-                    info?.let { inf ->
-                        FriendUI(
-                            info = inf,
-                            data = friend
-                        )
-                    }
-                }
-                _friendsUI.value = friendsUI.filterNotNull()
-                Log.d("ProfileViewModel", "Friends UI: ${_friendsUI.value}")
+                _friendsJoint.value = it
             }
         }
     }
 
-
-
-    protected fun observeUser() {
-        appRepository.observeUserJoint(accountService.currentUserId) {
+    protected fun observeUser(userId: String) {
+        appRepository.observeUserJoint(userId) {
             viewModelScope.launch {
                 _user.value = it
             }

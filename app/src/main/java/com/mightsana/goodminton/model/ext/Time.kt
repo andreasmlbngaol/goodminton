@@ -14,7 +14,7 @@ fun Timestamp.showDate(): String {
 
 fun Timestamp.showDateTime(): String {
     val instant = Instant.ofEpochSecond(this.seconds)
-    val formatter = DateTimeFormatter.ofPattern("EEEE, H:m:s\nd MMMM yyyy")
+    val formatter = DateTimeFormatter.ofPattern("EEEE, HH:mm:ss\nd MMMM yyyy")
         .withZone(ZoneId.systemDefault())
     return formatter.format(instant)
 }

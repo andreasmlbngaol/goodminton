@@ -18,17 +18,17 @@ class SelfProfileViewModel @Inject constructor(
 
     init {
         appLoading()
-        observeUser()
-        observeFriendsUI(accountService.currentUserId)
+        observeUser(accountService.currentUserId)
+        observeFriendsJoint(accountService.currentUserId)
         appLoaded()
+    }
 //        viewModelScope.launch {
 ////            _friendCount.value = getFriendCount(accountService.currentUserId)
 ////            appLoaded()
 //        }
-    }
 
-    fun refreshUserListener() {
-        observeUser()
-    }
+//    fun refreshUserListener() {
+//        observeUser(accountService.currentUserId)
+//    }
 
 }

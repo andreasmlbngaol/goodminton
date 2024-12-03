@@ -4,12 +4,14 @@ import com.google.firebase.Timestamp
 import com.mightsana.goodminton.model.repository.users.MyUser
 
 data class Friend(
-    val ids: List<String> = emptyList(),
+    val id: String = "",
+    val usersIds: List<String> = emptyList(),
     val startedAt: Timestamp = Timestamp.now()
 )
 
 data class FriendJoint(
-    val users: List<MyUser> = emptyList(),
+    val id: String = "",
+    val user: MyUser = MyUser(),
     val startedAt: Timestamp = Timestamp.now()
 )
 
