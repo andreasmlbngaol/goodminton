@@ -14,7 +14,7 @@ data class LeagueParticipant(
 
 data class LeagueParticipantJoint(
     val id: String = "",
-    val league: League = League(),
+    val league: LeagueJoint = LeagueJoint(),
     val user: MyUser = MyUser(),
     val role: Role = Role.Player,
     val status: Status = Status.Active,

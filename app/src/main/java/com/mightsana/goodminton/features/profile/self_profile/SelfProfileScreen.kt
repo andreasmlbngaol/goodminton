@@ -47,9 +47,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.mightsana.goodminton.MAIN
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.SIGN_IN
 import com.mightsana.goodminton.features.profile.model.PROFILE
+import com.mightsana.goodminton.model.ext.navigateAndPopAll
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.model.ext.navigateSingleTop
 import com.mightsana.goodminton.model.ext.onLongPress
@@ -121,7 +123,7 @@ fun SelfProfileScreen(
                         IconButton(
                             onClick = {
                                 viewModel.onSignOut {
-                                    navController.navigateAndPopUp(SIGN_IN, PROFILE)
+                                    navController.navigateAndPopAll(SIGN_IN)
                                 }
                             }
                         ) { MyIcon(MyIcons.Logout) }

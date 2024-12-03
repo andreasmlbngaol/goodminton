@@ -1,9 +1,11 @@
 package com.mightsana.goodminton.model.repository
 
 import android.util.Log
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.mightsana.goodminton.features.main.model.League
@@ -11,10 +13,12 @@ import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.Match
+import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.features.main.model.Status
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
+import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.friends.Friend
 import com.mightsana.goodminton.model.repository.users.MyUser
 import kotlinx.coroutines.Dispatchers
@@ -72,21 +76,47 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             }
             userDeferreds.flatMap { it.await() }
         }
-    private var userListener: ListenerRegistration? = null
-    override fun observeUser(userId: String, onUserUpdate: (MyUser) -> Unit) {
-        userListener?.remove()
-        userListener = usersCollection
+    override fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot) -> Unit) {
+        usersCollection
             .document(userId)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-
-                var user = MyUser()
                 if (snapshot != null && snapshot.exists())
-                    user = snapshot.toObject(MyUser::class.java)!!
-                onUserUpdate(user)
+                    onUserSnapshotUpdate(snapshot)
+                else
+                    Log.d("AppRepositoryImpl", "User snapshot is null or does not exist")
             }
+    }
+    override fun observeUserJoint(userId: String, onUserUpdate: (MyUser) -> Unit) {
+        observeUserSnapshot(userId) {
+            val user = it.toObject(MyUser::class.java)!!
+            onUserUpdate(user)
+        }
+    }
+    override fun observeUsersSnapshot(userIds: List<String>, onUsersUpdate: (QuerySnapshot) -> Unit) {
+        userIds.chunked(batchMaxSize).map { batch ->
+            usersCollection
+                .whereIn(FieldPath.documentId(), batch)
+                .addSnapshotListener { snapshot, exception ->
+                    if (exception != null) {
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null && !snapshot.isEmpty)
+                        onUsersUpdate(snapshot)
+                }
+        }
+    }
+    override fun observeUsersJoint(userIds: List<String>, onUsersUpdate: (List<MyUser>) -> Unit) {
+        observeUsersSnapshot(userIds) { snapshot ->
+            val users = mutableListOf<MyUser>()
+            snapshot.forEach { userSnapshot ->
+                val user = userSnapshot.toObject(MyUser::class.java)
+                users.add(user)
+            }
+            onUsersUpdate(users.toList())
+        }
     }
 
     // Create League
@@ -173,54 +203,38 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         val unionLeagueIds = userLeagueIds.union(publicLeagueIds).toList()
         return getLeagueByIds(unionLeagueIds)
     }
-    private var leagueListener: ListenerRegistration? = null
-    override fun observeLeague(leagueId: String, onLeagueUpdate: (League) -> Unit) {
-        leagueListener?.remove()
-        leagueListener = leaguesCollection
+    override fun observeLeagueSnapshot(leagueId: String, onLeagueSnapshotUpdate: (DocumentSnapshot) -> Unit) {
+        leaguesCollection
             .document(leagueId)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                var league = League()
                 if (snapshot != null && snapshot.exists())
-                    league = snapshot.toObject(League::class.java)!!
-                onLeagueUpdate(league)
+                    onLeagueSnapshotUpdate(snapshot)
+                else
+                    Log.d("AppRepositoryImpl", "League snapshot is null or does not exist")
             }
     }
     override fun observeLeagueJoint(leagueId: String, onLeagueUpdate: (LeagueJoint) -> Unit) {
-        leagueListener?.remove()
-        leagueListener = leaguesCollection
-            .document(leagueId)
-            .addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    return@addSnapshotListener
-                }
-                if (snapshot != null && snapshot.exists()) {
-                    val league = snapshot.toObject(League::class.java)!!
-                    usersCollection
-                        .document(league.createdById)
-                        .addSnapshotListener { userSnapshot, userException ->
-                            if (userException != null) {
-                                return@addSnapshotListener
-                            }
-                            if (userSnapshot != null && userSnapshot.exists()) {
-                                val leagueJoint = LeagueJoint(
-                                    id = league.id,
-                                    name = league.name,
-                                    matchPoints = league.matchPoints,
-                                    private = league.private,
-                                    deuceEnabled = league.deuceEnabled,
-                                    double = league.double,
-                                    fixedDouble = league.fixedDouble,
-                                    createdBy = userSnapshot.toObject(MyUser::class.java)!!,
-                                    createdAt = league.createdAt
-                                )
-                                onLeagueUpdate(leagueJoint)
-                            }
-                        }
-                }
+        observeLeagueSnapshot(leagueId) {
+            val league = it.toObject(League::class.java)!!
+            observeUserJoint(league.createdById) { creator ->
+                onLeagueUpdate(
+                    LeagueJoint(
+                        id = league.id,
+                        name = league.name,
+                        matchPoints = league.matchPoints,
+                        private = league.private,
+                        deuceEnabled = league.deuceEnabled,
+                        double = league.double,
+                        fixedDouble = league.fixedDouble,
+                        createdBy = creator,
+                        createdAt = league.createdAt
+                    )
+                )
             }
+        }
     }
 
     // Edit League Data
@@ -299,83 +313,44 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
 
     // Retrieve League Participant Data
-    private var leagueParticipantsListener: ListenerRegistration? = null
-    override fun observeLeagueParticipants(leagueId: String, onParticipantsUpdate: (List<LeagueParticipant>) -> Unit) {
-        leagueParticipantsListener?.remove()
-        leagueParticipantsListener = leagueParticipantsCollection
+    override fun observeLeagueParticipantsSnapshot(leagueId: String, onParticipantsSnapshotUpdate: (QuerySnapshot) -> Unit) {
+        leagueParticipantsCollection
             .whereEqualTo("leagueId", leagueId)
             .whereEqualTo("status", Status.Active)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                var leagueParticipants = listOf<LeagueParticipant>()
-                if (snapshot != null && !snapshot.isEmpty) {
-                    leagueParticipants = snapshot.documents.mapNotNull {
-                        it.toObject(LeagueParticipant::class.java)
-                    }
-                }
-                onParticipantsUpdate(leagueParticipants)
+                if (snapshot != null && !snapshot.isEmpty)
+                    onParticipantsSnapshotUpdate(snapshot)
+                else
+                    Log.d("AppRepositoryImpl", "League participants snapshot is null or does not exist")
             }
     }
     override fun observeLeagueParticipantsJoint(leagueId: String, onParticipantsUpdate: (List<LeagueParticipantJoint>) -> Unit) {
-        leagueParticipantsListener?.remove()
-        leagueParticipantsListener = leagueParticipantsCollection
-            .whereEqualTo("leagueId", leagueId)
-            .whereEqualTo("status", Status.Active)
-            .addSnapshotListener { participantSnapshot, participantException ->
-                if (participantException != null) {
-                    Log.e("AppRepositoryImpl", "Error observing league participants", participantException)
-                    return@addSnapshotListener
-                }
-                if (participantSnapshot != null && !participantSnapshot.isEmpty) {
-                    Log.d("AppRepositoryImpl", "Participant snapshot is not empty")
-                    val leagueParticipants = participantSnapshot.map { it.toObject(LeagueParticipant::class.java) }
-                    val userIds = leagueParticipants.map { it.userId }.distinct()
+        observeLeagueJoint(leagueId) { leagueJoint ->
+            observeLeagueParticipantsSnapshot(leagueId) { participantsSnapshot ->
+                val participants = mutableListOf<LeagueParticipantJoint>()
+                participantsSnapshot.forEach { participantSnapshot ->
+                    val participant = participantSnapshot.toObject(LeagueParticipant::class.java)
+                    observeUserJoint(participant.userId) { user ->
+                        participants.add(
+                            LeagueParticipantJoint(
+                                id = participant.id,
+                                league = leagueJoint,
+                                user = user,
+                                role = participant.role,
+                                status = participant.status,
+                                participateAt = participant.participateAt
+                            )
+                        )
+                        if (participants.size == participantsSnapshot.size())
+                            onParticipantsUpdate(participants.toList())
 
-                    leaguesCollection
-                        .document(leagueId)
-                        .addSnapshotListener { leagueSnapshot, leagueException ->
-                            if (leagueException != null) {
-                                Log.e("AppRepositoryImpl", "Error observing league", leagueException)
-                                return@addSnapshotListener
-                            }
-                            if(leagueSnapshot != null && leagueSnapshot.exists()) {
-                                Log.d("AppRepositoryImpl", "League snapshot is not null and exists")
-                                val league = leagueSnapshot.toObject(League::class.java)
-                                usersCollection
-                                    .whereIn(FieldPath.documentId(), userIds)
-                                    .addSnapshotListener { userSnapshot, userException ->
-                                        if (userException != null) {
-                                            Log.e("AppRepositoryImpl", "Error observing users", userException)
-                                            return@addSnapshotListener
-                                        }
-                                        if (userSnapshot != null && !userSnapshot.isEmpty) {
-                                            Log.d("AppRepositoryImpl", "User snapshot is not null and not empty")
-                                            val userMap = userSnapshot
-                                                .documents
-                                                .associateBy { it.id }
-                                                .mapValues { it.value.toObject(MyUser::class.java) }
-
-                                            val participantsJoin = leagueParticipants.map { participant ->
-                                                LeagueParticipantJoint(
-                                                    id = participant.id,
-                                                    league = league!!,
-                                                    user = userMap[participant.userId]!!,
-                                                    role = participant.role,
-                                                    status = participant.status,
-                                                    participateAt = participant.participateAt
-                                                )
-                                            }
-                                            Log.d("AppRepositoryImpl", "Participants joined: $participantsJoin")
-                                            onParticipantsUpdate(participantsJoin)
-                                        }
-                                    }
-                            }
-
-                        }
+                    }
                 }
             }
+        }
     }
 
     // Edit League Participant Data
@@ -407,23 +382,59 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         }
 
     // Retrieve Matches Data
-    private var matchesListener: ListenerRegistration? = null
-    override fun observeMatches(leagueId: String, onMatchesUpdate: (List<Match>) -> Unit) {
-        matchesListener?.remove()
-        matchesListener = matchesCollection
+    override fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot) -> Unit) {
+        matchesCollection
             .whereEqualTo("leagueId", leagueId)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                var matches = listOf<Match>()
-                if (snapshot != null && !snapshot.isEmpty) {
-                    matches = snapshot.documents.mapNotNull {
-                        it.toObject(Match::class.java)
+                if (snapshot != null && !snapshot.isEmpty)
+                    onMatchesSnapshotUpdate(snapshot)
+                else
+                    Log.d("AppRepositoryImpl", "Matches snapshot is null or does not exist")
+            }
+    }
+    override fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit) {
+        observeLeagueJoint(leagueId) { leagueJoint ->
+            Log.d("AppRepositoryImpl", "leagueJoint: $leagueJoint")
+            observeMatchesSnapshot(leagueId) { matchesSnapshot ->
+                Log.d("AppRepositoryImpl", "matchesSnapshot: $matchesSnapshot")
+                val matches = mutableListOf<MatchJoint>()
+                matchesSnapshot.forEach { matchSnapshot ->
+                    Log.d("AppRepositoryImpl", "matchSnapshot: $matchSnapshot")
+                    val match = matchSnapshot.toObject(Match::class.java)
+                    val allUserIds = match.team1Ids + match.team2Ids
+                    Log.d("AppRepositoryImpl", "allUserIds: $allUserIds")
+
+                    observeUsersJoint(allUserIds) { users ->
+                        Log.d("AppRepositoryImpl", "users: $users")
+                        val team1Users = users.filter { it.uid in match.team1Ids }
+                        val team2Users = users.filter { it.uid in match.team2Ids }
+
+                        matches.add(
+                            MatchJoint(
+                                id = match.id,
+                                league = leagueJoint,
+                                team1 = team1Users,
+                                team2 = team2Users,
+                                team1Score = match.team1Score,
+                                team2Score = match.team2Score,
+                                startedAt = match.startedAt,
+                                finishedAt = match.finishedAt,
+                                duration = match.duration,
+                                status = match.status
+                            )
+                        )
+                        Log.d("AppRepositoryImpl", "matches: $matches")
+
+                        if (matches.size == matchesSnapshot.size())
+                            onMatchesUpdate(matches.toList())
+
                     }
                 }
-                onMatchesUpdate(matches)
             }
+        }
     }
 
     // Retrieve Friends Data
@@ -485,5 +496,81 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 }
                 onFriendRequestsReceivedUpdate(friendRequestsReceived)
             }
+    }
+    override fun observeFriendRequestsSnapshot(
+        userId: String,
+        onFriendRequestsSentSnapshotUpdate: (QuerySnapshot) -> Unit,
+        onFriendRequestsReceivedSnapshotUpdate: (QuerySnapshot) -> Unit
+    ) {
+        friendRequestsCollection
+            .whereEqualTo("senderId", userId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty)
+                    onFriendRequestsSentSnapshotUpdate(snapshot)
+                else
+                    Log.d("AppRepositoryImpl", "Friend requests sent snapshot is null or does not exist")
+            }
+
+        friendRequestsCollection
+            .whereEqualTo("receiverId", userId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty)
+                    onFriendRequestsReceivedSnapshotUpdate(snapshot)
+                else
+                    Log.d("AppRepositoryImpl", "Friend requests received snapshot is null or does not exist")
+            }
+    }
+    override fun observeFriendRequestsJoint(
+        userId: String,
+        onFriendRequestsSentUpdate: (List<FriendRequestJoint>) -> Unit,
+        onFriendRequestsReceivedUpdate: (List<FriendRequestJoint>) -> Unit
+    ) {
+        observeFriendRequestsSnapshot(
+            userId = userId,
+            onFriendRequestsSentSnapshotUpdate = { requestsSentSnapshot ->
+                val requestsSent = mutableListOf<FriendRequestJoint>()
+                requestsSentSnapshot.forEach { requestSentSnapshot ->
+                    val requestSent = requestSentSnapshot.toObject(FriendRequest::class.java)
+                    observeUserJoint(requestSent.senderId) { sender ->
+                        observeUserJoint(requestSent.receiverId) { receiver ->
+                            requestsSent.add(
+                                FriendRequestJoint(
+                                    sender = sender,
+                                    receiver = receiver,
+                                    request = requestSent
+                                )
+                            )
+                            if (requestsSent.size == requestsSentSnapshot.size())
+                                onFriendRequestsSentUpdate(requestsSent.toList())
+                        }
+                    }
+                }
+            },
+            onFriendRequestsReceivedSnapshotUpdate = { requestsReceivedSnapshot ->
+                val requestsReceived = mutableListOf<FriendRequestJoint>()
+                requestsReceivedSnapshot.forEach { requestReceivedSnapshot ->
+                    val requestRecieved = requestReceivedSnapshot.toObject(FriendRequest::class.java)
+                    observeUserJoint(requestRecieved.senderId) { sender ->
+                        observeUserJoint(requestRecieved.receiverId) { receiver ->
+                            requestsReceived.add(
+                                FriendRequestJoint(
+                                    sender = sender,
+                                    receiver = receiver,
+                                    request = requestRecieved
+                                )
+                            )
+                            if (requestsReceived.size == requestsReceivedSnapshot.size())
+                                onFriendRequestsSentUpdate(requestsReceived.toList())
+                        }
+                    }
+                }
+            }
+        )
     }
 }

@@ -62,7 +62,7 @@ abstract class ProfileViewModel(
 
 
     protected fun observeUser() {
-        appRepository.observeUser(accountService.currentUserId) {
+        appRepository.observeUserJoint(accountService.currentUserId) {
             viewModelScope.launch {
                 _user.value = it
             }

@@ -55,6 +55,7 @@ fun SocialScreen(
     drawerState: DrawerState,
     viewModel: SocialViewModel = hiltViewModel()
 ) {
+    val requestReceived by viewModel.friendRequestReceived.collectAsState()
     val user by viewModel.user.collectAsState()
     val searchExpanded by viewModel.searchExpanded.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -160,6 +161,15 @@ fun SocialScreen(
             }
         }
     ) { innerPadding ->
-        Text("Social", modifier = Modifier.padding(innerPadding))
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            requestReceived.forEach {
+                ListItem(
+                    headlineContent = { Text(it.sender.name) },
+                    supportingContent = { Text("Friend Request") }
+                )
+            }
+        }
     }
 }

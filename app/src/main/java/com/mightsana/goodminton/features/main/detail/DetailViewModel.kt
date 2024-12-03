@@ -4,11 +4,10 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
-import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipantUI
-import com.mightsana.goodminton.features.main.model.Match
+import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
@@ -29,12 +28,12 @@ class DetailViewModel @Inject constructor(
     private val _user = MutableStateFlow(MyUser())
     val user = _user.asStateFlow()
 
-    private val _matches = MutableStateFlow<List<Match>>(emptyList())
-    val matches = _matches.asStateFlow()
+    private val _matchesJoint = MutableStateFlow<List<MatchJoint>>(emptyList())
+    val matchesJoint = _matchesJoint.asStateFlow()
 
     private fun observeUser() {
         viewModelScope.launch {
-            appRepository.observeUser(accountService.currentUserId) {
+            appRepository.observeUserJoint(accountService.currentUserId) {
                 _user.value = it
             }
         }
@@ -64,37 +63,20 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    private fun observeLeagueParticipantsUI(leagueId: String) {
-        appRepository.observeLeagueParticipants(leagueId) { participantsIds ->
-            viewModelScope.launch {
-                val users = appRepository.getUsersByIds(participantsIds.map { it.userId })
-                val stats = appRepository.getParticipantStatsByParticipantIds(participantsIds.map { it.userId })
-                val participantsUI = participantsIds.map { participant ->
-                    val user = users.find { it.uid == participant.userId }
-                    val stat = stats.find { it.userId == participant.userId }
-                    user?.let { usr ->
-                        stat?.let { stt ->
-                            LeagueParticipantUI(participant, usr, stt)
-                        }
-                    }
-                }
-                _leagueParticipantsUI.value = participantsUI.filterNotNull()
-            }
+    private fun observeMatchesJoint(leagueId: String) {
+        Log.d("DetailViewModel", "observeMatchesJoint: $leagueId")
+        appRepository.observeMatchesJoint(leagueId) {
+            _matchesJoint.value = it
         }
     }
-
-
-    private fun observeMatches(leagueId: String) {
-        appRepository.observeMatches(leagueId) {
-            _matches.value = it
-        }
-    }
-    fun observeLeague(leagueId: String) {
-//        observeLeagueInfo(leagueId)
+    fun observeLeague(
+        leagueId: String,
+        onSuccess: () -> Unit = {}
+    ) {
         observeLeagueJoint(leagueId)
         observeLeagueParticipantsJoint(leagueId)
-//        observeLeagueParticipantsUI(leagueId)
-        observeMatches(leagueId)
+        observeMatchesJoint(leagueId)
+        onSuccess()
     }
 
     fun onSelectItem(index: Int) {

@@ -1,13 +1,17 @@
 package com.mightsana.goodminton.model.repository
 
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.Match
+import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
+import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.friends.Friend
 import com.mightsana.goodminton.model.repository.users.MyUser
 
@@ -23,7 +27,10 @@ interface AppRepository {
 
     // Retrieve User Data
     suspend fun getUsersByIds(ids: List<String>): List<MyUser>
-    fun observeUser(userId: String, onUserUpdate: (MyUser) -> Unit)
+    fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot) -> Unit)
+    fun observeUserJoint(userId: String, onUserUpdate: (MyUser) -> Unit)
+    fun observeUsersSnapshot(userIds: List<String>, onUsersUpdate: (QuerySnapshot) -> Unit)
+    fun observeUsersJoint(userIds: List<String>, onUsersUpdate: (List<MyUser>) -> Unit)
 
     // Create League
     suspend fun addLeagueParticipant(participant: LeagueParticipant)
@@ -35,7 +42,7 @@ interface AppRepository {
     suspend fun getPublicLeagueIds(): List<String>
     suspend fun getLeagueByIds(ids: List<String>): List<League>
     suspend fun getUserAndPublicLeagues(userId: String): List<League>
-    fun observeLeague(leagueId: String, onLeagueUpdate: (League) -> Unit)
+    fun observeLeagueSnapshot(leagueId: String, onLeagueSnapshotUpdate: (DocumentSnapshot) -> Unit)
     fun observeLeagueJoint(leagueId: String, onLeagueUpdate: (LeagueJoint) -> Unit)
 
     // Edit League Data
@@ -48,7 +55,7 @@ interface AppRepository {
     suspend fun deleteLeague(leagueId: String)
 
     // Retrieve League Participant Data
-    fun observeLeagueParticipants(leagueId: String, onParticipantsUpdate: (List<LeagueParticipant>) -> Unit)
+    fun observeLeagueParticipantsSnapshot(leagueId: String, onParticipantsSnapshotUpdate: (QuerySnapshot) -> Unit)
     fun observeLeagueParticipantsJoint(leagueId: String, onParticipantsUpdate: (List<LeagueParticipantJoint>) -> Unit)
 
     // Edit League Participant Data
@@ -58,7 +65,8 @@ interface AppRepository {
     suspend fun getParticipantStatsByParticipantIds(ids: List<String>): List<ParticipantStats>
 
     // Retrieve Matches Data
-    fun observeMatches(leagueId: String, onMatchesUpdate: (List<Match>) -> Unit)
+    fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot) -> Unit)
+    fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit)
 
     // Retrieve Friends Data
     fun observeFriends(userId: String, onFriendsUpdate: (List<Friend>) -> Unit)
@@ -68,5 +76,15 @@ interface AppRepository {
         userId: String,
         onFriendRequestsUpdate: (List<FriendRequest>) -> Unit,
         onFriendRequestsReceivedUpdate: (List<FriendRequest>) -> Unit
+    )
+    fun observeFriendRequestsSnapshot(
+        userId: String,
+        onFriendRequestsSentSnapshotUpdate: (QuerySnapshot) -> Unit,
+        onFriendRequestsReceivedSnapshotUpdate: (QuerySnapshot) -> Unit
+    )
+    fun observeFriendRequestsJoint(
+        userId: String,
+        onFriendRequestsSentUpdate: (List<FriendRequestJoint>) -> Unit,
+        onFriendRequestsReceivedUpdate: (List<FriendRequestJoint>) -> Unit
     )
 }

@@ -14,6 +14,17 @@ fun NavHostController.navigateAndPopUp(
     }
 }
 
+fun NavHostController.navigateAndPopAll(
+    destination: String
+) {
+    navigate(destination) {
+        launchSingleTop = true
+        popUpTo(graph.startDestinationId) {
+            inclusive = true
+        }
+        }
+}
+
 @Suppress("unused")
 fun NavHostController.navigateSingleTop(
     destination: String

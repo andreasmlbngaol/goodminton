@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.model.repository.AppRepository
+import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +28,26 @@ class SocialViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
+    private val _friendRequestReceived = MutableStateFlow(listOf<FriendRequestJoint>())
+    val friendRequestReceived = _friendRequestReceived.asStateFlow()
+
+    private val _friendRequestSent = MutableStateFlow(listOf<FriendRequestJoint>())
+    val friendRequestSent = _friendRequestSent.asStateFlow()
+
+    private fun observeFriendRequestReceived() {
+        viewModelScope.launch {
+            appRepository.observeFriendRequestsJoint(
+                userId = accountService.currentUserId,
+                onFriendRequestsSentUpdate = {
+                    _friendRequestSent.value = it
+                },
+                onFriendRequestsReceivedUpdate = {
+                    _friendRequestReceived.value = it
+                }
+            )
+        }
+    }
+
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
     }
@@ -46,7 +67,7 @@ class SocialViewModel @Inject constructor(
 
     private fun observeUser() {
         viewModelScope.launch {
-            appRepository.observeUser(accountService.currentUserId) {
+            appRepository.observeUserJoint(accountService.currentUserId) {
                 _user.value = it
             }
         }

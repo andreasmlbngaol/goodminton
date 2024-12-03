@@ -173,7 +173,7 @@ class HomeViewModel @Inject constructor(
 
     private fun observeUser() {
         viewModelScope.launch {
-            appRepository.observeUser(accountService.currentUserId) {
+            appRepository.observeUserJoint(accountService.currentUserId) {
                 _user.value = it
             }
         }

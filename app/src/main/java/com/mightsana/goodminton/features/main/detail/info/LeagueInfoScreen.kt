@@ -41,7 +41,7 @@ fun LeagueInfoScreen(
     val participantJoint by viewModel.leagueParticipantsJoint.collectAsState()
     val currentUserRole = participantJoint.find { it.user.uid == uid }?.role
     val leagueJoint by viewModel.leagueJoint.collectAsState()
-    val matches by viewModel.matches.collectAsState()
+    val matchesJoint by viewModel.matchesJoint.collectAsState()
     val clipboardManager = LocalClipboardManager.current
     val changeNameDialogVisible by viewModel.changeNameDialogVisible.collectAsState()
     val changeMatchPointsDialogVisible by viewModel.changeMatchPointsDialogVisible.collectAsState()
@@ -77,7 +77,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Discipline",
             value = if(leagueJoint.double) "Double" else "Single",
-            icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
+            icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Flip,
@@ -92,7 +92,7 @@ fun LeagueInfoScreen(
             InfoItem(
                 title = "Fixed Double",
                 value = if(leagueJoint.fixedDouble!!) "Yes" else "No",
-                icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
+                icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
                     {
                         MyIcon(
                             MyIcons.Flip,
@@ -109,7 +109,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Match Points",
             value = leagueJoint.matchPoints.toString(),
-            icon = if (currentUserRole == Role.Creator && matches.isEmpty()) {
+            icon = if (currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Edit,
@@ -125,7 +125,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Deuce",
             value = if(leagueJoint.deuceEnabled) "Yes" else "No",
-            icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
+            icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Flip,
@@ -139,7 +139,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Visibility",
             value = if(leagueJoint.private) "Private" else "Public",
-            icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
+            icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Flip,
