@@ -43,6 +43,7 @@ import com.mightsana.goodminton.features.main.home.HomeScreen
 import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.features.main.settings.SettingsScreen
 import com.mightsana.goodminton.features.main.social.SocialScreen
+import com.mightsana.goodminton.features.profile.other_profile.OtherProfileScreen
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
@@ -93,7 +94,13 @@ fun MainContainer(
                 iconUnselected = Icons.Outlined.Notifications,
                 label = NOTIFICATIONS,
                 route = NOTIFICATIONS,
-                badgeCount = viewModel.friendRequestReceived.collectAsState().value.size
+                badgeCount = viewModel.friendRequestReceived.collectAsState().value.size,
+                content = {
+                    OtherProfileScreen(
+                        uid = "VIFCqBAFYYdc9EXKRc1K4HLHdsz1",
+                        navController = appNavController
+                    )
+                }
             )
         ),
 

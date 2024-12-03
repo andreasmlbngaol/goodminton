@@ -43,7 +43,7 @@ class OtherProfileViewModel @Inject constructor(
 
     fun observeOther(uid: String) {
         observeUser(accountService.currentUserId)
-        observeUser(uid)
+        observeOtherUser(uid)
         observeFriendsJoint(uid)
         appLoaded()
     }
