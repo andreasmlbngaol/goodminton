@@ -4,9 +4,9 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.FirebaseNetworkException
-import com.mightsana.goodminton.EMAIL_VERIFICATION
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.REGISTER
+import com.mightsana.goodminton.features.auth.model.EmailVerification
+import com.mightsana.goodminton.features.auth.model.Register
 import com.mightsana.goodminton.features.auth.viewmodel.AuthViewModel
 import com.mightsana.goodminton.features.auth.viewmodel.FormValidationResult
 import com.mightsana.goodminton.model.ext.clip
@@ -49,7 +49,7 @@ class SignInViewModel @Inject constructor(
     }
 
     fun onSignInWithEmailAndPassword(
-        onSuccess: (String?) -> Unit
+        onSuccess: (Any?) -> Unit
     ) {
         viewModelScope.launch {
             try {
@@ -62,9 +62,9 @@ class SignInViewModel @Inject constructor(
                 )
 
                 if (!accountService.isEmailVerified())
-                    onSuccess(EMAIL_VERIFICATION)
+                    onSuccess(EmailVerification)
                 else if (!appRepository.isUserRegistered(accountService.currentUserId))
-                    onSuccess(REGISTER)
+                    onSuccess(Register)
                 else
                     onSuccess(null)
             } catch (e: FirebaseNetworkException) {

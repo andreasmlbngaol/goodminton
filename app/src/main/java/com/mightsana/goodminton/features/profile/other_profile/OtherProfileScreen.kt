@@ -1,5 +1,6 @@
 package com.mightsana.goodminton.features.profile.other_profile
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -75,7 +76,15 @@ fun OtherProfileScreen(
     val otherUser by viewModel.otherUser.collectAsState()
     val friendsJoint by viewModel.friendsJoint.collectAsState()
     val currentUser by viewModel.user.collectAsState()
+    val friendRequestsReceived by viewModel.friendRequestReceived.collectAsState()
+    val friendRequestsSent by viewModel.friendRequestSent.collectAsState()
+    val isProcessing by viewModel.isProcessing.collectAsState()
     val isFriend = friendsJoint.any { it.user.uid == currentUser.uid }
+    val isFriendRequested = friendRequestsSent.any {
+        Log.d("OtherProfileScreen", "isFriendRequested: ${it.receiver.uid} & ${otherUser.uid}")
+        it.receiver.uid == otherUser.uid
+    }
+    val isFriendRequestReceived = friendRequestsReceived.any { it.sender.uid == otherUser.uid }
 
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -114,7 +123,7 @@ fun OtherProfileScreen(
                     navigationIcon = {
                         IconButton(
                             onClick = {
-                                navController.popBackStack()
+                                navController.navigateUp()
                             }
                         ) { MyIcon(MyIcons.Back) }
                     },
@@ -198,6 +207,22 @@ fun OtherProfileScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Unfriend")
                         }
+                    } else if (isFriendRequestReceived) {
+
+                        Button(
+                            enabled = !isProcessing,
+                            onClick = {
+//                                viewModel.cancelFriendRequest()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            MyIcon(MyIcons.Cancel)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Cancel")
+                        }
+                    }
+                    Log.d("OtherProfileScreen", "isFriendRequestReceived: $isFriendRequestReceived")
+                    Log.d("OtherProfileScreen", "isFriendRequested: $isFriendRequested")
 //                    } else if (isFriendRequestReceived) {
 //                        Row(
 //                            modifier = Modifier.fillMaxWidth(),
@@ -248,7 +273,6 @@ fun OtherProfileScreen(
 //                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Request")
 //                        }
 //                    }
-                    }
                 }
                 item {
                     MyTextField(

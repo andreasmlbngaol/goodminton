@@ -27,9 +27,7 @@ fun SettingsScreen(
 ) {
     val isDynamicColorEnabled by viewModel.dynamicColorEnabled.collectAsState()
 
-    BackHandler {
-        onBack()
-    }
+    BackHandler { onBack() }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()

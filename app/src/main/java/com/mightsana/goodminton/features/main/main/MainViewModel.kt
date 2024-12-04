@@ -17,10 +17,10 @@ class MainViewModel @Inject constructor(
     application: Application
 ): MyViewModel(accountService, appRepository, application) {
 
-    private val _selectedItem = MutableStateFlow("Home")
+    private val _selectedItem: MutableStateFlow<Any> = MutableStateFlow(Home)
     val selectedItem = _selectedItem.asStateFlow()
 
-    fun onSelectItem(item: String) {
+    fun onSelectItem(item: Any) {
         _selectedItem.value = item
     }
 

@@ -1,14 +1,14 @@
 package com.mightsana.goodminton.features.main.settings
 
 import android.app.Application
-import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.mightsana.goodminton.MyViewModel
-import com.mightsana.goodminton.PREF_DYNAMIC_COLOR
-import com.mightsana.goodminton.PREF_NAME
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.service.AccountService
+import com.mightsana.goodminton.model.values.SharedPreference.PREF_DYNAMIC_COLOR
+import com.mightsana.goodminton.model.values.SharedPreference.PREF_NAME
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +20,7 @@ class SettingsViewModel @Inject constructor(
     appRepository: AppRepository,
     application: Application
 ): MyViewModel(accountService, appRepository, application) {
-    val sharedPreferences: SharedPreferences = application.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+    val sharedPreferences: SharedPreferences = application.getSharedPreferences(PREF_NAME, MODE_PRIVATE)
     private val currentDynamicColorEnabled = sharedPreferences.getBoolean(PREF_DYNAMIC_COLOR, false)
 
     private val _dynamicColorEnabled = MutableStateFlow(currentDynamicColorEnabled)

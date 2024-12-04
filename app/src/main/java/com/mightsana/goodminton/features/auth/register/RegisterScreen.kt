@@ -29,11 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.REGISTER
-import com.mightsana.goodminton.SIGN_IN
-import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.MyImage
@@ -41,8 +37,8 @@ import com.mightsana.goodminton.view.MyTextField
 
 @Composable
 fun RegisterScreen(
-    navController: NavHostController,
-    mainRoute: String,
+    onNavigateToSignIn: () -> Unit,
+    onRegister: () -> Unit,
     viewModel: RegisterViewModel = hiltViewModel()
 ) {
     val isFullNameError by viewModel.isFullNameError.collectAsState()
@@ -152,7 +148,7 @@ fun RegisterScreen(
                             onClick = {
                                 viewModel.validateRegisterForm {
                                     viewModel.register {
-                                        navController.navigateAndPopUp(mainRoute, REGISTER)
+                                        onRegister()
                                     }
                                 }
                             }
@@ -164,7 +160,7 @@ fun RegisterScreen(
                         TextButton(
                             onClick = {
                                 viewModel.onSignOut {
-                                    navController.navigateAndPopUp(SIGN_IN, REGISTER)
+                                    onNavigateToSignIn()
                                 }
                             }
                         ) { Text(stringResource(R.string.back_to_sign_in)) }

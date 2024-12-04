@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -38,24 +40,35 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.mightsana.goodminton.League
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.home.HomeScreen
-import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.features.main.settings.SettingsScreen
 import com.mightsana.goodminton.features.main.social.SocialScreen
-import com.mightsana.goodminton.features.profile.other_profile.OtherProfileScreen
+import com.mightsana.goodminton.features.profile.model.Profile
+import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.model.ext.navigateAndPopUp
+import com.mightsana.goodminton.model.ext.navigateSingleTop
 import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
+@Serializable object Home
 const val HOME = "Home"
+
+@Serializable object Notifications
 const val NOTIFICATIONS = "Notifications"
+
+@Serializable object Social
+const val SOCIAL = "Social"
+
+@Serializable object Settings
 const val SETTINGS = "Settings"
 
 @Composable
 fun MainContainer(
-    appNavController: NavHostController,
+    navController: NavHostController,
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val mainNavController = rememberNavController()
@@ -68,39 +81,21 @@ fun MainContainer(
                 iconSelected = Icons.Filled.Home,
                 iconUnselected = Icons.Outlined.Home,
                 label = HOME,
-                route = HOME,
-                content = {
-                    HomeScreen(
-                        drawerState = drawerState,
-                        appNavController = appNavController
-                    )
-                }
+                route = Home
             ),
             NavigationItem(
                 iconSelected = MyIcons.SocialSelected,
                 iconUnselected = MyIcons.SocialUnselected,
-                label = "Social",
-                route = "Social",
-                badgeCount = viewModel.friendRequestSent.collectAsState().value.size,
-                content = {
-                    SocialScreen(
-                        drawerState = drawerState,
-                        appNavController = appNavController
-                    )
-                }
+                label = SOCIAL,
+                route = Social,
+                badgeCount = viewModel.friendRequestSent.collectAsState().value.size
             ),
             NavigationItem(
                 iconSelected = Icons.Filled.Notifications,
                 iconUnselected = Icons.Outlined.Notifications,
                 label = NOTIFICATIONS,
-                route = NOTIFICATIONS,
-                badgeCount = viewModel.friendRequestReceived.collectAsState().value.size,
-                content = {
-                    OtherProfileScreen(
-                        uid = "VIFCqBAFYYdc9EXKRc1K4HLHdsz1",
-                        navController = appNavController
-                    )
-                }
+                route = Notifications,
+                badgeCount = viewModel.friendRequestReceived.collectAsState().value.size
             )
         ),
 
@@ -109,15 +104,7 @@ fun MainContainer(
                 iconSelected = Icons.Filled.Settings,
                 iconUnselected = Icons.Outlined.Settings,
                 label = SETTINGS,
-                route = SETTINGS,
-                content = {
-                    SettingsScreen(
-                        onBack = {
-                            viewModel.onSelectItem(HOME)
-                            mainNavController.navigateAndPopUp(HOME, SETTINGS)
-                        }
-                    )
-                }
+                route = Settings
             )
         )
     )
@@ -154,6 +141,7 @@ fun MainContainer(
                         group.forEach{ item ->
                             val selected = selectedNavigationItem == item.route
                             NavigationDrawerItem(
+                                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
                                 badge = item.badgeCount?.let {
                                     {
                                         Text(item.badgeCount.toString())
@@ -170,7 +158,10 @@ fun MainContainer(
                                 onClick = {
                                     scope.launch {
                                         drawerState.close()
+                                        val currentRoute = selectedNavigationItem
                                         viewModel.onSelectItem(item.route)
+                                        if (item.route != currentRoute)
+                                            mainNavController.navigateAndPopUp(item.route, currentRoute)
                                     }
                                 }
                             )
@@ -183,14 +174,41 @@ fun MainContainer(
     ) {
         NavHost(
             navController = mainNavController,
-            startDestination = selectedNavigationItem
+            startDestination = Home
         ) {
-            navigationGroups.forEach { group ->
-                group.forEach { item ->
-                    composable(item.route) {
-                        item.content()
-                    }
-                }
+            fun backToHome() {
+                viewModel.onSelectItem(Home)
+                mainNavController.navigateAndPopUp(Home, Settings)
+            }
+
+            composable<Home> {
+                HomeScreen(
+                    onNavigateToProfile = { navController.navigateSingleTop(Profile()) },
+                    onNavigateToLeague = { navController.navigateSingleTop(League(it)) },
+                    onOpenDrawer = { drawerState.open() },
+                )
+            }
+
+            composable<Social> {
+                SocialScreen(
+                    onBack = { backToHome() },
+                    onNavigateToProfile = { navController.navigateSingleTop(Profile()) },
+                    onNavigateToOtherProfile = { navController.navigateSingleTop(Profile(it))},
+                    onOpenDrawer = { drawerState.open() }
+                )
+            }
+
+            composable<Notifications> {
+//                OtherProfileScreen(
+//                    uid = "VIFCqBAFYYdc9EXKRc1K4HLHdsz1",
+//                    navController = navController
+//                )
+            }
+
+            composable<Settings> {
+                SettingsScreen(
+                    onBack = { backToHome() }
+                )
             }
         }
     }

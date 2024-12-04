@@ -21,24 +21,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import com.mightsana.goodminton.EMAIL_VERIFICATION
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.REGISTER
-import com.mightsana.goodminton.SIGN_IN
 import com.mightsana.goodminton.model.ext.censoredEmail
-import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
 
 @Composable
 fun EmailVerificationScreen(
-    navController: NavHostController,
+    onSignOut: () -> Unit,
+    onEmailVerified: () -> Unit,
     viewModel: EmailVerificationViewModel = hiltViewModel()
 ) {
     viewModel.checkEmailVerification {
-        navController.navigateAndPopUp(REGISTER, EMAIL_VERIFICATION)
+        onEmailVerified()
     }
 
     Scaffold { innerPadding ->
@@ -76,9 +72,7 @@ fun EmailVerificationScreen(
 
                     TextButton(
                         onClick = {
-                            viewModel.onSignOut {
-                                navController.navigateAndPopUp(SIGN_IN, EMAIL_VERIFICATION)
-                            }
+                            viewModel.onSignOut { onSignOut() }
                         }
                     ) {
                         Text(text = stringResource(R.string.back_to_sign_in))

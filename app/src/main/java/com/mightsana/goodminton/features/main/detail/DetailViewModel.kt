@@ -67,16 +67,19 @@ class DetailViewModel @Inject constructor(
         Log.d("DetailViewModel", "observeMatchesJoint: $leagueId")
         appRepository.observeMatchesJoint(leagueId) {
             _matchesJoint.value = it
+            appLoaded()
         }
     }
     fun observeLeague(
         leagueId: String,
         onSuccess: () -> Unit = {}
     ) {
-        observeLeagueJoint(leagueId)
-        observeLeagueParticipantsJoint(leagueId)
-        observeMatchesJoint(leagueId)
-        onSuccess()
+        viewModelScope.launch {
+            observeLeagueJoint(leagueId)
+            observeLeagueParticipantsJoint(leagueId)
+            observeMatchesJoint(leagueId)
+            onSuccess()
+        }
     }
 
     fun onSelectItem(index: Int) {
@@ -84,6 +87,7 @@ class DetailViewModel @Inject constructor(
     }
 
     init {
+        appLoading()
         observeUser()
     }
 

@@ -1,35 +1,28 @@
 package com.mightsana.goodminton.features.auth.model
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import com.mightsana.goodminton.AUTH_GRAPH
-import com.mightsana.goodminton.EMAIL_VERIFICATION
-import com.mightsana.goodminton.REGISTER
-import com.mightsana.goodminton.SIGN_IN
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.service.AccountService
 
 @Composable
 fun AuthCheck(
-    mainRoute: String,
+    mainRoute: Any,
     accountService: AccountService,
     appRepository: AppRepository,
-    onAuthenticationResult: (String, String) -> Unit
+    onAuthenticationResult: (Any, Any) -> Unit
 ) {
     LaunchedEffect(Unit) {
         try {
             accountService.reloadUser()
-            Log.d("AuthCheck", "User logged in: ${accountService.currentUser}")
-            // userLoggedIn
             if (accountService.currentUser == null) {
-                onAuthenticationResult(AUTH_GRAPH, SIGN_IN)
+                onAuthenticationResult(AuthGraph, SignIn)
             } else if (!accountService.isEmailVerified()) {
-                onAuthenticationResult(AUTH_GRAPH, EMAIL_VERIFICATION)
+                onAuthenticationResult(AuthGraph, EmailVerification)
             } else if(!appRepository.isUserRegistered(accountService.currentUserId)) {
-                onAuthenticationResult(AUTH_GRAPH, REGISTER)
+                onAuthenticationResult(AuthGraph, Register)
             } else {
-                onAuthenticationResult(mainRoute, REGISTER)
+                onAuthenticationResult(mainRoute, Register)
             }
         } catch (e: Exception) {
             e.printStackTrace()

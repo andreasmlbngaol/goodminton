@@ -3,8 +3,8 @@ package com.mightsana.goodminton.model.ext
 import androidx.navigation.NavHostController
 
 fun NavHostController.navigateAndPopUp(
-    destination: String,
-    current: String
+    destination: Any,
+    current: Any
 ) {
     navigate(destination) {
         launchSingleTop = true
@@ -14,20 +14,19 @@ fun NavHostController.navigateAndPopUp(
     }
 }
 
-fun NavHostController.navigateAndPopAll(
-    destination: String
+fun NavHostController.navigateAndClearBackStack(
+    destination: Any
 ) {
     navigate(destination) {
-        launchSingleTop = true
         popUpTo(graph.startDestinationId) {
             inclusive = true
         }
-        }
+    }
 }
 
 @Suppress("unused")
 fun NavHostController.navigateSingleTop(
-    destination: String
+    destination: Any
 ) {
     navigate(destination) {
         launchSingleTop = true

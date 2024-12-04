@@ -19,6 +19,14 @@ class SocialViewModel @Inject constructor(
     appRepository: AppRepository,
     application: Application
 ): MyViewModel(accountService, appRepository, application) {
+    private val _allUsers = MutableStateFlow(listOf<MyUser>())
+    val allUsers = _allUsers.asStateFlow()
+
+    private fun getAllUsers() {
+        viewModelScope.launch {
+            _allUsers.value = appRepository.getAllUsers()
+        }
+    }
     private val _user = MutableStateFlow(MyUser())
     val user = _user.asStateFlow()
 
@@ -74,6 +82,7 @@ class SocialViewModel @Inject constructor(
     }
 
     init {
+        getAllUsers()
         observeUser()
     }
 }

@@ -31,13 +31,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import com.mightsana.goodminton.EMAIL_VERIFICATION
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.SIGN_IN
-import com.mightsana.goodminton.SIGN_UP
 import com.mightsana.goodminton.features.auth.view.GoogleAuthButton
-import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.Loader
@@ -49,8 +44,9 @@ import com.mightsana.goodminton.view.SurfaceVariantTextHorizontalDivider
 
 @Composable
 fun SignUpScreen(
-    navController: NavHostController,
-    mainRoute: String,
+    onSignUpWithEmailAndPassword: () -> Unit,
+    onSignInWithGoogle: (Any?) -> Unit,
+    onNavigateToSignIn: () -> Unit,
     defaultWebClientId: String,
     viewModel: SignUpViewModel = hiltViewModel()
 ) {
@@ -194,7 +190,7 @@ fun SignUpScreen(
                                 onClick = {
                                     viewModel.validateSignUpForm {
                                         viewModel.onSignUpWithEmailAndPassword {
-                                            navController.navigateAndPopUp(EMAIL_VERIFICATION, SIGN_UP)
+                                            onSignUpWithEmailAndPassword()
                                         }
                                     }
                                 }
@@ -211,20 +207,14 @@ fun SignUpScreen(
                                 onGetCredentialResponse = { credential ->
                                     viewModel.appLoading()
                                     viewModel.onSignInWithGoogle(credential) { destination ->
-                                        navController.navigateAndPopUp(
-                                            destination ?: mainRoute,
-                                            SIGN_IN
-                                        )
+                                        onSignInWithGoogle(destination)
                                     }
                                 }
                             )
 
-                            TextButton(
-                                onClick = {
-                                    navController.navigateAndPopUp(SIGN_IN, SIGN_UP)
-                                }
-                            ) { Text(stringResource(R.string.already_have_account)) }
-
+                            TextButton(onClick = onNavigateToSignIn) {
+                                Text(stringResource(R.string.already_have_account))
+                            }
                         }
                     }
                 }

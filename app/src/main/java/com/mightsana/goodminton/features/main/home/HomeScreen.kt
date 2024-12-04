@@ -24,7 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -60,19 +59,14 @@ import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.mightsana.goodminton.LEAGUE_DETAIL
-import com.mightsana.goodminton.MAIN
-import com.mightsana.goodminton.SIGN_IN
+import com.mightsana.goodminton.League
 import com.mightsana.goodminton.features.profile.model.PROFILE
-import com.mightsana.goodminton.model.ext.navigateAndPopUp
+import com.mightsana.goodminton.features.profile.model.Profile
 import com.mightsana.goodminton.model.ext.navigateSingleTop
-import com.mightsana.goodminton.model.ext.onGesture
-import com.mightsana.goodminton.model.ext.onLongPress
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDate
 import com.mightsana.goodminton.view.ErrorSupportingText
-import com.mightsana.goodminton.view.MyIcon
-import com.mightsana.goodminton.view.MyIcons
+import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyImage
 import com.mightsana.goodminton.view.MyTextField
 import kotlinx.coroutines.launch
@@ -80,13 +74,11 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    drawerState: DrawerState,
-    appNavController: NavHostController,
+    onNavigateToProfile: () -> Unit,
+    onNavigateToLeague: (String) -> Unit, // League ID
+    onOpenDrawer: suspend () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.loadLeagues()
-    }
 
     val user by viewModel.user.collectAsState()
     val leagues by viewModel.leagues.collectAsState()
@@ -101,151 +93,151 @@ fun HomeScreen(
 
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                SearchBar(
+    Loader(viewModel.isLoading.collectAsState().value) {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize(),
+            topBar = {
+                Box(
                     modifier = Modifier
-                        .widthIn(min = 450.dp)
-                        .fillMaxWidth(),
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            query = searchQuery,
-                            onQueryChange = { viewModel.onSearchQueryChange(it) },
-                            onSearch = { viewModel.collapseSearch() },
-                            expanded = searchExpanded,
-                            onExpandedChange = { viewModel.onSearchExpandedChange(it) },
-                            placeholder = { Text("Search...") },
-                            leadingIcon = {
-                                AnimatedContent(
-                                    searchExpanded,
-                                    label = ""
-                                ) {
-                                    if (!it)
-                                        Icon(
-                                            Icons.Default.Menu,
-                                            contentDescription = null,
-                                            modifier = Modifier.onTap {
-                                                scope.launch {
-                                                    drawerState.open()
-                                                }
-                                            }
-                                        )
-                                    else
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = null,
-                                            modifier = Modifier.onTap {
-                                                viewModel.collapseSearch()
-                                            }
-                                        )
-                                }
-                            },
-                            trailingIcon = if (!searchExpanded) {
-                                {
-                                    IconButton(
-                                        { appNavController.navigate(PROFILE) }
-                                    ) {
-                                        MyImage(
-                                            user.profilePhotoUrl,
-                                            modifier = Modifier
-                                                .clip(CircleShape)
-                                        )
-                                    }
-                                }
-                            } else null,
-                        )
-                    },
-                    expanded = searchExpanded,
-                    onExpandedChange = { viewModel.onSearchExpandedChange(it) },
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalPadding),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(Modifier.verticalScroll(rememberScrollState())) {
-                        if (searchQuery.isNotEmpty()) {
-                            leagues.filter {it.name.contains(searchQuery, true)}.forEach {
-                                ListItem(
-                                    headlineContent = { Text(it.name) },
-                                    supportingContent = { Text(it.createdById) },
-                                    leadingContent = {
-                                        Icon(
-                                            Icons.Filled.Star,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                    modifier = Modifier
-                                        .clickable {
-                                            viewModel.collapseSearch()
-                                            appNavController.navigate("$LEAGUE_DETAIL/${it.id}")
+                    SearchBar(
+                        modifier = Modifier
+                            .widthIn(min = 450.dp)
+                            .fillMaxWidth(),
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                query = searchQuery,
+                                onQueryChange = { viewModel.onSearchQueryChange(it) },
+                                onSearch = { viewModel.collapseSearch() },
+                                expanded = searchExpanded,
+                                onExpandedChange = { viewModel.onSearchExpandedChange(it) },
+                                placeholder = { Text("Search...") },
+                                leadingIcon = {
+                                    AnimatedContent(
+                                        searchExpanded,
+                                        label = ""
+                                    ) {
+                                        if (!it)
+                                            Icon(
+                                                Icons.Default.Menu,
+                                                contentDescription = null,
+                                                modifier = Modifier.onTap {
+                                                    scope.launch {
+                                                        onOpenDrawer()
+                                                    }
+                                                }
+                                            )
+                                        else
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = null,
+                                                modifier = Modifier.onTap {
+                                                    viewModel.collapseSearch()
+                                                }
+                                            )
+                                    }
+                                },
+                                trailingIcon = if (!searchExpanded) {
+                                    {
+                                        IconButton(onNavigateToProfile) {
+                                            MyImage(
+                                                user.profilePhotoUrl,
+                                                modifier = Modifier
+                                                    .clip(CircleShape)
+                                            )
                                         }
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                                )
+                                    }
+                                } else null,
+                            )
+                        },
+                        expanded = searchExpanded,
+                        onExpandedChange = { viewModel.onSearchExpandedChange(it) },
+                    ) {
+                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                            if (searchQuery.isNotEmpty()) {
+                                leagues.filter {it.name.contains(searchQuery, true)}.forEach {
+                                    ListItem(
+                                        headlineContent = { Text(it.name) },
+                                        supportingContent = { Text(it.createdById) },
+                                        leadingContent = {
+                                            Icon(
+                                                Icons.Filled.Star,
+                                                contentDescription = null
+                                            )
+                                        },
+                                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                        modifier = Modifier
+                                            .clickable {
+                                                viewModel.collapseSearch()
+                                                onNavigateToLeague(it.id)
+                                            }
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-        },
-        floatingActionButton = {
-            AnimatedVisibility(!searchExpanded) {
-                ExtendedFloatingActionButton(
-                    text = { Text("New League") },
-                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                    onClick = {
-                        scope.launch {
-                            sheetState.show()
-                            viewModel.onBottomSheetExpandedChange(true)
+            },
+            floatingActionButton = {
+                AnimatedVisibility(!searchExpanded) {
+                    ExtendedFloatingActionButton(
+                        text = { Text("New League") },
+                        icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                        onClick = {
+                            scope.launch {
+                                sheetState.show()
+                                viewModel.onBottomSheetExpandedChange(true)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
-        }
-    ) { innerPadding ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(350.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(top = 16.dp)
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(leagues.sortedByDescending { it.createdAt }) {
-                Card(
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.clickable {
-                        appNavController.navigateSingleTop("$LEAGUE_DETAIL/${it.id}")
-                    }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
+        ) { innerPadding ->
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(350.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(top = 16.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(leagues.sortedByDescending { it.createdAt }) {
+                    Card(
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.clickable {
+                            onNavigateToLeague(it.id)
+                        }
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                it.name,
-                                style = MaterialTheme.typography.titleLarge,
-                                maxLines = 1,
-                                overflow = Ellipsis
-                            )
-                            Text(
-                                it.createdAt.showDate(),
-                                maxLines = 1,
-                                overflow = Ellipsis
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    it.name,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    maxLines = 1,
+                                    overflow = Ellipsis
+                                )
+                                Text(
+                                    it.createdAt.showDate(),
+                                    maxLines = 1,
+                                    overflow = Ellipsis
+                                )
+                            }
                         }
                     }
                 }

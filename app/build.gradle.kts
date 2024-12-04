@@ -5,6 +5,8 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.google.gms.google.services)
+//    kotlin("plugin.serialization") version "2.0.21"
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -92,6 +94,10 @@ dependencies {
 
     // Rebirth App
     implementation (libs.process.phoenix)
+
+    // JSON Serialization
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.navigation.compose)
 }
 
 kapt {

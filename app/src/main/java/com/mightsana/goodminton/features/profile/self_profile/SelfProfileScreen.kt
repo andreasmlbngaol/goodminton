@@ -28,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,8 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.SIGN_IN
-import com.mightsana.goodminton.model.ext.navigateAndPopAll
+import com.mightsana.goodminton.features.auth.model.SignIn
+import com.mightsana.goodminton.model.ext.navigateAndClearBackStack
 import com.mightsana.goodminton.model.ext.onLongPress
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.view.Loader
@@ -119,7 +118,7 @@ fun SelfProfileScreen(
                         IconButton(
                             onClick = {
                                 viewModel.onSignOut {
-                                    navController.navigateAndPopAll(SIGN_IN)
+                                    navController.navigateAndClearBackStack(SignIn)
                                 }
                             }
                         ) { MyIcon(MyIcons.Logout) }

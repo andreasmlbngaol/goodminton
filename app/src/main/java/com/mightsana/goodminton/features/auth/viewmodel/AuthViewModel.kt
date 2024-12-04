@@ -9,7 +9,7 @@ import androidx.credentials.CustomCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.mightsana.goodminton.MyViewModel
-import com.mightsana.goodminton.REGISTER
+import com.mightsana.goodminton.features.auth.model.Register
 import com.mightsana.goodminton.model.ext.clip
 import com.mightsana.goodminton.model.ext.noSpace
 import com.mightsana.goodminton.model.ext.toast
@@ -122,7 +122,7 @@ abstract class AuthViewModel(
 
     fun onSignInWithGoogle(
         credential: Credential,
-        onSuccess: (String?) -> Unit
+        onSuccess: (Any?) -> Unit
     ) {
         viewModelScope.launch {
             try {
@@ -143,7 +143,7 @@ abstract class AuthViewModel(
                     }
                 }
 
-                onSuccess(if(!appRepository.isUserRegistered(accountService.currentUserId)) REGISTER else null)
+                onSuccess(if(!appRepository.isUserRegistered(accountService.currentUserId)) Register else null)
 
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "onSignInWithGoogle: $e")

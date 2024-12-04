@@ -66,6 +66,15 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .isEmpty
 
     // Retrive User Data
+    override suspend fun getAllUsers(): List<MyUser> =
+        try {
+            usersCollection
+                .get()
+                .await()
+                .toObjects(MyUser::class.java)
+        } catch (_: Exception) {
+            emptyList()
+        }
     override suspend fun getUsersByIds(ids: List<String>): List<MyUser> =
         coroutineScope {
             val userDeferreds = ids.chunked(batchMaxSize).map { batch ->
@@ -413,7 +422,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         }
 
     // Retrieve Matches Data
-    override fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot) -> Unit) {
+    override fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot?) -> Unit) {
         matchesCollection
             .whereEqualTo("leagueId", leagueId)
             .addSnapshotListener { snapshot, exception ->
@@ -423,16 +432,17 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 if (snapshot != null && !snapshot.isEmpty)
                     onMatchesSnapshotUpdate(snapshot)
                 else
+                    onMatchesSnapshotUpdate(snapshot)
                     Log.d("AppRepositoryImpl", "Matches snapshot is null or does not exist")
             }
     }
     override fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit) {
         observeMatchesSnapshot(leagueId) { matchesSnapshot ->
             CoroutineScope(Dispatchers.IO).launch {
-                val matches = matchesSnapshot.map { it.toObject(Match::class.java) }
+                val matches = matchesSnapshot?.map { it.toObject(Match::class.java) }
                 val leagueJoint = getLeagueJoint(leagueId)
 
-                val matchesJoint = matches.map { match ->
+                val matchesJoint = matches?.map { match ->
                     val team1Users = getUsersByIds(match.team1Ids)
                     val team2Users = getUsersByIds(match.team2Ids)
 
@@ -451,7 +461,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 }
 
                 launch(Dispatchers.Main) {
-                    onMatchesUpdate(matchesJoint)
+                    onMatchesUpdate(matchesJoint ?: emptyList())
                 }
             }
         }

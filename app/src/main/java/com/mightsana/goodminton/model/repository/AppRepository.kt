@@ -27,6 +27,7 @@ interface AppRepository {
     suspend fun isUsernameAvailable(username: String): Boolean
 
     // Retrieve User Data
+    suspend fun getAllUsers(): List<MyUser>
     suspend fun getUsersByIds(ids: List<String>): List<MyUser>
     suspend fun getUser(userId: String): MyUser
     fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot) -> Unit)
@@ -69,7 +70,7 @@ interface AppRepository {
     suspend fun getParticipantStatsByParticipantIds(ids: List<String>): List<ParticipantStats>
 
     // Retrieve Matches Data
-    fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot) -> Unit)
+    fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot?) -> Unit)
     fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit)
 
     // Retrieve Friends Data

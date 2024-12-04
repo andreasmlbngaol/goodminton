@@ -4,54 +4,94 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.mightsana.goodminton.AUTH_GRAPH
-import com.mightsana.goodminton.EMAIL_VERIFICATION
-import com.mightsana.goodminton.REGISTER
-import com.mightsana.goodminton.SIGN_IN
-import com.mightsana.goodminton.SIGN_UP
 import com.mightsana.goodminton.features.auth.email_verification.EmailVerificationScreen
 import com.mightsana.goodminton.features.auth.register.RegisterScreen
 import com.mightsana.goodminton.features.auth.sign_in.SignInScreen
 import com.mightsana.goodminton.features.auth.sign_up.SignUpScreen
+import com.mightsana.goodminton.model.ext.navigateAndClearBackStack
+import kotlinx.serialization.Serializable
 
-fun NavGraphBuilder.authGraph(
+@Serializable object AuthGraph
+@Serializable object SignIn
+@Serializable object SignUp
+@Serializable object EmailVerification
+@Serializable object Register
+
+fun NavGraphBuilder.authGraphTypeSafe(
     navController: NavHostController,
-    mainRoute: String,
+    mainRoute: Any,
     defaultWebClientId: String,
-    startDestination: String = SIGN_IN
 ) {
-    navigation(
-        route = AUTH_GRAPH,
-        startDestination = startDestination,
-    ) {
-        composable(SIGN_IN) {
+    navigation<AuthGraph>(startDestination = SignIn) {
+        composable<SignIn> {
             SignInScreen(
-                navController = navController,
-                mainRoute = mainRoute,
+                onCheckRegisterStatusAndNavigate = { navController.navigateAndClearBackStack(it ?: mainRoute) },
+                onNavigateToSignUp = { navController.navigateAndClearBackStack(SignUp) },
                 defaultWebClientId = defaultWebClientId
             )
         }
 
-        composable(SIGN_UP) {
+        composable<SignUp> {
             SignUpScreen(
-                navController = navController,
-                mainRoute = mainRoute,
+                onSignUpWithEmailAndPassword = { navController.navigateAndClearBackStack(EmailVerification) },
+                onSignInWithGoogle = { navController.navigateAndClearBackStack(it ?: mainRoute) },
+                onNavigateToSignIn = { navController.navigateAndClearBackStack(SignIn) },
                 defaultWebClientId = defaultWebClientId
             )
         }
 
-        composable(EMAIL_VERIFICATION) {
+        composable<EmailVerification> {
             EmailVerificationScreen(
-                navController = navController
+                onSignOut = { navController.navigateAndClearBackStack(SignIn) },
+                onEmailVerified = { navController.navigateAndClearBackStack(mainRoute) }
             )
         }
 
-        composable(REGISTER) {
+        composable<Register> {
             RegisterScreen(
-                navController = navController,
-                mainRoute = mainRoute
+                onNavigateToSignIn = { navController.navigateAndClearBackStack(SignIn) },
+                onRegister = { navController.navigateAndClearBackStack(mainRoute) }
             )
         }
     }
 
 }
+
+//fun NavGraphBuilder.authGraph(
+//    navController: NavHostController,
+//    mainRoute: String,
+//    defaultWebClientId: String,
+//    startDestination: String = SIGN_IN
+//) {
+//    navigation(
+//        route = AUTH_GRAPH,
+//        startDestination = startDestination,
+//    ) {
+//        composable(SIGN_IN) {
+//            SignInScreen(
+//                navController = navController,
+//                defaultWebClientId = defaultWebClientId
+//            )
+//        }
+//
+//        composable(SIGN_UP) {
+//            SignUpScreen(
+//                navController = navController,
+//                defaultWebClientId = defaultWebClientId
+//            )
+//        }
+//
+//        composable(EMAIL_VERIFICATION) {
+//            EmailVerificationScreen(
+//                navController = navController
+//            )
+//        }
+//
+//        composable(REGISTER) {
+//            RegisterScreen(
+//                navController = navController
+//            )
+//        }
+//    }
+//}
+

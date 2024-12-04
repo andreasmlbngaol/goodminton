@@ -31,25 +31,21 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.SIGN_IN
-import com.mightsana.goodminton.SIGN_UP
 import com.mightsana.goodminton.features.auth.view.GoogleAuthButton
-import com.mightsana.goodminton.model.ext.navigateAndPopUp
 import com.mightsana.goodminton.model.values.Size
+import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyIcon
-import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.MyIcons
-import com.mightsana.goodminton.view.MyTextField
 import com.mightsana.goodminton.view.MyImage
+import com.mightsana.goodminton.view.MyTextField
 import com.mightsana.goodminton.view.SurfaceVariantTextHorizontalDivider
 
 @Composable
 fun SignInScreen(
-    navController: NavHostController,
-    mainRoute: String,
+    onCheckRegisterStatusAndNavigate: (Any?) -> Unit,
+    onNavigateToSignUp: () -> Unit,
     defaultWebClientId: String,
     viewModel: SignInViewModel = hiltViewModel()
 ) {
@@ -156,10 +152,7 @@ fun SignInScreen(
                                 onClick = {
                                     viewModel.validateSignInForm {
                                         viewModel.onSignInWithEmailAndPassword { destination ->
-                                            navController.navigateAndPopUp(
-                                                destination ?: mainRoute,
-                                                SIGN_IN
-                                            )
+                                            onCheckRegisterStatusAndNavigate(destination)
                                         }
                                     }
                                 }
@@ -176,18 +169,13 @@ fun SignInScreen(
                                 onGetCredentialResponse = { credential ->
                                     viewModel.appLoading()
                                     viewModel.onSignInWithGoogle(credential) { destination ->
-                                        navController.navigateAndPopUp(
-                                            destination ?: mainRoute,
-                                            SIGN_IN
-                                        )
+                                        onCheckRegisterStatusAndNavigate(destination)
                                     }
                                 }
                             )
 
                             TextButton(
-                                onClick = {
-                                    navController.navigateAndPopUp(SIGN_UP, SIGN_IN)
-                                }
+                                onClick = onNavigateToSignUp
                             ) { Text(stringResource(R.string.dont_have_account)) }
 
                         }
