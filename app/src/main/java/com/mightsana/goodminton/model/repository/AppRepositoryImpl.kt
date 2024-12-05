@@ -52,6 +52,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .set(user)
             .await()
     }
+
     override suspend fun isUserRegistered(userId: String): Boolean =
         usersCollection
             .document(userId)
@@ -189,6 +190,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 .map { it.getString("leagueId")!! }
                 .filter {it.isNotEmpty()}
         } catch (e: Exception) {
+            e.printStackTrace()
             emptyList()
         }
     override suspend fun getLeague(leagueId: String): League =
@@ -221,6 +223,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 .map { it.getString("id")!! }
                 .filter { it.isNotEmpty() }
         } catch (e: Exception) {
+            e.printStackTrace()
             emptyList()
         }
     override suspend fun getLeagueByIds(ids: List<String>): List<League> =
@@ -609,9 +612,10 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                         observeUserJoint(requestSent.receiverId) { receiver ->
                             requestsSent.add(
                                 FriendRequestJoint(
+                                    id = requestSent.id,
                                     sender = sender,
                                     receiver = receiver,
-                                    request = requestSent
+                                    requestedAt = requestSent.requestedAt
                                 )
                             )
                             if (requestsSent.size == requestsSentSnapshot.size())
@@ -623,22 +627,42 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             onFriendRequestsReceivedSnapshotUpdate = { requestsReceivedSnapshot ->
                 val requestsReceived = mutableListOf<FriendRequestJoint>()
                 requestsReceivedSnapshot.forEach { requestReceivedSnapshot ->
-                    val requestRecieved = requestReceivedSnapshot.toObject(FriendRequest::class.java)
-                    observeUserJoint(requestRecieved.senderId) { sender ->
-                        observeUserJoint(requestRecieved.receiverId) { receiver ->
+                    val requestReceived = requestReceivedSnapshot.toObject(FriendRequest::class.java)
+                    observeUserJoint(requestReceived.senderId) { sender ->
+                        observeUserJoint(requestReceived.receiverId) { receiver ->
                             requestsReceived.add(
                                 FriendRequestJoint(
+                                    id = requestReceived.id,
                                     sender = sender,
                                     receiver = receiver,
-                                    request = requestRecieved
+                                    requestedAt = requestReceived.requestedAt
                                 )
                             )
                             if (requestsReceived.size == requestsReceivedSnapshot.size())
-                                onFriendRequestsSentUpdate(requestsReceived.toList())
+                                onFriendRequestsReceivedUpdate(requestsReceived.toList())
                         }
                     }
                 }
             }
         )
+    }
+
+    override suspend fun acceptFriendRequest(requestId: String, userIds: List<String>) {
+        friendRequestsCollection
+            .document(requestId)
+            .delete()
+            .await()
+
+
+        val newFriendsDoc = friendsCollection.document()
+        val generatedId = newFriendsDoc.id
+
+        newFriendsDoc
+            .set(
+                Friend(
+                    id = generatedId,
+                    usersIds = userIds
+                )
+            )
     }
 }

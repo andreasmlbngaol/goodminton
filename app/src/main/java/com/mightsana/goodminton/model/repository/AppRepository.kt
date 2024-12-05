@@ -7,7 +7,6 @@ import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
-import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
@@ -91,7 +90,10 @@ interface AppRepository {
     )
     fun observeFriendRequestsJoint(
         userId: String,
-        onFriendRequestsSentUpdate: (List<FriendRequestJoint>) -> Unit,
-        onFriendRequestsReceivedUpdate: (List<FriendRequestJoint>) -> Unit
+        onFriendRequestsSentUpdate: (List<FriendRequestJoint>) -> Unit = {},
+        onFriendRequestsReceivedUpdate: (List<FriendRequestJoint>) -> Unit = {}
     )
+
+    // Friend Request Action
+    suspend fun acceptFriendRequest(requestId: String, userIds: List<String>)
 }

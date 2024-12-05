@@ -1,6 +1,5 @@
 package com.mightsana.goodminton.features.profile.other_profile
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -22,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.model.ext.onLongPress
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyIcon
@@ -80,10 +79,7 @@ fun OtherProfileScreen(
     val friendRequestsSent by viewModel.friendRequestSent.collectAsState()
     val isProcessing by viewModel.isProcessing.collectAsState()
     val isFriend = friendsJoint.any { it.user.uid == currentUser.uid }
-    val isFriendRequested = friendRequestsSent.any {
-        Log.d("OtherProfileScreen", "isFriendRequested: ${it.receiver.uid} & ${otherUser.uid}")
-        it.receiver.uid == otherUser.uid
-    }
+    val isFriendRequested = friendRequestsSent.any { it.receiver.uid == otherUser.uid }
     val isFriendRequestReceived = friendRequestsReceived.any { it.sender.uid == otherUser.uid }
 
 
@@ -165,7 +161,7 @@ fun OtherProfileScreen(
                                             y = coordinates.positionInRoot().y.toInt()
                                         )
                                     }
-                                    .onLongPress { viewModel.expandProfilePicture() }
+                                    .onTap { viewModel.expandProfilePicture() }
                                     .alpha(imageAlpha)
                             )
                         Row(
@@ -176,7 +172,7 @@ fun OtherProfileScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.onTap {
-                                    if (friendsJoint.size > 0)
+                                    if (friendsJoint.isNotEmpty())
 //                                        navController.navigateSingleTop("$FRIEND_LIST/${profile.uid}/${profile.username}")
                                         viewModel.comingSoon()
                                 }
@@ -198,31 +194,76 @@ fun OtherProfileScreen(
                 item {
                     if (isFriend) {
                         Button(
-                            onClick = {
-                                viewModel.showDialog()
-                            },
+                            onClick = { viewModel.showDialog() },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             MyIcon(MyIcons.Minus)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Unfriend")
                         }
-                    } else if (isFriendRequestReceived) {
-
+                    } else if (isFriendRequested) {
                         Button(
                             enabled = !isProcessing,
                             onClick = {
 //                                viewModel.cancelFriendRequest()
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors().copy(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError,
+                                disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
+                                disabledContentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
                         ) {
                             MyIcon(MyIcons.Cancel)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Cancel")
+                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Cancel Request")
                         }
+                    } else if (isFriendRequestReceived) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                enabled = !viewModel.isProcessing.collectAsState().value,
+                                onClick = { viewModel.acceptFriendRequest() },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    text = "Accept"
+                                )
+                            }
+                            OutlinedButton(
+                                enabled = !viewModel.isProcessing.collectAsState().value,
+                                onClick = {
+//                                    viewModel.declineFriendRequest()
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    text = "Decline"
+                                )
+                            }
+                        }
+                    } else {
+                        Button(
+                            enabled = !viewModel.isProcessing.collectAsState().value,
+                            onClick = {
+//                                viewModel.sendFriendRequest()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            MyIcon(MyIcons.Plus)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Request Friend")
+                        }
+
                     }
-                    Log.d("OtherProfileScreen", "isFriendRequestReceived: $isFriendRequestReceived")
-                    Log.d("OtherProfileScreen", "isFriendRequested: $isFriendRequested")
 //                    } else if (isFriendRequestReceived) {
 //                        Row(
 //                            modifier = Modifier.fillMaxWidth(),

@@ -1,16 +1,16 @@
 package com.mightsana.goodminton.features.profile.other_profile
 
 import android.app.Application
-import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.features.profile.ProfileViewModel
 import com.mightsana.goodminton.model.repository.AppRepository
-import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,11 +51,9 @@ class OtherProfileViewModel @Inject constructor(
         appRepository.observeFriendRequestsJoint(
             userId = accountService.currentUserId,
             onFriendRequestsSentUpdate = {
-                Log.d("OtherProfileViewModel", "onFriendRequestsSentUpdate: $it")
                 _friendRequestSent.value = it
             },
             onFriendRequestsReceivedUpdate = {
-                Log.d("OtherProfileViewModel", "onFriendRequestsReceivedUpdate: $it")
                 _friendRequestReceived.value = it
             }
         )
@@ -69,4 +67,18 @@ class OtherProfileViewModel @Inject constructor(
 
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing = _isProcessing.asStateFlow()
+
+    fun acceptFriendRequest() {
+        viewModelScope.launch {
+            val request = _friendRequestReceived.value.find { it.sender.uid == otherUser.value.uid }
+            request?.let {
+                appRepository.acceptFriendRequest(
+                    requestId = it.id,
+                    userIds = listOf(request.sender.uid, request.receiver.uid)
+                )
+            }
+        }
+    }
+
+
 }

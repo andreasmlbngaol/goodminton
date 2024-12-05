@@ -4,25 +4,36 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -36,10 +47,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.repository.users.MyUser
+import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyImage
 import kotlinx.coroutines.launch
 
@@ -184,14 +197,89 @@ fun SocialScreen(
             }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier.padding(innerPadding)
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(350.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(top = 16.dp)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            requestReceived.forEach {
-                ListItem(
-                    headlineContent = { Text(it.sender.name) },
-                    supportingContent = { Text("Friend Request") }
-                )
+            items(requestReceived.sortedBy {it.sender.name}) {
+                Card(
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize().padding(Size.padding),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Size.padding)
+                    ) {
+                        MyImage(
+                            model = it.sender.profilePhotoUrl,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(80.dp)
+                                .onTap {
+                                    onNavigateToOtherProfile(it.sender.uid)
+                                }
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = it.sender.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier
+                                    .onTap {
+                                        onNavigateToOtherProfile(it.sender.uid)
+                                    }
+                            )
+                            Text(
+                                text = it.sender.username,
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier
+                                    .onTap {
+                                        onNavigateToOtherProfile(it.sender.uid)
+                                    }
+                            )
+                            Spacer(modifier = Modifier.height(Size.smallPadding))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
+                            ) {
+                                Button(
+//                                    enabled = !viewModel.isProcessing.collectAsState().value,
+                                    onClick = {
+//                                    viewModel.acceptFriendRequest()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        text = "Accept"
+                                    )
+                                }
+                                OutlinedButton(
+//                                    enabled = !viewModel.isProcessing.collectAsState().value,
+                                    onClick = {
+//                                    viewModel.declineFriendRequest()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        text = "Decline"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
