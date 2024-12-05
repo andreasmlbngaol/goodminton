@@ -1,5 +1,6 @@
 package com.mightsana.goodminton.features.main.main
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,7 +48,7 @@ import com.mightsana.goodminton.features.main.settings.SettingsScreen
 import com.mightsana.goodminton.features.main.social.SocialScreen
 import com.mightsana.goodminton.features.profile.model.Profile
 import com.mightsana.goodminton.model.component_model.NavigationItem
-import com.mightsana.goodminton.model.ext.navigateAndPopUp
+import com.mightsana.goodminton.model.ext.navigateAndPopUpTo
 import com.mightsana.goodminton.model.ext.navigateSingleTop
 import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
@@ -88,14 +89,13 @@ fun MainContainer(
                 iconUnselected = MyIcons.SocialUnselected,
                 label = SOCIAL,
                 route = Social,
-                badgeCount = viewModel.friendRequestSent.collectAsState().value.size
+                badgeCount = viewModel.friendRequestReceived.collectAsState().value.size
             ),
             NavigationItem(
                 iconSelected = Icons.Filled.Notifications,
                 iconUnselected = Icons.Outlined.Notifications,
                 label = NOTIFICATIONS,
-                route = Notifications,
-                badgeCount = viewModel.friendRequestReceived.collectAsState().value.size
+                route = Notifications
             )
         ),
 
@@ -161,7 +161,7 @@ fun MainContainer(
                                         val currentRoute = selectedNavigationItem
                                         viewModel.onSelectItem(item.route)
                                         if (item.route != currentRoute)
-                                            mainNavController.navigateAndPopUp(item.route, currentRoute)
+                                            mainNavController.navigateAndPopUpTo(item.route, currentRoute)
                                     }
                                 }
                             )
@@ -178,7 +178,7 @@ fun MainContainer(
         ) {
             fun backToHome() {
                 viewModel.onSelectItem(Home)
-                mainNavController.navigateAndPopUp(Home, Settings)
+                mainNavController.navigateAndPopUpTo(Home, Settings)
             }
 
             composable<Home> {
@@ -199,6 +199,7 @@ fun MainContainer(
             }
 
             composable<Notifications> {
+                BackHandler { backToHome() }
 //                OtherProfileScreen(
 //                    uid = "VIFCqBAFYYdc9EXKRc1K4HLHdsz1",
 //                    navController = navController

@@ -1,12 +1,10 @@
 package com.mightsana.goodminton.features.profile
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.friends.FriendJoint
-import com.mightsana.goodminton.model.repository.friends.FriendUI
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,13 +30,13 @@ abstract class ProfileViewModel(
         _profilePictureExpanded.value = false
     }
 
-    protected val _friendsJoint = MutableStateFlow<List<FriendJoint>>(emptyList())
-    val friendsJoint = _friendsJoint.asStateFlow()
+    protected val _friends = MutableStateFlow<List<FriendJoint>>(emptyList())
+    val friends = _friends.asStateFlow()
 
     protected fun observeFriendsJoint(userId: String) {
         appRepository.observeFriendsJoint(userId) {
             viewModelScope.launch {
-                _friendsJoint.value = it
+                _friends.value = it
             }
         }
     }

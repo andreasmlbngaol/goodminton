@@ -1,10 +1,8 @@
 package com.mightsana.goodminton.model.repository
 
-import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -95,26 +93,23 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .get()
             .await()
             .toObject(MyUser::class.java)!!
-    override fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot) -> Unit) {
+    override fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot?) -> Unit) {
         usersCollection
             .document(userId)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                if (snapshot != null && snapshot.exists())
-                    onUserSnapshotUpdate(snapshot)
-                else
-                    Log.d("AppRepositoryImpl", "User snapshot is null or does not exist")
+                onUserSnapshotUpdate(snapshot)
             }
     }
     override fun observeUserJoint(userId: String, onUserUpdate: (MyUser) -> Unit) {
         observeUserSnapshot(userId) {
-            val user = it.toObject(MyUser::class.java)!!
-            onUserUpdate(user)
+            val user = it?.toObject(MyUser::class.java)
+            onUserUpdate(user ?: MyUser())
         }
     }
-    override fun observeUsersSnapshot(userIds: List<String>, onUsersUpdate: (QuerySnapshot) -> Unit) {
+    override fun observeUsersSnapshot(userIds: List<String>, onUsersUpdate: (QuerySnapshot?) -> Unit) {
         userIds.chunked(batchMaxSize).map { batch ->
             usersCollection
                 .whereIn(FieldPath.documentId(), batch)
@@ -122,15 +117,14 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     if (exception != null) {
                         return@addSnapshotListener
                     }
-                    if (snapshot != null && !snapshot.isEmpty)
-                        onUsersUpdate(snapshot)
+                    onUsersUpdate(snapshot)
                 }
         }
     }
     override fun observeUsersJoint(userIds: List<String>, onUsersUpdate: (List<MyUser>) -> Unit) {
         observeUsersSnapshot(userIds) { snapshot ->
             val users = mutableListOf<MyUser>()
-            snapshot.forEach { userSnapshot ->
+            snapshot?.forEach { userSnapshot ->
                 val user = userSnapshot.toObject(MyUser::class.java)
                 users.add(user)
             }
@@ -245,27 +239,24 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         val unionLeagueIds = userLeagueIds.union(publicLeagueIds).toList()
         return getLeagueByIds(unionLeagueIds)
     }
-    override fun observeLeagueSnapshot(leagueId: String, onLeagueSnapshotUpdate: (DocumentSnapshot) -> Unit) {
+    override fun observeLeagueSnapshot(leagueId: String, onLeagueSnapshotUpdate: (DocumentSnapshot?) -> Unit) {
         leaguesCollection
             .document(leagueId)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                if (snapshot != null && snapshot.exists())
-                    onLeagueSnapshotUpdate(snapshot)
-                else
-                    Log.d("AppRepositoryImpl", "League snapshot is null or does not exist")
+                onLeagueSnapshotUpdate(snapshot)
             }
     }
     override fun observeLeagueJoint(leagueId: String, onLeagueUpdate: (LeagueJoint) -> Unit) {
         observeLeagueSnapshot(leagueId) {
             CoroutineScope(Dispatchers.IO).launch {
-                val league = it.toObject(League::class.java)!!
-                val creator = getUser(league.createdById)
+                val league = it?.toObject(League::class.java)
+                val creator = league?.let { it1 -> getUser(it1.createdById) }
 
                 launch(Dispatchers.Main) {
-                    onLeagueUpdate(
+                    val result = league?.let {
                         LeagueJoint(
                             id = league.id,
                             name = league.name,
@@ -274,10 +265,11 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                             deuceEnabled = league.deuceEnabled,
                             double = league.double,
                             fixedDouble = league.fixedDouble,
-                            createdBy = creator,
+                            createdBy = creator!!,
                             createdAt = league.createdAt
                         )
-                    )
+                    }
+                    onLeagueUpdate(result ?: LeagueJoint())
                 }
             }
         }
@@ -357,7 +349,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
 
     // Retrieve League Participant Data
-    override fun observeLeagueParticipantsSnapshot(leagueId: String, onParticipantsSnapshotUpdate: (QuerySnapshot) -> Unit) {
+    override fun observeLeagueParticipantsSnapshot(leagueId: String, onParticipantsSnapshotUpdate: (QuerySnapshot?) -> Unit) {
         leagueParticipantsCollection
             .whereEqualTo("leagueId", leagueId)
             .whereEqualTo("status", Status.Active)
@@ -365,32 +357,32 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                if (snapshot != null && !snapshot.isEmpty)
-                    onParticipantsSnapshotUpdate(snapshot)
-                else
-                    Log.d("AppRepositoryImpl", "League participants snapshot is null or does not exist")
+                onParticipantsSnapshotUpdate(snapshot)
+
             }
     }
     override fun observeLeagueParticipantsJoint(leagueId: String, onParticipantsUpdate: (List<LeagueParticipantJoint>) -> Unit) {
         observeLeagueParticipantsSnapshot(leagueId) { participantsSnapshot ->
             CoroutineScope(Dispatchers.IO).launch {
-                val participants = participantsSnapshot.map { it.toObject(LeagueParticipant::class.java) }
                 val leagueJoint = getLeagueJoint(leagueId)
-                val users = getUsersByIds(participants.map { it.userId }).associateBy { it.uid }
+                val participants = participantsSnapshot?.map { it.toObject(LeagueParticipant::class.java) }
+                val users = participants?.let { ptcs ->
+                    getUsersByIds(ptcs.map { it.userId })
+                        .associateBy { it.uid }
+                }
 
                 launch(Dispatchers.Main) {
-                    onParticipantsUpdate(
-                        participants.map { participant ->
-                            LeagueParticipantJoint(
-                                id = participant.id,
-                                league = leagueJoint,
-                                user = users[participant.userId]!!,
-                                role = participant.role,
-                                status = participant.status,
-                                participateAt = participant.participateAt
-                            )
-                        }
-                    )
+                    val result = participants?.map { participant ->
+                        LeagueParticipantJoint(
+                            id = participant.id,
+                            league = leagueJoint,
+                            user = users?.get(participant.userId)!!,
+                            role = participant.role,
+                            status = participant.status,
+                            participateAt = participant.participateAt
+                        )
+                    }
+                    onParticipantsUpdate(result ?: emptyList())
                 }
             }
         }
@@ -432,11 +424,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                if (snapshot != null && !snapshot.isEmpty)
-                    onMatchesSnapshotUpdate(snapshot)
-                else
-                    onMatchesSnapshotUpdate(snapshot)
-                    Log.d("AppRepositoryImpl", "Matches snapshot is null or does not exist")
+                onMatchesSnapshotUpdate(snapshot)
             }
     }
     override fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit) {
@@ -471,30 +459,28 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
 
     // Retrieve Friends Data
-    private var friendsListener: ListenerRegistration? = null
-    override fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot) -> Unit) {
+    override fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot?) -> Unit) {
         friendsCollection
             .whereArrayContains("usersIds", userId)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                if (snapshot != null && !snapshot.isEmpty)
-                    onFriendsSnapshotUpdate(snapshot)
-                else
-                    Log.d("AppRepositoryImpl", "Friends snapshot is null or does not exist")
+                onFriendsSnapshotUpdate(snapshot)
             }
     }
     override fun observeFriendsJoint(userId: String, onFriendsUpdate: (List<FriendJoint>) -> Unit) {
         observeFriendsSnapshot(userId) { friendsSnapshot ->
             CoroutineScope(Dispatchers.IO).launch {
-                val friends = friendsSnapshot.map { it.toObject(Friend::class.java) }
-                val allUserIds = friends.flatMap { it.usersIds }.distinct().filterNot { it == userId }
-                val usersMap = getUsersByIds(allUserIds).associateBy { it.uid }
-                val friendsJoint = friends.mapNotNull { friend ->
+                val friends = friendsSnapshot?.map { it.toObject(Friend::class.java) }
+                val allUserIds = friends?.let {
+                    friends.flatMap { it.usersIds }.distinct().filterNot { it == userId }
+                }
+                val usersMap = allUserIds?.let { ids -> getUsersByIds(ids).associateBy { it.uid } }
+                val friendsJoint = friends?.mapNotNull { friend ->
                     val otherUserId = friend.usersIds.firstOrNull { it != userId }
                     otherUserId?.let { otherId ->
-                        val user = usersMap[otherId]
+                        val user = usersMap?.get(otherId)
                         user?.let {
                             FriendJoint(
                                 id = friend.id,
@@ -505,73 +491,38 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     }
                 }
                 launch(Dispatchers.Main) {
-                    onFriendsUpdate(friendsJoint)
+                    onFriendsUpdate(friendsJoint ?: emptyList())
                 }
             }
         }
     }
-    override fun observeFriends(userId: String, onFriendsUpdate: (List<Friend>) -> Unit) {
-        friendsListener?.remove()
-        friendsListener = friendsCollection
-            .whereArrayContains("ids", userId)
-            .addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    return@addSnapshotListener
-                }
-                var friends = listOf<Friend>()
-                if (snapshot != null && !snapshot.isEmpty) {
-                    friends = snapshot.documents.mapNotNull {
-                        it.toObject(Friend::class.java)
-                    }
-                }
-                onFriendsUpdate(friends)
-            }
+
+    // Friend Action
+    override suspend fun deleteFriend(id: String) {
+        friendsCollection
+            .document(id)
+            .delete()
+            .await()
+    }
+
+    override suspend fun addFriend(userIds: List<String>) {
+        val newFriendsDoc = friendsCollection.document()
+        val generatedId = newFriendsDoc.id
+
+        newFriendsDoc
+            .set(
+                Friend(
+                    id = generatedId,
+                    usersIds = userIds
+                )
+            )
     }
 
     // Retrieve Friend Requests Data
-    private var friendRequestsListener: ListenerRegistration? = null
-    private var friendRequestsReceivedListener: ListenerRegistration? = null
-    override fun observeFriendRequests(
-        userId: String,
-        onFriendRequestsUpdate: (List<FriendRequest>) -> Unit,
-        onFriendRequestsReceivedUpdate: (List<FriendRequest>) -> Unit
-    ) {
-        friendRequestsListener?.remove()
-        friendRequestsReceivedListener?.remove()
-        friendRequestsListener = friendRequestsCollection
-            .whereEqualTo("senderId", userId)
-            .addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    return@addSnapshotListener
-                }
-                var friendRequests = listOf<FriendRequest>()
-                if (snapshot != null && !snapshot.isEmpty) {
-                    friendRequests = snapshot.documents.mapNotNull {
-                        it.toObject(FriendRequest::class.java)
-                    }
-                }
-                onFriendRequestsUpdate(friendRequests)
-            }
-
-        friendRequestsReceivedListener = friendRequestsCollection
-            .whereEqualTo("receiverId", userId)
-            .addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    return@addSnapshotListener
-                }
-                var friendRequestsReceived = listOf<FriendRequest>()
-                if (snapshot != null && !snapshot.isEmpty) {
-                    friendRequestsReceived = snapshot.documents.mapNotNull {
-                        it.toObject(FriendRequest::class.java)
-                    }
-                }
-                onFriendRequestsReceivedUpdate(friendRequestsReceived)
-            }
-    }
     override fun observeFriendRequestsSnapshot(
         userId: String,
-        onFriendRequestsSentSnapshotUpdate: (QuerySnapshot) -> Unit,
-        onFriendRequestsReceivedSnapshotUpdate: (QuerySnapshot) -> Unit
+        onFriendRequestsSentSnapshotUpdate: (QuerySnapshot?) -> Unit,
+        onFriendRequestsReceivedSnapshotUpdate: (QuerySnapshot?) -> Unit
     ) {
         friendRequestsCollection
             .whereEqualTo("senderId", userId)
@@ -579,10 +530,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                if (snapshot != null && !snapshot.isEmpty)
-                    onFriendRequestsSentSnapshotUpdate(snapshot)
-                else
-                    Log.d("AppRepositoryImpl", "Friend requests sent snapshot is null or does not exist")
+                onFriendRequestsSentSnapshotUpdate(snapshot)
             }
 
         friendRequestsCollection
@@ -591,10 +539,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 if (exception != null) {
                     return@addSnapshotListener
                 }
-                if (snapshot != null && !snapshot.isEmpty)
-                    onFriendRequestsReceivedSnapshotUpdate(snapshot)
-                else
-                    Log.d("AppRepositoryImpl", "Friend requests received snapshot is null or does not exist")
+                onFriendRequestsReceivedSnapshotUpdate(snapshot)
             }
     }
     override fun observeFriendRequestsJoint(
@@ -606,7 +551,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             userId = userId,
             onFriendRequestsSentSnapshotUpdate = { requestsSentSnapshot ->
                 val requestsSent = mutableListOf<FriendRequestJoint>()
-                requestsSentSnapshot.forEach { requestSentSnapshot ->
+                requestsSentSnapshot?.forEach { requestSentSnapshot ->
                     val requestSent = requestSentSnapshot.toObject(FriendRequest::class.java)
                     observeUserJoint(requestSent.senderId) { sender ->
                         observeUserJoint(requestSent.receiverId) { receiver ->
@@ -623,10 +568,12 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                         }
                     }
                 }
+                if(requestsSentSnapshot?.size() == 0)
+                    onFriendRequestsSentUpdate(emptyList())
             },
             onFriendRequestsReceivedSnapshotUpdate = { requestsReceivedSnapshot ->
                 val requestsReceived = mutableListOf<FriendRequestJoint>()
-                requestsReceivedSnapshot.forEach { requestReceivedSnapshot ->
+                requestsReceivedSnapshot?.forEach { requestReceivedSnapshot ->
                     val requestReceived = requestReceivedSnapshot.toObject(FriendRequest::class.java)
                     observeUserJoint(requestReceived.senderId) { sender ->
                         observeUserJoint(requestReceived.receiverId) { receiver ->
@@ -643,25 +590,34 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                         }
                     }
                 }
+                if(requestsReceivedSnapshot?.size() == 0)
+                    onFriendRequestsReceivedUpdate(emptyList())
             }
         )
     }
 
-    override suspend fun acceptFriendRequest(requestId: String, userIds: List<String>) {
+    override suspend fun deleteFriendRequest(requestId: String) {
         friendRequestsCollection
             .document(requestId)
             .delete()
             .await()
+    }
 
+    override suspend fun acceptFriendRequest(requestId: String, userIds: List<String>) {
+        deleteFriendRequest(requestId)
+        addFriend(userIds)
+    }
 
-        val newFriendsDoc = friendsCollection.document()
-        val generatedId = newFriendsDoc.id
+    override suspend fun createFriendRequest(senderId: String, receiverId: String) {
+        val newFriendRequestDoc = friendRequestsCollection.document()
+        val generatedId = newFriendRequestDoc.id
 
-        newFriendsDoc
+        newFriendRequestDoc
             .set(
-                Friend(
+                FriendRequest(
                     id = generatedId,
-                    usersIds = userIds
+                    senderId = senderId,
+                    receiverId = receiverId
                 )
             )
     }

@@ -2,7 +2,7 @@ package com.mightsana.goodminton.model.ext
 
 import androidx.navigation.NavHostController
 
-fun NavHostController.navigateAndPopUp(
+fun NavHostController.navigateAndPopUpTo(
     destination: Any,
     current: Any
 ) {

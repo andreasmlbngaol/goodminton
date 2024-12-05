@@ -35,7 +35,7 @@ import com.mightsana.goodminton.view.MyTextField
 @Suppress("unused")
 fun LeagueInfoScreen(
     viewModel: DetailViewModel,
-    onNavigateToHome: () -> Unit
+    onBack: () -> Unit
 ) {
     val uid = viewModel.user.collectAsState().value.uid
     val participantJoint by viewModel.leagueParticipantsJoint.collectAsState()
@@ -272,9 +272,7 @@ fun LeagueInfoScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.deleteLeague {
-                            onNavigateToHome()
-                        }
+                        viewModel.deleteLeague(onBack)
                     },
                     colors = ButtonDefaults.buttonColors().copy(
                         containerColor = containerColor,

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -67,7 +69,9 @@ fun SocialScreen(
 ) {
     BackHandler { onBack() }
     val allUsers by viewModel.allUsers.collectAsState()
+    val isProcessing by viewModel.isProcessing.collectAsState()
     val user by viewModel.user.collectAsState()
+//    val requestSent by viewModel.friendRequestSent.collectAsState()
     val requestReceived by viewModel.friendRequestReceived.collectAsState()
     val searchExpanded by viewModel.searchExpanded.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -185,6 +189,14 @@ fun SocialScreen(
                                                     viewModel.collapseSearch()
                                                     onNavigateToOtherProfile(it.uid)
                                                 },
+                                            leadingContent = {
+                                                MyImage(
+                                                    it.profilePhotoUrl,
+                                                    modifier = Modifier
+                                                        .clip(CircleShape)
+                                                        .size(40.dp)
+                                                )
+                                            },
                                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                                             headlineContent = { Text(it.name) },
                                             supportingContent = { Text(it.username) }
@@ -207,10 +219,21 @@ fun SocialScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(requestReceived.sortedBy {it.sender.name}) {
-                Card(
-                    shape = MaterialTheme.shapes.medium
-                ) {
+            val requestCount = requestReceived.size
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Column {
+                    Text(
+                        text = "Friend Requests (${requestCount})",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = Size.smallPadding)
+                    )
+                    HorizontalDivider()
+                }
+            }
+
+            if(requestCount > 0)
+                items(requestReceived.sortedBy {it.sender.name}) {
+                Card(shape = MaterialTheme.shapes.medium) {
                     Row(
                         modifier = Modifier.fillMaxSize().padding(Size.padding),
                         verticalAlignment = Alignment.CenterVertically,
@@ -251,9 +274,12 @@ fun SocialScreen(
                                 horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
                             ) {
                                 Button(
-//                                    enabled = !viewModel.isProcessing.collectAsState().value,
+                                    enabled = !isProcessing,
                                     onClick = {
-//                                    viewModel.acceptFriendRequest()
+                                        viewModel.acceptFriendRequest(
+                                            requestId = it.id,
+                                            senderId = it.sender.uid
+                                        )
                                     },
                                     modifier = Modifier.weight(1f)
                                 ) {
@@ -264,10 +290,8 @@ fun SocialScreen(
                                     )
                                 }
                                 OutlinedButton(
-//                                    enabled = !viewModel.isProcessing.collectAsState().value,
-                                    onClick = {
-//                                    viewModel.declineFriendRequest()
-                                    },
+                                    enabled = !isProcessing,
+                                    onClick = { viewModel.declineFriendRequest(it.id) },
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Text(
@@ -281,6 +305,16 @@ fun SocialScreen(
                     }
                 }
             }
+            else
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Text(
+                        text = "No Friend Requests",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Size.padding),
+                        textAlign = TextAlign.Center
+                    )
+                }
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.mightsana.goodminton.features.main.social
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.model.repository.AppRepository
@@ -40,18 +39,32 @@ class SocialViewModel @Inject constructor(
     private val _friendRequestReceived = MutableStateFlow(listOf<FriendRequestJoint>())
     val friendRequestReceived = _friendRequestReceived.asStateFlow()
 
-//    private val _friendRequestSent = MutableStateFlow(listOf<FriendRequestJoint>())
+    private val _friendRequestSent = MutableStateFlow(listOf<FriendRequestJoint>())
 //    val friendRequestSent = _friendRequestSent.asStateFlow()
+
+    private val _isProcessing = MutableStateFlow(false)
+    val isProcessing = _isProcessing.asStateFlow()
+
+    private fun setProcessing(value: Boolean) {
+        _isProcessing.value = value
+    }
+
+    private fun isProcessing() {
+        setProcessing(true)
+    }
+
+    private fun isNotProcessing() {
+        setProcessing(false)
+    }
 
     private fun observeFriendRequestReceived() {
         viewModelScope.launch {
             appRepository.observeFriendRequestsJoint(
                 userId = accountService.currentUserId,
-//                onFriendRequestsSentUpdate = {
-////                    _friendRequestSent.value = it
-//                },
+                onFriendRequestsSentUpdate = {
+                    _friendRequestSent.value = it
+                },
                 onFriendRequestsReceivedUpdate = {
-                    Log.d("FriendRequestReceived", it.toString())
                     _friendRequestReceived.value = it
                 }
             )
@@ -62,7 +75,7 @@ class SocialViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    fun resetSearchQuery() {
+    private fun resetSearchQuery() {
         _searchQuery.value = ""
     }
 
@@ -87,5 +100,26 @@ class SocialViewModel @Inject constructor(
         getAllUsers()
         observeUser()
         observeFriendRequestReceived()
+    }
+
+    fun acceptFriendRequest(requestId: String, senderId: String) {
+        viewModelScope.launch {
+            isProcessing()
+            val userIds = listOf(accountService.currentUserId, senderId)
+            appRepository.acceptFriendRequest(
+                requestId = requestId,
+                userIds = userIds
+            )
+            isNotProcessing()
+        }
+    }
+
+    fun declineFriendRequest(requestId: String) {
+        viewModelScope.launch {
+            isProcessing()
+            appRepository.deleteFriendRequest(requestId)
+            isNotProcessing()
+        }
+
     }
 }

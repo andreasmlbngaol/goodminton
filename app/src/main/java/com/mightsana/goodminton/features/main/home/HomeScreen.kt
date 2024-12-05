@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -45,7 +44,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,11 +56,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import com.mightsana.goodminton.League
-import com.mightsana.goodminton.features.profile.model.PROFILE
-import com.mightsana.goodminton.features.profile.model.Profile
-import com.mightsana.goodminton.model.ext.navigateSingleTop
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDate
 import com.mightsana.goodminton.view.ErrorSupportingText

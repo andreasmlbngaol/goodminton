@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.mightsana.goodminton.features.main.detail.info.LeagueInfoScreen
 import com.mightsana.goodminton.features.main.detail.matches.MatchesScreen
 import com.mightsana.goodminton.features.main.detail.participants.ParticipantsScreen
@@ -52,7 +51,7 @@ import com.mightsana.goodminton.view.PullToRefreshScreen
 @Composable
 fun DetailContainer(
     leagueId: String,
-    navController: NavHostController,
+    onBack: () -> Unit,
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     LaunchedEffect(Unit) {
@@ -117,9 +116,10 @@ fun DetailContainer(
             iconSelected = Icons.Filled.Info,
             iconUnselected = Icons.Outlined.Info,
             content = {
-                LeagueInfoScreen(viewModel = viewModel) {
-                    navController.popBackStack()
-                }
+                LeagueInfoScreen(
+                    viewModel = viewModel,
+                    onBack = onBack
+                )
             }
         )
     )
@@ -135,9 +135,7 @@ fun DetailContainer(
                     title = { Text(leagueJoint.name) },
                     navigationIcon = {
                         IconButton(
-                            onClick = {
-                                navController.popBackStack()
-                            }
+                            onClick = onBack
                         ) {
                             MyIcon(MyIcons.Back)
                         }

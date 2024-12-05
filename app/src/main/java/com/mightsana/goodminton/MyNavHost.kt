@@ -44,7 +44,7 @@ fun MyNavHost(
             val league = it.toRoute<League>()
             DetailContainer(
                 leagueId = league.id,
-                navController = navController
+                onBack = { navController.navigateUp()}
             )
         }
     }

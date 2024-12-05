@@ -3,7 +3,7 @@ package com.mightsana.goodminton.features.main.main
 import android.app.Application
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.model.repository.AppRepository
-import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
+import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,16 +24,16 @@ class MainViewModel @Inject constructor(
         _selectedItem.value = item
     }
 
-    private val _friendRequestReceived = MutableStateFlow(listOf<FriendRequest>())
+    private val _friendRequestReceived = MutableStateFlow(listOf<FriendRequestJoint>())
     val friendRequestReceived = _friendRequestReceived.asStateFlow()
 
-    private val _friendRequestSent = MutableStateFlow(listOf<FriendRequest>())
-    val friendRequestSent = _friendRequestSent.asStateFlow()
+    private val _friendRequestSent = MutableStateFlow(listOf<FriendRequestJoint>())
+//    val friendRequestSent = _friendRequestSent.asStateFlow()
 
     init {
-        appRepository.observeFriendRequests(
+        appRepository.observeFriendRequestsJoint(
             userId = accountService.currentUserId,
-            onFriendRequestsUpdate = {
+            onFriendRequestsSentUpdate = {
                 _friendRequestSent.value = it
             },
             onFriendRequestsReceivedUpdate = {
