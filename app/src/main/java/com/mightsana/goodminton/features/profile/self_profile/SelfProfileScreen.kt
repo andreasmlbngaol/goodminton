@@ -184,6 +184,7 @@ fun SelfProfileScreen(
                     Button(
                         {
 //                            navController.navigateSingleTop("$PROFILE/$SETTINGS")
+                            viewModel.comingSoon()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {

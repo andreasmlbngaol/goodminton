@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FlipCameraAndroid
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Man
@@ -64,6 +65,7 @@ fun MyIcon(
 
 @Suppress("unused")
 object MyIcons {
+    val Invitation: ImageVector = Icons.Default.Email
     val SocialSelected: ImageVector = Icons.Filled.PeopleAlt
     val SocialUnselected: ImageVector = Icons.Outlined.PeopleAlt
     val Delete: ImageVector = Icons.Filled.Delete

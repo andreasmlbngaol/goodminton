@@ -316,23 +316,8 @@ fun OtherProfileScreen(
         AnimatedVisibility(
             profilePictureExpanded,
             enter = fadeIn(
-//                initialOffset = { fullSize ->
-//                    IntOffset(
-//                        x = imagePosition.value.x - fullSize.width / 2 + imageMinWidth.value.toInt() / 2,
-//                        y = imagePosition.value.y - fullSize.height / 2 + imageMinWidth.value.toInt() / 2
-//                    )
-//                },
                 animationSpec = tween(durationMillis = imageExpandedDuration)
             ),
-//            exit = slideOut(
-//                targetOffset = { fullSize ->
-//                    IntOffset(
-//                        x = - fullSize.width / 2 + imagePosition.value.x + imageMinWidth.value.toInt() / 2,
-//                        y = - fullSize.height / 2 + imagePosition.value.y + imageMinWidth.value.toInt() / 2
-//                    )
-//                },
-//                animationSpec = tween(durationMillis = imageExpandedDuration)
-//            ),
             exit = fadeOut(
                 animationSpec = tween(durationMillis = imageExpandedDuration)
             )

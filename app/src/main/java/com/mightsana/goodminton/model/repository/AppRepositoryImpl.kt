@@ -6,6 +6,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.mightsana.goodminton.features.main.model.Invitation
+import com.mightsana.goodminton.features.main.model.InvitationJoint
 import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipant
@@ -33,6 +35,8 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     // Initiate
     override val db: FirebaseFirestore
         get() = Firebase.firestore
+    private val appDataCollection = db.collection("appData")
+    private val maintenanceDoc = appDataCollection.document("maintenance")
     private val usersCollection = db.collection("users")
     private val friendRequestsCollection = db.collection("friendRequests")
     private val friendsCollection = db.collection("friends")
@@ -40,8 +44,16 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     private val leagueParticipantsCollection = db.collection("leagueParticipants")
     private val participantStatsCollection = db.collection("participantStats")
     private val matchesCollection = db.collection("matches")
+    private val invitationsCollection = db.collection("leagueInvitations")
 
     private val batchMaxSize = 10
+
+    // App Checking
+    override suspend fun isMaintenance(): Boolean =
+        maintenanceDoc
+            .get()
+            .await()
+            .getBoolean("isMaintenance") == true
 
     // Register
     override suspend fun createNewUser(user: MyUser) {
@@ -358,7 +370,6 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     return@addSnapshotListener
                 }
                 onParticipantsSnapshotUpdate(snapshot)
-
             }
     }
     override fun observeLeagueParticipantsJoint(leagueId: String, onParticipantsUpdate: (List<LeagueParticipantJoint>) -> Unit) {
@@ -504,7 +515,6 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .delete()
             .await()
     }
-
     override suspend fun addFriend(userIds: List<String>) {
         val newFriendsDoc = friendsCollection.document()
         val generatedId = newFriendsDoc.id
@@ -602,12 +612,10 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .delete()
             .await()
     }
-
     override suspend fun acceptFriendRequest(requestId: String, userIds: List<String>) {
         deleteFriendRequest(requestId)
         addFriend(userIds)
     }
-
     override suspend fun createFriendRequest(senderId: String, receiverId: String) {
         val newFriendRequestDoc = friendRequestsCollection.document()
         val generatedId = newFriendRequestDoc.id
@@ -620,5 +628,45 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     receiverId = receiverId
                 )
             )
+    }
+
+    // Retrieve League Invitation Data
+    override fun observeLeagueInvitationsSentSnapshot(leagueId: String, onInvitationsSentSnapshotUpdate: (QuerySnapshot?) -> Unit) {
+        invitationsCollection
+            .whereEqualTo("leagueId", leagueId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                onInvitationsSentSnapshotUpdate(snapshot)
+            }
+    }
+    override fun observeLeagueInvitationsSentJoint(leagueId: String, onInvitationsSentUpdate: (List<InvitationJoint>) -> Unit) {
+        observeLeagueInvitationsSentSnapshot(leagueId) { invitationsSnapshot ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val leagueJoint = getLeagueJoint(leagueId)
+                val invitations = invitationsSnapshot?.map { it.toObject(Invitation::class.java) }
+                val senders = invitations?.let { invs ->
+                    getUsersByIds(invs.map { it.senderId })
+                        .associateBy { it.uid }
+                }
+                val receivers = invitations?.let { invs ->
+                    getUsersByIds(invs.map { it.receiverId })
+                        .associateBy { it.uid }
+                }
+                launch(Dispatchers.Main) {
+                    val result = invitations?.map { invitation ->
+                        InvitationJoint(
+                            id = invitation.id,
+                            sender = senders?.get(invitation.senderId)!!,
+                            receiver = receivers?.get(invitation.receiverId)!!,
+                            league = leagueJoint,
+                            invitedAt = invitation.invitedAt
+                        )
+                    }
+                    onInvitationsSentUpdate(result ?: emptyList())
+                }
+            }
+        }
     }
 }

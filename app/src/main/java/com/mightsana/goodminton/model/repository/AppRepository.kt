@@ -3,6 +3,7 @@ package com.mightsana.goodminton.model.repository
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.mightsana.goodminton.features.main.model.InvitationJoint
 import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipant
@@ -16,7 +17,9 @@ import com.mightsana.goodminton.model.repository.users.MyUser
 interface AppRepository {
     // Initiate
     val db: FirebaseFirestore
-//    val batchSize: Int
+
+    // App Checking
+    suspend fun isMaintenance(): Boolean
 
     // Register
     suspend fun createNewUser(user: MyUser)
@@ -95,4 +98,7 @@ interface AppRepository {
     suspend fun acceptFriendRequest(requestId: String, userIds: List<String>)
     suspend fun createFriendRequest(senderId: String, receiverId: String)
 
+    // Retrieve League Invitation Data
+    fun observeLeagueInvitationsSentSnapshot(leagueId: String, onInvitationsSentSnapshotUpdate: (QuerySnapshot?) -> Unit)
+    fun observeLeagueInvitationsSentJoint(leagueId: String, onInvitationsSentUpdate: (List<InvitationJoint>) -> Unit)
 }

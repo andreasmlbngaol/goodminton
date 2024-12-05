@@ -8,7 +8,7 @@ import com.mightsana.goodminton.features.auth.email_verification.EmailVerificati
 import com.mightsana.goodminton.features.auth.register.RegisterScreen
 import com.mightsana.goodminton.features.auth.sign_in.SignInScreen
 import com.mightsana.goodminton.features.auth.sign_up.SignUpScreen
-import com.mightsana.goodminton.model.ext.navigateAndClearBackStack
+import com.mightsana.goodminton.model.ext.navigateAndPopUpTo
 import kotlinx.serialization.Serializable
 
 @Serializable object AuthGraph
@@ -17,81 +17,44 @@ import kotlinx.serialization.Serializable
 @Serializable object EmailVerification
 @Serializable object Register
 
-fun NavGraphBuilder.authGraphTypeSafe(
+fun NavGraphBuilder.authGraph(
     navController: NavHostController,
+    startDestination: Any,
     mainRoute: Any,
     defaultWebClientId: String,
 ) {
-    navigation<AuthGraph>(startDestination = SignIn) {
+    navigation<AuthGraph>(startDestination = startDestination) {
         composable<SignIn> {
             SignInScreen(
-                onCheckRegisterStatusAndNavigate = { navController.navigateAndClearBackStack(it ?: mainRoute) },
-                onNavigateToSignUp = { navController.navigateAndClearBackStack(SignUp) },
+                onCheckRegisterStatusAndNavigate = { navController.navigateAndPopUpTo(it ?: mainRoute, SignIn) },
+                onNavigateToSignUp = { navController.navigateAndPopUpTo(SignUp, SignIn) },
                 defaultWebClientId = defaultWebClientId
             )
         }
 
         composable<SignUp> {
             SignUpScreen(
-                onSignUpWithEmailAndPassword = { navController.navigateAndClearBackStack(EmailVerification) },
-                onSignInWithGoogle = { navController.navigateAndClearBackStack(it ?: mainRoute) },
-                onNavigateToSignIn = { navController.navigateAndClearBackStack(SignIn) },
+                onSignUpWithEmailAndPassword = { navController.navigateAndPopUpTo(EmailVerification,
+                    SignUp) },
+                onSignInWithGoogle = { navController.navigateAndPopUpTo(it ?: mainRoute, SignUp) },
+                onNavigateToSignIn = { navController.navigateAndPopUpTo(SignIn, SignUp) },
                 defaultWebClientId = defaultWebClientId
             )
         }
 
         composable<EmailVerification> {
             EmailVerificationScreen(
-                onSignOut = { navController.navigateAndClearBackStack(SignIn) },
-                onEmailVerified = { navController.navigateAndClearBackStack(mainRoute) }
+                onSignOut = { navController.navigateAndPopUpTo(SignIn, EmailVerification) },
+                onEmailVerified = { navController.navigateAndPopUpTo(mainRoute, EmailVerification) }
             )
         }
 
         composable<Register> {
             RegisterScreen(
-                onNavigateToSignIn = { navController.navigateAndClearBackStack(SignIn) },
-                onRegister = { navController.navigateAndClearBackStack(mainRoute) }
+                onNavigateToSignIn = { navController.navigateAndPopUpTo(SignIn, AuthGraph) },
+                onRegister = { navController.navigateAndPopUpTo(mainRoute, AuthGraph) }
             )
         }
     }
 
 }
-
-//fun NavGraphBuilder.authGraph(
-//    navController: NavHostController,
-//    mainRoute: String,
-//    defaultWebClientId: String,
-//    startDestination: String = SIGN_IN
-//) {
-//    navigation(
-//        route = AUTH_GRAPH,
-//        startDestination = startDestination,
-//    ) {
-//        composable(SIGN_IN) {
-//            SignInScreen(
-//                navController = navController,
-//                defaultWebClientId = defaultWebClientId
-//            )
-//        }
-//
-//        composable(SIGN_UP) {
-//            SignUpScreen(
-//                navController = navController,
-//                defaultWebClientId = defaultWebClientId
-//            )
-//        }
-//
-//        composable(EMAIL_VERIFICATION) {
-//            EmailVerificationScreen(
-//                navController = navController
-//            )
-//        }
-//
-//        composable(REGISTER) {
-//            RegisterScreen(
-//                navController = navController
-//            )
-//        }
-//    }
-//}
-

@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                     Loader(navStart == null) {
                         ExitWithDoublePress()
                         navStart?.let { startDestination ->
-                            MyNavHost(navController, startDestination)
+                            MyNavHost(navController, startDestination, authStart)
                         }
                     }
                 }

@@ -4,11 +4,12 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
+import com.mightsana.goodminton.features.main.model.InvitationJoint
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
-import com.mightsana.goodminton.features.main.model.LeagueParticipantUI
 import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.model.repository.AppRepository
+import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,13 +29,28 @@ class DetailViewModel @Inject constructor(
     private val _user = MutableStateFlow(MyUser())
     val user = _user.asStateFlow()
 
+    private val _friends = MutableStateFlow(listOf<FriendJoint>())
+    val friends = _friends.asStateFlow()
+
     private val _matchesJoint = MutableStateFlow<List<MatchJoint>>(emptyList())
     val matchesJoint = _matchesJoint.asStateFlow()
+
+    private val _invitationSent = MutableStateFlow<List<InvitationJoint>>(emptyList())
+    val invitationSent = _invitationSent.asStateFlow()
+
 
     private fun observeUser() {
         viewModelScope.launch {
             appRepository.observeUserJoint(accountService.currentUserId) {
                 _user.value = it
+            }
+        }
+    }
+
+    private fun observeFriends() {
+        viewModelScope.launch {
+            appRepository.observeFriendsJoint(accountService.currentUserId) {
+                _friends.value = it
             }
         }
     }
@@ -50,9 +66,6 @@ class DetailViewModel @Inject constructor(
             _leagueJoint.value = it
         }
     }
-
-    private val _leagueParticipantsUI = MutableStateFlow(listOf<LeagueParticipantUI>())
-    val leagueParticipantsUI = _leagueParticipantsUI.asStateFlow()
 
     private val _leagueParticipantsJoint = MutableStateFlow(listOf<LeagueParticipantJoint>())
     val leagueParticipantsJoint = _leagueParticipantsJoint.asStateFlow()
@@ -70,6 +83,13 @@ class DetailViewModel @Inject constructor(
             appLoaded()
         }
     }
+
+    private fun observeInvitationSent(leagueId: String) {
+        appRepository.observeLeagueInvitationsSentJoint(leagueId) {
+            _invitationSent.value = it
+        }
+    }
+
     fun observeLeague(
         leagueId: String,
         onSuccess: () -> Unit = {}
@@ -77,6 +97,7 @@ class DetailViewModel @Inject constructor(
         viewModelScope.launch {
             observeLeagueJoint(leagueId)
             observeLeagueParticipantsJoint(leagueId)
+            observeInvitationSent(leagueId)
             observeMatchesJoint(leagueId)
             onSuccess()
         }
@@ -89,6 +110,7 @@ class DetailViewModel @Inject constructor(
     init {
         appLoading()
         observeUser()
+        observeFriends()
     }
 
     // Participants
@@ -116,6 +138,18 @@ class DetailViewModel @Inject constructor(
             this[userId] = false
         }
     }
+
+    private val _participantsSheetExpanded = MutableStateFlow(false)
+    val participantsSheetExpanded = _participantsSheetExpanded.asStateFlow()
+
+    fun dismissParticipantsSheet() {
+        _participantsSheetExpanded.value = false
+    }
+
+    fun showParticipantsSheet() {
+        _participantsSheetExpanded.value = true
+    }
+
 
     // League Info
     fun updateLeagueDiscipline(newDouble: Boolean) {

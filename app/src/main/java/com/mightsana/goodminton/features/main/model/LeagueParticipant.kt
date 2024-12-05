@@ -21,16 +21,11 @@ data class LeagueParticipantJoint(
     val participateAt: Timestamp = Timestamp.now(),
 )
 
-data class LeagueParticipantUI(
-    val info: LeagueParticipant = LeagueParticipant(),
-    val user: MyUser = MyUser(),
-    val stats: ParticipantStats = ParticipantStats()
-)
-
 enum class Role {
     Creator, Admin, Player, Spectator
 }
 
+@Suppress("unused")
 enum class Status {
     Pending, Active, Invited
 }

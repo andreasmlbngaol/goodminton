@@ -19,8 +19,9 @@ class SelfProfileViewModel @Inject constructor(
     init {
         appLoading()
         observeUser(accountService.currentUserId)
-        observeFriendsJoint(accountService.currentUserId)
-        appLoaded()
+        observeFriendsJoint(accountService.currentUserId) {
+            appLoaded()
+        }
     }
 
     private val _signOutDialogVisible = MutableStateFlow(false)

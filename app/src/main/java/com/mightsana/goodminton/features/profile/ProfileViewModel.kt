@@ -33,10 +33,11 @@ abstract class ProfileViewModel(
     protected val _friends = MutableStateFlow<List<FriendJoint>>(emptyList())
     val friends = _friends.asStateFlow()
 
-    protected fun observeFriendsJoint(userId: String) {
+    protected fun observeFriendsJoint(userId: String, onObserved: () -> Unit = {}) {
         appRepository.observeFriendsJoint(userId) {
             viewModelScope.launch {
                 _friends.value = it
+                onObserved()
             }
         }
     }

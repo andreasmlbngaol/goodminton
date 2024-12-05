@@ -62,8 +62,7 @@ class OtherProfileViewModel @Inject constructor(
 
     fun observeOther(uid: String) {
         observeOtherUser(uid)
-        observeFriendsJoint(uid)
-        appLoaded()
+        observeFriendsJoint(uid) { appLoaded() }
     }
 
     private val _isProcessing = MutableStateFlow(false)

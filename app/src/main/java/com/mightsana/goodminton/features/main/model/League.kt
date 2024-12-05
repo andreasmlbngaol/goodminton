@@ -25,5 +25,4 @@ data class LeagueJoint(
     val fixedDouble: Boolean? = null,
     val createdBy: MyUser = MyUser(),
     val createdAt: Timestamp = Timestamp.now()
-
 )

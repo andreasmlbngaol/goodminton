@@ -83,7 +83,6 @@ fun HomeScreen(
         label = ""
     )
     val sheetState = rememberModalBottomSheetState()
-
     val scope = rememberCoroutineScope()
 
     Loader(viewModel.isLoading.collectAsState().value) {
@@ -108,7 +107,7 @@ fun HomeScreen(
                                 onSearch = { viewModel.collapseSearch() },
                                 expanded = searchExpanded,
                                 onExpandedChange = { viewModel.onSearchExpandedChange(it) },
-                                placeholder = { Text("Search...") },
+                                placeholder = { Text("Search league name...") },
                                 leadingIcon = {
                                     AnimatedContent(
                                         searchExpanded,
@@ -239,7 +238,7 @@ fun HomeScreen(
     }
 
     // Bottom Drawer Sheet
-    if(viewModel.bottomSheetExpanded.collectAsState().value) {
+    AnimatedVisibility(viewModel.bottomSheetExpanded.collectAsState().value) {
         ModalBottomSheet(
             onDismissRequest = {
                 scope.launch {

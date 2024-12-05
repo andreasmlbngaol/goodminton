@@ -104,7 +104,7 @@ fun SocialScreen(
                             onSearch = { viewModel.collapseSearch() },
                             expanded = searchExpanded,
                             onExpandedChange = { viewModel.onSearchExpandedChange(it) },
-                            placeholder = { Text("Search...") },
+                            placeholder = { Text("Search name or username...") },
                             leadingIcon = {
                                 AnimatedContent(
                                     searchExpanded,

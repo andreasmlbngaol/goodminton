@@ -1,5 +1,6 @@
 package com.mightsana.goodminton.features.profile.friend_list
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -103,9 +104,9 @@ fun FriendListScreen(
 
                 sortedFriends.forEach {
                     item(
-                        span = if(it.user.uid == user.uid) {
-                            { GridItemSpan(maxLineSpan) } }
-                        else null
+                        span = if(it.user.uid == user.uid || sortedFriends.size == 1) {
+                            { GridItemSpan(maxLineSpan) }
+                        } else null
                     ) {
                         Card(
                             shape = MaterialTheme.shapes.medium,
@@ -156,7 +157,7 @@ fun FriendListScreen(
                                         Spacer(modifier = Modifier.height(Size.smallPadding))
                                         val isFriendRequestedReceived = friendRequestReceived.any { request -> request.sender.uid == it.user.uid }
                                         val isFriendRequestedSent = friendRequestSent.any { request -> request.receiver.uid == it.user.uid }
-                                        if(isFriendRequestedReceived)
+                                        if(isFriendRequestedReceived) {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
@@ -184,38 +185,50 @@ fun FriendListScreen(
                                                     )
                                                 }
                                             }
-                                        else if(isFriendRequestedSent)
-                                            Button(
-                                                onClick = { viewModel.cancelFriendRequest(it.user.uid) },
-                                                colors = ButtonDefaults.buttonColors().copy(
-                                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                                    disabledContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                                                    disabledContentColor = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.5f)
-                                                ),
-                                                modifier = Modifier.fillMaxWidth()
-                                            ) {
-                                                Row(
-                                                    horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    MyIcon(MyIcons.Cancel)
-                                                    Text(text = "Cancel")
-                                                }
+                                        } else {
+                                            AnimatedContent(isFriendRequestedSent, label = "") { requestSent ->
+                                                if (requestSent)
+                                                    Button(
+                                                        onClick = { viewModel.cancelFriendRequest(it.user.uid) },
+                                                        colors = ButtonDefaults.buttonColors().copy(
+                                                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                                                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                                            disabledContainerColor = MaterialTheme.colorScheme.errorContainer.copy(
+                                                                alpha = 0.5f
+                                                            ),
+                                                            disabledContentColor = MaterialTheme.colorScheme.onErrorContainer.copy(
+                                                                alpha = 0.5f
+                                                            )
+                                                        ),
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    ) {
+                                                        Row(
+                                                            horizontalArrangement = Arrangement.spacedBy(
+                                                                Size.smallPadding
+                                                            ),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            MyIcon(MyIcons.Cancel)
+                                                            Text(text = "Cancel")
+                                                        }
+                                                    }
+                                                else
+                                                    Button(
+                                                        onClick = { viewModel.sendFriendRequest(it.user.uid) },
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    ) {
+                                                        Row(
+                                                            horizontalArrangement = Arrangement.spacedBy(
+                                                                Size.smallPadding
+                                                            ),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            MyIcon(MyIcons.Plus)
+                                                            Text(text = "Request Friend")
+                                                        }
+                                                    }
                                             }
-                                        else
-                                            Button(
-                                                onClick = { viewModel.sendFriendRequest(it.user.uid) },
-                                                modifier = Modifier.fillMaxWidth()
-                                            ) {
-                                                Row(
-                                                    horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    MyIcon(MyIcons.Plus)
-                                                    Text(text = "Request Friend")
-                                                }
-                                            }
+                                        }
                                     }
                                     else if(it.user.uid != user.uid) {
                                         Spacer(modifier = Modifier.height(Size.smallPadding))
@@ -246,144 +259,6 @@ fun FriendListScreen(
                         }
                     }
                 }
-
-//                items(sortedFriends) {
-//                    Card(
-//                        shape = MaterialTheme.shapes.medium,
-//                        modifier = Modifier
-//                            .fillMaxHeight()
-//                    ) {
-//                        Row(
-//                            modifier = Modifier.fillMaxSize().padding(Size.padding),
-//                            verticalAlignment = Alignment.CenterVertically,
-//                            horizontalArrangement = Arrangement.spacedBy(Size.padding)
-//                        ) {
-//                            MyImage(
-//                                model = it.user.profilePhotoUrl,
-//                                modifier = Modifier
-//                                    .clip(CircleShape)
-//                                    .size(70.dp)
-//                                    .onTap {
-//                                        if(it.user.uid != user.uid)
-//                                            onNavigateToOtherProfile(it.user.uid)
-//                                    }
-//                            )
-//                            Column(
-//                                modifier = Modifier.weight(1f),
-//                                verticalArrangement = Arrangement.Center
-//                            ) {
-//                                Text(
-//                                    text = it.user.name,
-//                                    style = MaterialTheme.typography.titleMedium,
-//                                    modifier = Modifier
-//                                        .onTap {
-//                                            if(it.user.uid != user.uid)
-//                                                onNavigateToOtherProfile(it.user.uid)
-//                                        }
-//                                )
-//                                Text(
-//                                    text = it.user.username,
-//                                    style = MaterialTheme.typography.titleSmall,
-//                                    modifier = Modifier
-//                                        .onTap {
-//                                            if(it.user.uid != user.uid)
-//                                                onNavigateToOtherProfile(it.user.uid)
-//                                        }
-//                                )
-//                                val isNotFriend = !friends.any { friend -> friend.user.uid == it.user.uid } && it.user.uid != user.uid
-//                                if(isNotFriend) {
-//                                    Spacer(modifier = Modifier.height(Size.smallPadding))
-//                                    val isFriendRequestedReceived = friendRequestReceived.any { request -> request.sender.uid == it.user.uid }
-//                                    val isFriendRequestedSent = friendRequestSent.any { request -> request.receiver.uid == it.user.uid }
-//                                    if(isFriendRequestedReceived)
-//                                        Row(
-//                                            modifier = Modifier.fillMaxWidth(),
-//                                            horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
-//                                        ) {
-//                                            Button(
-//                                                enabled = !isProcessing,
-//                                                onClick = { viewModel.acceptFriendRequest(it.user.uid) },
-//                                                modifier = Modifier.weight(1f)
-//                                            ) {
-//                                                Text(
-//                                                    maxLines = 1,
-//                                                    overflow = TextOverflow.Ellipsis,
-//                                                    text = "Accept"
-//                                                )
-//                                            }
-//                                            OutlinedButton(
-//                                                enabled = !isProcessing,
-//                                                onClick = { viewModel.declineFriendRequest(it.user.uid) },
-//                                                modifier = Modifier.weight(1f)
-//                                            ) {
-//                                                Text(
-//                                                    maxLines = 1,
-//                                                    overflow = TextOverflow.Ellipsis,
-//                                                    text = "Decline"
-//                                                )
-//                                            }
-//                                        }
-//                                    else if(isFriendRequestedSent)
-//                                        Button(
-//                                            onClick = { viewModel.cancelFriendRequest(it.user.uid) },
-//                                            colors = ButtonDefaults.buttonColors().copy(
-//                                                containerColor = MaterialTheme.colorScheme.errorContainer,
-//                                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-//                                                disabledContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-//                                                disabledContentColor = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.5f)
-//                                            ),
-//                                            modifier = Modifier.fillMaxWidth()
-//                                        ) {
-//                                            Row(
-//                                                horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
-//                                                verticalAlignment = Alignment.CenterVertically
-//                                            ) {
-//                                                MyIcon(MyIcons.Cancel)
-//                                                Text(text = "Cancel")
-//                                            }
-//                                        }
-//                                    else
-//                                        Button(
-//                                            onClick = { viewModel.sendFriendRequest(it.user.uid) },
-//                                            modifier = Modifier.fillMaxWidth()
-//                                        ) {
-//                                            Row(
-//                                                horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
-//                                                verticalAlignment = Alignment.CenterVertically
-//                                            ) {
-//                                                MyIcon(MyIcons.Plus)
-//                                                Text(text = "Request Friend")
-//                                            }
-//                                        }
-//                                }
-//                                else if(it.user.uid != user.uid) {
-//                                    Spacer(modifier = Modifier.height(Size.smallPadding))
-//                                    Button(
-//                                        onClick = {
-//                                            viewModel.setUnfriendUser(it.user)
-//                                            viewModel.showDialog()
-//                                        },
-//                                        colors = ButtonDefaults.buttonColors().copy(
-//                                            containerColor = MaterialTheme.colorScheme.error,
-//                                            contentColor = MaterialTheme.colorScheme.onError,
-//                                            disabledContainerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-//                                            disabledContentColor = MaterialTheme.colorScheme.onError.copy(alpha = 0.5f)
-//                                        ),
-//                                        modifier = Modifier.fillMaxWidth()
-//                                    ) {
-//                                        Row(
-//                                            horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
-//                                            verticalAlignment = Alignment.CenterVertically
-//                                        ) {
-//                                            MyIcon(MyIcons.Delete)
-//                                            Text(text = "Unfriend")
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
             }
         }
         AnimatedVisibility(dialogVisible) {
@@ -420,5 +295,4 @@ fun FriendListScreen(
             )
         }
     }
-
 }

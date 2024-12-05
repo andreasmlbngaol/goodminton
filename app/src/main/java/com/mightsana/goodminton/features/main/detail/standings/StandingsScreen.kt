@@ -1,13 +1,9 @@
 package com.mightsana.goodminton.features.main.detail.standings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,20 +11,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 
+@Suppress("unused")
 @Composable
 fun StandingsScreen(
     viewModel: DetailViewModel
 ) {
-    val participantsUI by viewModel.leagueParticipantsUI.collectAsState()
+//    val participants by viewModel.leagueParticipantsJoint.collectAsState()
 
 //    LazyColumn(
 //        modifier = Modifier
@@ -42,19 +36,20 @@ fun StandingsScreen(
 //            )
 //        }
 //    }
-    val tableData = participantsUI.sortedByDescending { it.stats.wins }.mapIndexed { index, item ->
-        TableData(
-            position = index + 1,
-            name = item.user.name,
-            nickname = item.user.nickname,
-            matches = item.stats.matches,
-            wins = item.stats.wins,
-            losses = item.stats.losses,
-            pointsScored = item.stats.pointsScored,
-            pointsConceded = item.stats.pointsConceded,
-            pointsDifference = item.stats.pointsScored - item.stats.pointsConceded
-        )
-    }
+//    val tableData = participants.sortedByDescending { it.wins }.mapIndexed { index, item ->
+//        TableData(
+//            position = index + 1,
+//            name = item.user.name,
+//            nickname = item.user.nickname,
+//            matches = item.matches,
+//            wins = item.wins,
+//            losses = item.losses,
+//            pointsScored = item.pointsScored,
+//            pointsConceded = item.pointsConceded,
+//            pointsDifference = item.pointsScored - item.pointsConceded
+//        )
+//    }
+    val tableData = emptyList<TableData>()
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
