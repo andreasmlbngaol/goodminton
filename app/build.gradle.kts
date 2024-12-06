@@ -98,6 +98,9 @@ dependencies {
     // JSON Serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.navigation.compose)
+
+    // Table
+    implementation(libs.beetablescompose)
 }
 
 kapt {

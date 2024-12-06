@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CopyAll
@@ -66,6 +67,7 @@ fun MyIcon(
 
 @Suppress("unused")
 object MyIcons {
+    val Generate: ImageVector = Icons.Default.AutoAwesome
     val Join: ImageVector = Icons.Default.Start
     val Invitation: ImageVector = Icons.Default.Email
     val SocialSelected: ImageVector = Icons.Filled.PeopleAlt

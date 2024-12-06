@@ -16,7 +16,7 @@ data class ParticipantStats(
 data class ParticipantStatsJoint(
     val id: String = "",
     val user: MyUser = MyUser(),
-    val league: League = League(),
+    val league: LeagueJoint = LeagueJoint(),
     val wins: Int = 0,
     val losses: Int = 0,
     val pointsScored: Int = 0,

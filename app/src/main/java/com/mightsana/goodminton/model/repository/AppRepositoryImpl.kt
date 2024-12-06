@@ -16,6 +16,7 @@ import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.ParticipantStats
+import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.features.main.model.Status
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequest
@@ -63,7 +64,6 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .set(user)
             .await()
     }
-
     override suspend fun isUserRegistered(userId: String): Boolean =
         usersCollection
             .document(userId)
@@ -752,7 +752,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     getLeagueJointsByIds(invs.map { it.leagueId })
                         .associateBy { it.id }
                 }
-                var participants = mutableMapOf<String, List<LeagueParticipantJoint>>()
+                val participants = mutableMapOf<String, List<LeagueParticipantJoint>>()
                 invitations?.let { invs ->
                     invs.map { it.leagueId }.forEach { leagueId ->
                         participants[leagueId] = getParticipantsJoint(leagueId)
@@ -799,7 +799,44 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
     override suspend fun acceptInvitation(invitationId: String, leagueId: String, userId: String) {
         addParticipant(leagueId, userId)
-        addParticipantStats(userId,leagueId)
+        addParticipantStats(leagueId, userId)
         deleteInvitation(invitationId)
+    }
+
+    // Retrieve League Participants Stats Data
+    override fun observeParticipantsStatsSnapshot(leagueId: String, onParticipantsStatsSnapshotUpdate: (QuerySnapshot?) -> Unit) {
+        participantStatsCollection
+            .whereEqualTo("leagueId", leagueId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                onParticipantsStatsSnapshotUpdate(snapshot)
+            }
+    }
+    override fun observeParticipantsStatsJoint(leagueId: String, onParticipantsStatsUpdate: (List<ParticipantStatsJoint>) -> Unit) {
+        observeParticipantsStatsSnapshot(leagueId) { participantsStatsSnapshot ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val participants = participantsStatsSnapshot?.toObjects(ParticipantStats::class.java)
+                val leagueJoint = getLeagueJoint(leagueId)
+                val users = participants?.let { ptc -> getUsersByIds(ptc.map { it.userId }).associateBy { it.uid } }
+
+                launch(Dispatchers.Main) {
+                    val result = participants?.map { participant ->
+                        ParticipantStatsJoint(
+                            id = participant.id,
+                            user = users?.get(participant.userId)!!,
+                            league = leagueJoint,
+                            wins = participant.wins,
+                            losses = participant.losses,
+                            pointsScored = participant.pointsScored,
+                            pointsConceded = participant.pointsConceded,
+                            matches = participant.matches
+                        )
+                    }
+                    onParticipantsStatsUpdate(result ?: emptyList())
+                }
+            }
+        }
     }
 }

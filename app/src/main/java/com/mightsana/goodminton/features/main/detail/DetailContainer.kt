@@ -2,11 +2,13 @@ package com.mightsana.goodminton.features.main.detail
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,6 +27,8 @@ import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
@@ -52,17 +56,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.features.main.detail.info.LeagueInfoScreen
 import com.mightsana.goodminton.features.main.detail.matches.MatchesScreen
 import com.mightsana.goodminton.features.main.detail.participants.ParticipantsScreen
 import com.mightsana.goodminton.features.main.detail.standings.StandingsScreen
+import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.model.values.Size
@@ -87,6 +93,8 @@ fun DetailContainer(
     val league by viewModel.leagueJoint.collectAsState()
     val participants by viewModel.leagueParticipantsJoint.collectAsState()
     val sheetState = rememberModalBottomSheetState()
+    val playerDropdownExpanded by viewModel.matchPlayersExpanded.collectAsState()
+    val playerSelected by viewModel.playerSelected.collectAsState()
     val scope = rememberCoroutineScope()
 
     val navItems = listOf(
@@ -95,8 +103,39 @@ fun DetailContainer(
             route = MATCH,
             iconSelected = Icons.Filled.Schedule,
             iconUnselected = Icons.Outlined.Schedule,
-            content = {
-                MatchesScreen(viewModel = viewModel)
+            content = { MatchesScreen(viewModel = viewModel) },
+            fab = {
+                val role = participants.find { it.user.uid == user.uid }?.role
+                if (role == Role.Creator || role == Role.Admin) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        if(participants.size >= 8) {
+                            FloatingActionButton(
+                                onClick = {}
+                            ) {
+                                MyIcon(MyIcons.Generate)
+                            }
+                        }
+                        if(participants.size >= 4) {
+                            ExtendedFloatingActionButton(
+                                text = {
+                                    Text("New Match")
+                                },
+                                icon = {
+                                    MyIcon(MyIcons.Plus)
+                                },
+                                onClick = {
+                                    scope.launch {
+                                        viewModel.showMatchSheet()
+                                        sheetState.show()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
             }
         ),
         NavigationItem(
@@ -104,15 +143,14 @@ fun DetailContainer(
             route = STANDINGS,
             iconSelected = Icons.Filled.Leaderboard,
             iconUnselected = Icons.Outlined.Leaderboard,
-            content = {
-                StandingsScreen(viewModel = viewModel)
-            }
+            content = { StandingsScreen(viewModel = viewModel) }
         ),
         NavigationItem(
             label = PARTICIPANTS,
             route = PARTICIPANTS,
             iconSelected = Icons.Filled.People,
             iconUnselected = Icons.Outlined.People,
+            content = { ParticipantsScreen(viewModel = viewModel) },
             fab = {
                 if (participants.find { it.user.uid == user.uid }?.role == Role.Creator) {
                     Column(
@@ -142,9 +180,6 @@ fun DetailContainer(
                 } else {
                     Text("For Participant Only")
                 }
-            },
-            content = {
-                ParticipantsScreen(viewModel = viewModel)
             }
         ),
         NavigationItem(
@@ -152,12 +187,7 @@ fun DetailContainer(
             route = INFO,
             iconSelected = Icons.Filled.Info,
             iconUnselected = Icons.Outlined.Info,
-            content = {
-                LeagueInfoScreen(
-                    viewModel = viewModel,
-                    onBack = onBack
-                )
-            }
+            content = { LeagueInfoScreen(viewModel, onBack) }
         )
     )
     val selectedItem by viewModel.selectedItem.collectAsState()
@@ -172,7 +202,7 @@ fun DetailContainer(
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
-                    title = { Text(league.name, overflow = TextOverflow.Ellipsis, maxLines = 1) },
+                    title = { Text(league.name, overflow = Ellipsis, maxLines = 1) },
                     navigationIcon = {
                         IconButton(
                             onClick = onBack
@@ -276,6 +306,17 @@ fun DetailContainer(
                     val participantIds = participants.map { it.user.uid }
                     val friendsAvailable = friends
                         .filter { it.user.uid !in participantIds }
+                    if(friendsAvailable.isEmpty())
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(Size.padding),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "No Friends Can Be Invited")
+                            }
+                        }
                     items(friendsAvailable) {
                         ListItem(
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -318,6 +359,88 @@ fun DetailContainer(
                         )
                     }
                 }
+            }
+        }
+    }
+    if(viewModel.matchSheetExpanded.collectAsState().value) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                    viewModel.dismissMatchSheet()
+                }
+            },
+            sheetState = sheetState
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Size.padding),
+                verticalArrangement = Arrangement.spacedBy(Size.padding)
+            ) {
+                items(listOf(1, 2, 3, 4)) {
+                    MatchDropdownButton(
+                        dropdownExpandedMap = playerDropdownExpanded,
+                        order = it,
+                        items = participants.filter { p -> p.user.uid !in playerSelected.values },
+                        onToggle = { viewModel.togglePlayerExpanded(it) },
+                        onDismiss = { viewModel.dismissPlayerExpanded(it) },
+                        onSelected = { selectedId -> viewModel.selectPlayer(it, selectedId) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(100.dp))
+        }
+    }
+}
+
+@Composable
+fun MatchDropdownButton(
+    dropdownExpandedMap: Map<Int, Boolean>,
+    order: Int,
+    label: String = "Player $order",
+    items: List<LeagueParticipantJoint>,
+    onToggle: (Int) -> Unit,
+    onDismiss: (Int) -> Unit,
+    onSelected: (String) -> Unit
+) {
+    Box {
+        val isDropdownExpanded = dropdownExpandedMap[order] == true
+        Button(onClick = { onToggle(order) }) {
+            Text(label)
+        }
+        DropdownMenu(
+            expanded = isDropdownExpanded,
+            onDismissRequest = { onDismiss(order) }
+        ) {
+            items.forEach { item ->
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            modifier = Modifier.padding(vertical = Size.extraSmallPadding),
+                            horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
+                            verticalAlignment = CenterVertically
+                        ) {
+                            MyImage(
+                                item.user.profilePhotoUrl,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .size(40.dp)
+                            )
+                            Text(
+                                item.user.name,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.titleSmall,
+                                overflow = Ellipsis
+                            )
+                        }
+                    },
+                    onClick = {
+                        onSelected(item.user.uid)
+                        onDismiss(order)
+                    }
+                )
             }
         }
     }

@@ -1,170 +1,77 @@
 package com.mightsana.goodminton.features.main.detail.standings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
+import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
+import com.mightsana.goodminton.model.values.Size
+import com.mightsana.goodminton.view.Tables
 
 @Suppress("unused")
 @Composable
 fun StandingsScreen(
     viewModel: DetailViewModel
 ) {
-//    val participants by viewModel.leagueParticipantsJoint.collectAsState()
+    val participantsStats by viewModel.participantsStats.collectAsState()
+    val tableData = participantsStats
+        .sortedWith(
+            compareByDescending<ParticipantStatsJoint> { it.wins }
+                .thenBy { it.matches }
+                .thenBy { it.losses }
+                .thenByDescending { (it.pointsScored - it.pointsConceded) }
+                .thenByDescending { it.pointsScored }
+                .thenBy { it.pointsConceded }
+                .thenBy { it.user.name }
+        )
+        .mapIndexed { index, it ->
+            TableData(
+                position = index + 1,
+                name = it.user.name,
+                matches = it.matches,
+                wins = it.wins,
+                losses = it.losses,
+                pointsScored = it.pointsScored,
+                pointsConceded = it.pointsConceded,
+                pointsDifference = it.pointsScored - it.pointsConceded
+            )
+        }
+    val tableColumns = listOf("No", "Name", "M", "W", "L", "PS", "PC", "PD")
 
-//    LazyColumn(
-//        modifier = Modifier
-//            .fillMaxSize()
-//    ) {
-//        itemsIndexed(participantsUI.sortedByDescending { it.stats.wins }) { index, item ->
-//            ListItem(
-//                headlineContent = {
-//                    Text("${index + 1}. ${item.user.nickname}")
-//                }
-//            )
-//        }
-//    }
-//    val tableData = participants.sortedByDescending { it.wins }.mapIndexed { index, item ->
-//        TableData(
-//            position = index + 1,
-//            name = item.user.name,
-//            nickname = item.user.nickname,
-//            matches = item.matches,
-//            wins = item.wins,
-//            losses = item.losses,
-//            pointsScored = item.pointsScored,
-//            pointsConceded = item.pointsConceded,
-//            pointsDifference = item.pointsScored - item.pointsConceded
-//        )
-//    }
-    val tableData = emptyList<TableData>()
-
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Box(
+        modifier = Modifier.fillMaxSize().padding(vertical = Size.padding),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        // Standings
-        LazyColumn(
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            item {
-                Text("No", style = MaterialTheme.typography.titleMedium)
-            }
-            items(tableData) {
-                Text(it.position.toString())
-            }
-        }
-
-        // Name
-        LazyColumn(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.widthIn(max = 160.dp)
-        ) {
-            item {
-                Text("Name", style = MaterialTheme.typography.titleMedium)
-            }
-            items(tableData) {
-                Text(it.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
-
-        // Stats
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            item {
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text("Match", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(tableData) {
-                        Text(it.matches.toString())
-                    }
-                }
-            }
-            item {
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text("Win", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(tableData) {
-                        Text(it.wins.toString())
-                    }
-                }
-            }
-            item {
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text("Losses", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(tableData) {
-                        Text(it.losses.toString())
-                    }
-                }
-            }
-            item {
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text("PS", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(tableData) {
-                        Text(it.pointsScored.toString())
-                    }
-                }
-            }
-            item {
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text("PC", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(tableData) {
-                        Text(it.pointsConceded.toString())
-                    }
-                }
-            }
-            item {
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text("PD", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(tableData) {
-                        Text(it.pointsDifference.toString())
-                    }
-                }
-            }
-        }
+        Tables(
+            data = tableData,
+            enableTableHeaderTitles = true,
+            headerTableTitles = tableColumns,
+            headerTitlesTextStyle = MaterialTheme.typography.titleMedium,
+            headerTitlesBackGroundColor = MaterialTheme.colorScheme.surfaceVariant,
+            columnToIndexIncreaseWidth = 1,
+            columnToFontWeightModified = mapOf(3 to FontWeight.ExtraBold),
+            columnToColorModified = mapOf(
+                2 to MaterialTheme.colorScheme.secondary,
+                3 to MaterialTheme.colorScheme.primary,
+                7 to MaterialTheme.colorScheme.tertiary
+            ),
+            rowTextStyle = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(horizontal = Size.smallPadding)
+        )
     }
+
 }
 
 data class TableData(
     val position: Int,
     val name: String,
-    val nickname: String,
     val matches: Int,
     val wins: Int,
     val losses: Int,

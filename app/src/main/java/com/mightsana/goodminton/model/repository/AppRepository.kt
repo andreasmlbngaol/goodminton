@@ -10,6 +10,7 @@ import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.ParticipantStats
+import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.friends.FriendJoint
@@ -111,4 +112,9 @@ interface AppRepository {
     suspend fun addInvitation(leagueId: String, senderId: String, receiverId: String)
     suspend fun deleteInvitation(invitationId: String)
     suspend fun acceptInvitation(invitationId: String, leagueId: String, userId: String)
+
+    // Retrieve League Participants Stats Data
+    fun observeParticipantsStatsSnapshot(leagueId: String, onParticipantsStatsSnapshotUpdate: (QuerySnapshot?) -> Unit)
+    fun observeParticipantsStatsJoint(leagueId: String, onParticipantsStatsUpdate: (List<ParticipantStatsJoint>) -> Unit)
+
 }

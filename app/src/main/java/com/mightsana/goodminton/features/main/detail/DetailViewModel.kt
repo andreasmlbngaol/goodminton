@@ -8,6 +8,7 @@ import com.mightsana.goodminton.features.main.model.InvitationJoint
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.MatchJoint
+import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
@@ -38,6 +39,8 @@ class DetailViewModel @Inject constructor(
     private val _invitationSent = MutableStateFlow<List<InvitationJoint>>(emptyList())
     val invitationSent = _invitationSent.asStateFlow()
 
+    private val _participantsStats = MutableStateFlow(listOf<ParticipantStatsJoint>())
+    val participantsStats = _participantsStats.asStateFlow()
 
     private fun observeUser() {
         viewModelScope.launch {
@@ -90,6 +93,13 @@ class DetailViewModel @Inject constructor(
         }
     }
 
+    private fun observeParticipantsStats(leagueId: String) {
+        appRepository.observeParticipantsStatsJoint(leagueId) {
+            Log.d("DetailViewModel", "observeParticipantsStats: $it")
+            _participantsStats.value = it
+        }
+    }
+
     fun observeLeague(
         leagueId: String,
         onSuccess: () -> Unit = {}
@@ -98,6 +108,7 @@ class DetailViewModel @Inject constructor(
             observeLeagueJoint(leagueId)
             observeLeagueParticipantsJoint(leagueId)
             observeInvitationSent(leagueId)
+            observeParticipantsStats(leagueId)
             observeMatchesJoint(leagueId)
             onSuccess()
         }
@@ -110,6 +121,7 @@ class DetailViewModel @Inject constructor(
     fun addParticipant(uid: String) {
         viewModelScope.launch {
             appRepository.addParticipant(_leagueJoint.value.id, uid)
+            appRepository.addParticipantStats(_leagueJoint.value.id, uid)
         }
     }
 
@@ -304,4 +316,39 @@ class DetailViewModel @Inject constructor(
         }
     }
 
+    // Matches
+    private val _matchSheetExpanded = MutableStateFlow(false)
+    val matchSheetExpanded = _matchSheetExpanded.asStateFlow()
+
+    fun dismissMatchSheet() {
+        _matchSheetExpanded.value = false
+    }
+
+    fun showMatchSheet() {
+        _matchSheetExpanded.value = true
+    }
+
+    private val _matchPlayersExpanded = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
+    val matchPlayersExpanded = _matchPlayersExpanded.asStateFlow()
+
+    private val _playerSelected = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val playerSelected = _playerSelected.asStateFlow()
+
+    fun selectPlayer(playerOrder: Int, playerId: String) {
+        _playerSelected.value = _playerSelected.value.toMutableMap().apply {
+            this[playerOrder] = playerId
+        }
+    }
+
+    fun togglePlayerExpanded(playerOrder: Int) {
+        _matchPlayersExpanded.value = _matchPlayersExpanded.value.toMutableMap().apply {
+            this[playerOrder] = !(this[playerOrder] ?: false)
+        }
+    }
+
+    fun dismissPlayerExpanded(playerOrder: Int) {
+        _matchPlayersExpanded.value = _matchPlayersExpanded.value.toMutableMap().apply {
+            this[playerOrder] = false
+        }
+    }
 }
