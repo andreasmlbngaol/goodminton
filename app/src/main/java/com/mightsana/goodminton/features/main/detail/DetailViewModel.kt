@@ -107,6 +107,41 @@ class DetailViewModel @Inject constructor(
         _selectedItem.value = index
     }
 
+    fun addParticipant(uid: String) {
+        viewModelScope.launch {
+            appRepository.addParticipant(_leagueJoint.value.id, uid)
+        }
+    }
+
+    fun inviteFriend(uid: String) {
+        viewModelScope.launch {
+            appRepository.addInvitation(
+                _leagueJoint.value.id,
+                _user.value.uid,
+                uid
+            )
+        }
+    }
+
+    fun cancelInvitation(invitationId: String) {
+        viewModelScope.launch {
+            appRepository.deleteInvitation(invitationId)
+        }
+    }
+
+    fun acceptInvitation(invitationId: String, leagueId: String) {
+        viewModelScope.launch {
+            appRepository.acceptInvitation(invitationId, leagueId, accountService.currentUserId)
+        }
+    }
+
+    fun declineInvitation(invitationId: String) {
+        viewModelScope.launch {
+            appRepository.deleteInvitation(invitationId)
+        }
+    }
+
+
     init {
         appLoading()
         observeUser()
@@ -184,7 +219,8 @@ class DetailViewModel @Inject constructor(
     val changeNameDialogVisible = _changeNameDialogVisible.asStateFlow()
 
     fun changeLeagueName(newName: String) {
-        _leagueName.value = newName
+        if(newName.length <= 16)
+            _leagueName.value = newName
     }
 
     fun dismissChangeNameDialog() {
@@ -261,8 +297,10 @@ class DetailViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             appRepository.deleteLeague(_leagueJoint.value.id)
-            dismissDeleteLeagueDialog()
             onNavigateToHome()
+            appLoading()
+            dismissDeleteLeagueDialog()
+            appLoaded()
         }
     }
 

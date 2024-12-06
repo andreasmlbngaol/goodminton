@@ -68,6 +68,7 @@ class SocialViewModel @Inject constructor(
                     _friendRequestReceived.value = it
                 }
             )
+            appLoaded()
         }
     }
 
@@ -97,6 +98,7 @@ class SocialViewModel @Inject constructor(
     }
 
     init {
+        appLoading()
         getAllUsers()
         observeUser()
         observeFriendRequestReceived()

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Start
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wc
@@ -65,6 +66,7 @@ fun MyIcon(
 
 @Suppress("unused")
 object MyIcons {
+    val Join: ImageVector = Icons.Default.Start
     val Invitation: ImageVector = Icons.Default.Email
     val SocialSelected: ImageVector = Icons.Filled.PeopleAlt
     val SocialUnselected: ImageVector = Icons.Outlined.PeopleAlt

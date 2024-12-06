@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.features.main.main.FormValidationResult
 import com.mightsana.goodminton.features.main.model.League
+import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.model.ext.clip
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.users.MyUser
@@ -24,7 +25,7 @@ class HomeViewModel @Inject constructor(
     private val _user = MutableStateFlow(MyUser())
     val user = _user.asStateFlow()
 
-    private val _leagues = MutableStateFlow<List<League>>(emptyList())
+    private val _leagues = MutableStateFlow<List<LeagueJoint>>(emptyList())
     val leagues = _leagues.asStateFlow()
 
     private val _searchExpanded = MutableStateFlow(false)
@@ -65,7 +66,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun updateLeagueName(name: String) {
-        _leagueName.value = name
+        if(name.length <= 16)
+            _leagueName.value = name
     }
 
     fun updateMatchPoints(points: String) {
@@ -192,10 +194,10 @@ class HomeViewModel @Inject constructor(
         observeUser()
     }
 
-    fun deleteLeague(leagueId: String) {
-        viewModelScope.launch {
-            appRepository.deleteLeague(leagueId)
-            loadLeagues()
-        }
-    }
+//    fun deleteLeague(leagueId: String) {
+//        viewModelScope.launch {
+//            appRepository.deleteLeague(leagueId)
+//            loadLeagues()
+//        }
+//    }
 }

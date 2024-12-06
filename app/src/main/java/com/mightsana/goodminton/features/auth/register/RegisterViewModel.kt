@@ -57,8 +57,10 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun updateFullName(fullName: String) {
-        _fullName.value = fullName
-        validateFullName()
+        if(fullName.length <= 20) {
+            _fullName.value = fullName
+            validateFullName()
+        }
     }
 
     private fun validateNickname() {
@@ -68,8 +70,10 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun updateNickname(nickname: String) {
-        _nickname.value = nickname
-        validateNickname()
+        if(nickname.length <= 10) {
+            _nickname.value = nickname
+            validateNickname()
+        }
     }
 
     private fun isUsernameValid(): Boolean {
@@ -112,8 +116,10 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun updateUsername(username: String) {
-        _username.value = username.lowercase().noSpace()
-        validateUsername()
+        if(username.length <= 16) {
+            _username.value = username.lowercase().noSpace()
+            validateUsername()
+        }
     }
 
     private fun setFullNameError(error: Boolean) {

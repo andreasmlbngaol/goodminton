@@ -62,6 +62,7 @@ import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyImage
 import com.mightsana.goodminton.view.MyTextField
+import com.mightsana.goodminton.view.PullToRefreshScreen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,7 +155,7 @@ fun HomeScreen(
                                 leagues.filter {it.name.contains(searchQuery, true)}.forEach {
                                     ListItem(
                                         headlineContent = { Text(it.name) },
-                                        supportingContent = { Text(it.createdById) },
+                                        supportingContent = { Text(it.createdBy.name) },
                                         leadingContent = {
                                             Icon(
                                                 Icons.Filled.Star,
@@ -191,44 +192,46 @@ fun HomeScreen(
                 }
             }
         ) { innerPadding ->
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(350.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(leagues.sortedByDescending { it.createdAt }) {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        modifier = Modifier.clickable {
-                            onNavigateToLeague(it.id)
-                        }
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
+            PullToRefreshScreen( { viewModel.loadLeagues() }, Modifier.padding(innerPadding) ) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(350.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+//                        .padding(innerPadding)
+                        .padding(top = 16.dp)
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(leagues.sortedByDescending { it.createdAt }) {
+                        Card(
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier.clickable {
+                                onNavigateToLeague(it.id)
+                            }
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    it.name,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    maxLines = 1,
-                                    overflow = Ellipsis
-                                )
-                                Text(
-                                    it.createdAt.showDate(),
-                                    maxLines = 1,
-                                    overflow = Ellipsis
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        it.name,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        maxLines = 1,
+                                        overflow = Ellipsis
+                                    )
+                                    Text(
+                                        it.createdAt.showDate(),
+                                        maxLines = 1,
+                                        overflow = Ellipsis
+                                    )
+                                }
                             }
                         }
                     }
@@ -238,7 +241,7 @@ fun HomeScreen(
     }
 
     // Bottom Drawer Sheet
-    AnimatedVisibility(viewModel.bottomSheetExpanded.collectAsState().value) {
+    if(viewModel.bottomSheetExpanded.collectAsState().value) {
         ModalBottomSheet(
             onDismissRequest = {
                 scope.launch {

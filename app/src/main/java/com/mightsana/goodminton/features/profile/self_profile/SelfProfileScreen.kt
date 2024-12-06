@@ -32,8 +32,6 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,16 +39,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.R
-import com.mightsana.goodminton.model.ext.onLongPress
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyIcon
@@ -75,7 +69,7 @@ fun SelfProfileScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val profilePictureExpanded by viewModel.profilePictureExpanded.collectAsState()
-    val imagePosition = remember { mutableStateOf(IntOffset(0, 0)) }
+//    val imagePosition = remember { mutableStateOf(IntOffset(0, 0)) }
     val imageExpandedDuration = 600
     val imageMinWidth = 100.dp
     val imageMaxWidth = 400.dp
@@ -149,13 +143,13 @@ fun SelfProfileScreen(
                                     .width(imageMinWidth)
                                     .aspectRatio(1f)
                                     .clip(CircleShape)
-                                    .onGloballyPositioned { coordinates ->
-                                        imagePosition.value = IntOffset(
-                                            x = coordinates.positionInRoot().x.toInt(),
-                                            y = coordinates.positionInRoot().y.toInt()
-                                        )
-                                    }
-                                    .onLongPress { viewModel.expandProfilePicture() }
+//                                    .onGloballyPositioned { coordinates ->
+//                                        imagePosition.value = IntOffset(
+//                                            x = coordinates.positionInRoot().x.toInt(),
+//                                            y = coordinates.positionInRoot().y.toInt()
+//                                        )
+//                                    }
+                                    .onTap { viewModel.expandProfilePicture() }
                                     .alpha(imageAlpha)
                             )
                         Row(
@@ -166,10 +160,13 @@ fun SelfProfileScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier
-                                    .onTap { onNavigateToFriendList(user.uid) }
+                                    .onTap {
+                                        if (friendsJoint.isNotEmpty())
+                                            onNavigateToFriendList(user.uid)
+                                    }
                             ) {
-                                Text(friendsJoint.size.toString())
-                                Text("Friends")
+                                Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "${friendsJoint.size}")
+                                Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = if(friendsJoint.size == 1) "Friend" else "Friends")
                             }
                         }
                     }

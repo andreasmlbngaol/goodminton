@@ -2,6 +2,7 @@ package com.mightsana.goodminton.features.main.main
 
 import android.app.Application
 import com.mightsana.goodminton.MyViewModel
+import com.mightsana.goodminton.features.main.model.InvitationJoint
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.service.AccountService
@@ -27,19 +28,30 @@ class MainViewModel @Inject constructor(
     private val _friendRequestReceived = MutableStateFlow(listOf<FriendRequestJoint>())
     val friendRequestReceived = _friendRequestReceived.asStateFlow()
 
-    private val _friendRequestSent = MutableStateFlow(listOf<FriendRequestJoint>())
-//    val friendRequestSent = _friendRequestSent.asStateFlow()
+    private val _invitationReceived = MutableStateFlow(listOf<InvitationJoint>())
+    val invitationReceived = _invitationReceived.asStateFlow()
 
-    init {
+    private fun observeFriendRequests() {
         appRepository.observeFriendRequestsJoint(
             userId = accountService.currentUserId,
-            onFriendRequestsSentUpdate = {
-                _friendRequestSent.value = it
-            },
             onFriendRequestsReceivedUpdate = {
                 _friendRequestReceived.value = it
             }
         )
+    }
+
+    private fun observeInvitations() {
+        appRepository.observeLeagueInvitationsReceivedJoint(
+            userId = accountService.currentUserId,
+            onInvitationsReceivedUpdate = {
+                _invitationReceived.value = it
+            }
+        )
+    }
+
+    init {
+        observeFriendRequests()
+        observeInvitations()
     }
 }
 

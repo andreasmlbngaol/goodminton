@@ -55,6 +55,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.values.Size
+import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyImage
 import kotlinx.coroutines.launch
 
@@ -83,238 +84,240 @@ fun SocialScreen(
 
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                SearchBar(
+    Loader(viewModel.isLoading.collectAsState().value) {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize(),
+            topBar = {
+                Box(
                     modifier = Modifier
-                        .widthIn(min = 450.dp)
-                        .fillMaxWidth(),
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            query = searchQuery,
-                            onQueryChange = { viewModel.onSearchQueryChange(it) },
-                            onSearch = { viewModel.collapseSearch() },
-                            expanded = searchExpanded,
-                            onExpandedChange = { viewModel.onSearchExpandedChange(it) },
-                            placeholder = { Text("Search name or username...") },
-                            leadingIcon = {
-                                AnimatedContent(
-                                    searchExpanded,
-                                    label = ""
-                                ) {
-                                    if (!it)
-                                        Icon(
-                                            Icons.Default.Menu,
-                                            contentDescription = null,
-                                            modifier = Modifier.onTap {
-                                                scope.launch {
-                                                    onOpenDrawer()
-                                                }
-                                            }
-                                        )
-                                    else
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = null,
-                                            modifier = Modifier.onTap {
-                                                viewModel.collapseSearch()
-                                            }
-                                        )
-                                }
-                            },
-                            trailingIcon = if (!searchExpanded) {
-                                {
-                                    IconButton(onNavigateToProfile) {
-                                        MyImage(
-                                            user.profilePhotoUrl,
-                                            modifier = Modifier
-                                                .clip(CircleShape)
-                                        )
-                                    }
-                                }
-                            } else null,
-
-                        )
-                    },
-                    expanded = searchExpanded,
-                    onExpandedChange = { viewModel.onSearchExpandedChange(it) },
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalPadding),
+                    contentAlignment = Alignment.Center
                 ) {
-                    AnimatedContent(
-                        targetState = searchQuery,
-                        label = ""
-                    ) { query ->
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            if(query.isNotEmpty()) {
-                                val userFiltered = allUsers
-                                    .filter {
-                                        (it.name.contains(query, ignoreCase = true)
-                                                || it.username.contains(query, ignoreCase = true)
-                                        ) && it.uid != user.uid
+                    SearchBar(
+                        modifier = Modifier
+                            .widthIn(min = 450.dp)
+                            .fillMaxWidth(),
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                query = searchQuery,
+                                onQueryChange = { viewModel.onSearchQueryChange(it) },
+                                onSearch = { viewModel.collapseSearch() },
+                                expanded = searchExpanded,
+                                onExpandedChange = { viewModel.onSearchExpandedChange(it) },
+                                placeholder = { Text("Search name or username...") },
+                                leadingIcon = {
+                                    AnimatedContent(
+                                        searchExpanded,
+                                        label = ""
+                                    ) {
+                                        if (!it)
+                                            Icon(
+                                                Icons.Default.Menu,
+                                                contentDescription = null,
+                                                modifier = Modifier.onTap {
+                                                    scope.launch {
+                                                        onOpenDrawer()
+                                                    }
+                                                }
+                                            )
+                                        else
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = null,
+                                                modifier = Modifier.onTap {
+                                                    viewModel.collapseSearch()
+                                                }
+                                            )
                                     }
-                                    .sortedWith(
-                                        compareBy<MyUser> {
-                                            val indexInUsername = it.username.indexOf(query, ignoreCase = true)
-                                            if (indexInUsername == -1) Int.MAX_VALUE else indexInUsername
-                                        }.thenBy { it.username }
-                                            .thenBy {
-                                                val indexInName = it.name.indexOf(query, ignoreCase = true)
-                                                if (indexInName == -1) Int.MAX_VALUE else indexInName
+                                },
+                                trailingIcon = if (!searchExpanded) {
+                                    {
+                                        IconButton(onNavigateToProfile) {
+                                            MyImage(
+                                                user.profilePhotoUrl,
+                                                modifier = Modifier
+                                                    .clip(CircleShape)
+                                            )
+                                        }
+                                    }
+                                } else null,
+
+                                )
+                        },
+                        expanded = searchExpanded,
+                        onExpandedChange = { viewModel.onSearchExpandedChange(it) },
+                    ) {
+                        AnimatedContent(
+                            targetState = searchQuery,
+                            label = ""
+                        ) { query ->
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                if(query.isNotEmpty()) {
+                                    val userFiltered = allUsers
+                                        .filter {
+                                            (it.name.contains(query, ignoreCase = true)
+                                                    || it.username.contains(query, ignoreCase = true)
+                                                    ) && it.uid != user.uid
+                                        }
+                                        .sortedWith(
+                                            compareBy<MyUser> {
+                                                val indexInUsername = it.username.indexOf(query, ignoreCase = true)
+                                                if (indexInUsername == -1) Int.MAX_VALUE else indexInUsername
+                                            }.thenBy { it.username }
+                                                .thenBy {
+                                                    val indexInName = it.name.indexOf(query, ignoreCase = true)
+                                                    if (indexInName == -1) Int.MAX_VALUE else indexInName
+                                                }
+                                        )
+                                    if(userFiltered.isEmpty())
+                                        item {
+                                            Text(
+                                                text = "No User Found",
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(top = 32.dp),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    else
+                                        items(userFiltered) {
+                                            ListItem(
+                                                modifier = Modifier
+                                                    .clickable {
+                                                        viewModel.collapseSearch()
+                                                        onNavigateToOtherProfile(it.uid)
+                                                    },
+                                                leadingContent = {
+                                                    MyImage(
+                                                        it.profilePhotoUrl,
+                                                        modifier = Modifier
+                                                            .clip(CircleShape)
+                                                            .size(40.dp)
+                                                    )
+                                                },
+                                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                                headlineContent = { Text(it.name) },
+                                                supportingContent = { Text(it.username) }
+                                            )
+                                        }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ) { innerPadding ->
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(350.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(top = 16.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                val requestCount = requestReceived.size
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Column {
+                        Text(
+                            text = "Friend Requests (${requestCount})",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(bottom = Size.smallPadding)
+                        )
+                        HorizontalDivider()
+                    }
+                }
+
+                if(requestCount > 0)
+                    items(requestReceived.sortedBy {it.sender.name}) {
+                        Card(shape = MaterialTheme.shapes.medium) {
+                            Row(
+                                modifier = Modifier.fillMaxSize().padding(Size.padding),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Size.padding)
+                            ) {
+                                MyImage(
+                                    model = it.sender.profilePhotoUrl,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .size(80.dp)
+                                        .onTap {
+                                            onNavigateToOtherProfile(it.sender.uid)
+                                        }
+                                )
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = it.sender.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .onTap {
+                                                onNavigateToOtherProfile(it.sender.uid)
                                             }
                                     )
-                                if(userFiltered.isEmpty())
-                                    item {
-                                        Text(
-                                            text = "No User Found",
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 32.dp),
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
-                                else
-                                    items(userFiltered) {
-                                        ListItem(
-                                            modifier = Modifier
-                                                .clickable {
-                                                    viewModel.collapseSearch()
-                                                    onNavigateToOtherProfile(it.uid)
-                                                },
-                                            leadingContent = {
-                                                MyImage(
-                                                    it.profilePhotoUrl,
-                                                    modifier = Modifier
-                                                        .clip(CircleShape)
-                                                        .size(40.dp)
+                                    Text(
+                                        text = it.sender.username,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        modifier = Modifier
+                                            .onTap {
+                                                onNavigateToOtherProfile(it.sender.uid)
+                                            }
+                                    )
+                                    Spacer(modifier = Modifier.height(Size.smallPadding))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
+                                    ) {
+                                        Button(
+                                            enabled = !isProcessing,
+                                            onClick = {
+                                                viewModel.acceptFriendRequest(
+                                                    requestId = it.id,
+                                                    senderId = it.sender.uid
                                                 )
                                             },
-                                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                            headlineContent = { Text(it.name) },
-                                            supportingContent = { Text(it.username) }
-                                        )
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                text = "Accept"
+                                            )
+                                        }
+                                        OutlinedButton(
+                                            enabled = !isProcessing,
+                                            onClick = { viewModel.declineFriendRequest(it.id) },
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                text = "Decline"
+                                            )
+                                        }
                                     }
+                                }
                             }
                         }
                     }
-                }
-            }
-        }
-    ) { innerPadding ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(350.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(top = 16.dp)
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            val requestCount = requestReceived.size
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Column {
-                    Text(
-                        text = "Friend Requests (${requestCount})",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = Size.smallPadding)
-                    )
-                    HorizontalDivider()
-                }
-            }
-
-            if(requestCount > 0)
-                items(requestReceived.sortedBy {it.sender.name}) {
-                Card(shape = MaterialTheme.shapes.medium) {
-                    Row(
-                        modifier = Modifier.fillMaxSize().padding(Size.padding),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Size.padding)
-                    ) {
-                        MyImage(
-                            model = it.sender.profilePhotoUrl,
+                else
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Text(
+                            text = "No Friend Requests.",
                             modifier = Modifier
-                                .clip(CircleShape)
-                                .size(80.dp)
-                                .onTap {
-                                    onNavigateToOtherProfile(it.sender.uid)
-                                }
+                                .fillMaxWidth()
+                                .padding(top = Size.padding),
+                            textAlign = TextAlign.Center
                         )
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = it.sender.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .onTap {
-                                        onNavigateToOtherProfile(it.sender.uid)
-                                    }
-                            )
-                            Text(
-                                text = it.sender.username,
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier
-                                    .onTap {
-                                        onNavigateToOtherProfile(it.sender.uid)
-                                    }
-                            )
-                            Spacer(modifier = Modifier.height(Size.smallPadding))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
-                            ) {
-                                Button(
-                                    enabled = !isProcessing,
-                                    onClick = {
-                                        viewModel.acceptFriendRequest(
-                                            requestId = it.id,
-                                            senderId = it.sender.uid
-                                        )
-                                    },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        text = "Accept"
-                                    )
-                                }
-                                OutlinedButton(
-                                    enabled = !isProcessing,
-                                    onClick = { viewModel.declineFriendRequest(it.id) },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        text = "Decline"
-                                    )
-                                }
-                            }
-                        }
                     }
-                }
             }
-            else
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Text(
-                        text = "No Friend Requests",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = Size.padding),
-                        textAlign = TextAlign.Center
-                    )
-                }
         }
     }
 }

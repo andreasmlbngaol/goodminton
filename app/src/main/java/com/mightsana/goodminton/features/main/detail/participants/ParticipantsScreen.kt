@@ -1,15 +1,16 @@
 package com.mightsana.goodminton.features.main.detail.participants
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
@@ -40,101 +41,100 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
     val currentUserRole = participantJoint.find { it.user.uid == uid }?.role
     val roleDropdownExpanded by viewModel.participantsRoleExpanded.collectAsState()
 
-    Column(
+    LazyColumn(
         modifier = Modifier
-            .verticalScroll(rememberScrollState())
+            .fillMaxSize()
             .padding(bottom = 150.dp)
     ) {
-
-        participantJoint
-            .sortedWith(
-                compareBy(
-                    { it.role.ordinal },
-                    { it.user.name }
+        item {
+            participantJoint
+                .sortedWith(
+                    compareBy(
+                        { it.role.ordinal },
+                        { it.user.name }
+                    )
                 )
-            )
-            .forEachIndexed { index, participant ->
-                val isDropdownExpanded = roleDropdownExpanded[participant.user.uid] ?: false
-
-                ListItem(
-                    leadingContent = {
-                        MyImage(
-                            model = participant.user.profilePhotoUrl,
-                            modifier = Modifier.width(40.dp).clip(CircleShape).aspectRatio(1f)
-                        )
-                    },
-                    headlineContent = {
-                        Text(
-                            text = participant.user.name,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.titleMedium,
-                            overflow = Ellipsis
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = participant.user.username,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.titleSmall,
-                            overflow = Ellipsis
-                        )
-                    },
-                    trailingContent = {
-                        if (currentUserRole == Role.Creator && participant.role != Role.Creator) {
-                            OutlinedButton(
-                                onClick = { viewModel.toggleParticipantsRoleExpanded(participant.user.uid) },
-                                contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
-//                                enabled = participant.role != Role.Creator
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(participant.role.name)
-                                    MyIcon(if (isDropdownExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown)
-                                }
-                            }
-                            DropdownMenu(
-                                expanded = isDropdownExpanded,
-                                onDismissRequest = {
-                                    viewModel.dismissParticipantsRoleExpanded(
-                                        participant.user.uid
-                                    )
-                                }
-                            ) {
-                                Role.entries.forEach { role ->
-
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                role.name,
-                                                maxLines = 1,
-                                                style = MaterialTheme.typography.titleSmall,
-                                                overflow = Ellipsis
-                                            )
-                                        },
-                                        onClick = {
-                                            viewModel.changeParticipantRole(
-                                                leagueId = participant.league.id,
-                                                userId = participant.user.uid,
-                                                newRole = role.name
-                                            )
-                                            viewModel.dismissParticipantsRoleExpanded(participant.user.uid)
-                                        },
-//                                        enabled = role != Role.Creator || role != participant.role
-                                    )
-                                }
-                            }
-                        } else {
+                .forEachIndexed { index, participant ->
+                    val isDropdownExpanded = roleDropdownExpanded[participant.user.uid] == true
+                    ListItem(
+                        leadingContent = {
+                            MyImage(
+                                model = participant.user.profilePhotoUrl,
+                                modifier = Modifier.width(40.dp).clip(CircleShape).aspectRatio(1f)
+                            )
+                        },
+                        headlineContent = {
                             Text(
-                                participant.role.name,
+                                text = participant.user.name,
                                 maxLines = 1,
                                 style = MaterialTheme.typography.titleMedium,
                                 overflow = Ellipsis
                             )
+                        },
+                        supportingContent = {
+                            Text(
+                                text = participant.user.username,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.titleSmall,
+                                overflow = Ellipsis
+                            )
+                        },
+                        trailingContent = {
+                            if (currentUserRole == Role.Creator && participant.role != Role.Creator) {
+                                OutlinedButton(
+                                    onClick = { viewModel.toggleParticipantsRoleExpanded(participant.user.uid) },
+                                    contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
+//                                enabled = participant.role != Role.Creator
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(participant.role.name)
+                                        MyIcon(if (isDropdownExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown)
+                                    }
+                                }
+                                DropdownMenu(
+                                    expanded = isDropdownExpanded,
+                                    onDismissRequest = {
+                                        viewModel.dismissParticipantsRoleExpanded(
+                                            participant.user.uid
+                                        )
+                                    }
+                                ) {
+                                    Role.entries.forEach { role ->
+                                        if (role == Role.Creator) return@forEach
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    role.name,
+                                                    maxLines = 1,
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    overflow = Ellipsis
+                                                )
+                                            },
+                                            onClick = {
+                                                viewModel.changeParticipantRole(
+                                                    leagueId = participant.league.id,
+                                                    userId = participant.user.uid,
+                                                    newRole = role.name
+                                                )
+                                                viewModel.dismissParticipantsRoleExpanded(participant.user.uid)
+                                            },
+//                                        enabled = role != Role.Creator || role != participant.role
+                                        )
+                                    }
+                                }
+                            } else {
+                                Text(
+                                    participant.role.name,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    overflow = Ellipsis
+                                )
+                            }
                         }
-                    }
-                )
+                    )
 //                Text("League ID: ${participant.info.leagueId}", maxLines = 1)
 //                Text("Uid: ${participant.info.id}", maxLines = 1)
 //                Text("Uid: ${participant.info.id}", maxLines = 1)
@@ -151,7 +151,10 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
 //            Text("Created At: ${participant.user.createdAt}", maxLines = 1)
 //            Text("Is Verified: ${participant.user.verified}", maxLines = 1)
 //            Text("\n")
-            }
+                }
+        }
+        item { Spacer(Modifier.height(150.dp)) }
+
     }
 }
 

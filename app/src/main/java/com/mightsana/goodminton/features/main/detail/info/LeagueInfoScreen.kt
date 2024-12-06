@@ -73,6 +73,12 @@ fun LeagueInfoScreen(
             }
         )
 
+        // Participants
+        InfoItem(
+            title = "Participants",
+            value = participantJoint.size.toString(),
+        )
+
         // Discipline
         InfoItem(
             title = "Discipline",
@@ -139,7 +145,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Visibility",
             value = if(leagueJoint.private) "Private" else "Public",
-            icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
+            icon = if(currentUserRole == Role.Creator) {
                 {
                     MyIcon(
                         MyIcons.Flip,
@@ -271,9 +277,7 @@ fun LeagueInfoScreen(
             onDismissRequest = { viewModel.dismissDeleteLeagueDialog() },
             confirmButton = {
                 Button(
-                    onClick = {
-                        viewModel.deleteLeague(onBack)
-                    },
+                    onClick = { viewModel.deleteLeague(onBack) },
                     colors = ButtonDefaults.buttonColors().copy(
                         containerColor = containerColor,
                         contentColor = contentColorFor(containerColor)

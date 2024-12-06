@@ -1,16 +1,19 @@
 package com.mightsana.goodminton.features.main.detail
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Leaderboard
@@ -21,19 +24,24 @@ import androidx.compose.material.icons.outlined.Leaderboard
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -48,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.features.main.detail.info.LeagueInfoScreen
@@ -56,6 +65,7 @@ import com.mightsana.goodminton.features.main.detail.participants.ParticipantsSc
 import com.mightsana.goodminton.features.main.detail.standings.StandingsScreen
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.component_model.NavigationItem
+import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
@@ -74,7 +84,7 @@ fun DetailContainer(
     val user by viewModel.user.collectAsState()
     val friends by viewModel.friends.collectAsState()
     val invitationSent by viewModel.invitationSent.collectAsState()
-    val leagueJoint by viewModel.leagueJoint.collectAsState()
+    val league by viewModel.leagueJoint.collectAsState()
     val participants by viewModel.leagueParticipantsJoint.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -116,7 +126,7 @@ fun DetailContainer(
                         }
                         ExtendedFloatingActionButton(
                             text = {
-                                Text("Invite Friend")
+                                Text("Add Friend")
                             },
                             icon = {
                                 MyIcon(MyIcons.Invitation)
@@ -154,12 +164,15 @@ fun DetailContainer(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     Loader(viewModel.isLoading.collectAsState().value) {
+        val userInvited = user.uid in invitationSent.map { it.receiver.uid }
         Scaffold(
+            floatingActionButtonPosition = if(userInvited || (!league.private && user.uid !in participants.map { it.user.uid }))
+                FabPosition.Center else FabPosition.End,
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
-                    title = { Text(leagueJoint.name) },
+                    title = { Text(league.name, overflow = TextOverflow.Ellipsis, maxLines = 1) },
                     navigationIcon = {
                         IconButton(
                             onClick = onBack
@@ -171,7 +184,15 @@ fun DetailContainer(
                 )
             },
             bottomBar = {
-                NavigationBar {
+                NavigationBar(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(
+                            topStart = 20.dp,
+                            topEnd = 20.dp,
+                            bottomStart = 0.dp,
+                            bottomEnd = 0.dp
+                        ))
+                ) {
                     navItems.forEachIndexed { index, item ->
                         val selected = index == selectedItem
                         NavigationBarItem(
@@ -189,9 +210,39 @@ fun DetailContainer(
                 }
             },
             floatingActionButton = {
-                AnimatedContent(selectedItem, label = "") { selected ->
-                    navItems[selected].fab?.let { fab ->
-                        fab()
+                if(user.uid !in participants.map { it.user.uid } && !league.private) {
+                    ExtendedFloatingActionButton(
+                        text = { Text("Join") },
+                        icon = { MyIcon(MyIcons.Join) },
+                        onClick = {}
+                    )
+                } else if(userInvited) {
+                    val invitationId = invitationSent.find { it.receiver.uid == user.uid }!!.id
+                    Row {
+                        Button(
+                            onClick = {
+                                viewModel.acceptInvitation(
+                                    invitationId = invitationId,
+                                    leagueId = league.id
+                                )
+                            }
+                        ) {
+                            Text("Accept")
+                        }
+                        Spacer(Modifier.width(Size.padding))
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.declineInvitation(invitationId)
+                            }
+                        ) {
+                            Text("Decline")
+                        }
+                    }
+                } else {
+                    AnimatedContent(selectedItem, label = "") { selected ->
+                        navItems[selected].fab?.let { fab ->
+                            fab()
+                        }
                     }
                 }
             }
@@ -207,7 +258,7 @@ fun DetailContainer(
             }
         }
 
-        AnimatedVisibility(viewModel.participantsSheetExpanded.collectAsState().value) {
+        if(viewModel.participantsSheetExpanded.collectAsState().value) {
             ModalBottomSheet(
                 onDismissRequest = {
                     scope.launch {
@@ -222,8 +273,9 @@ fun DetailContainer(
                         .fillMaxWidth()
                 ) {
                     val invitationReceiverIds = invitationSent.map { it.receiver.uid }
+                    val participantIds = participants.map { it.user.uid }
                     val friendsAvailable = friends
-                        .filter { it.user.uid !in invitationReceiverIds }
+                        .filter { it.user.uid !in participantIds }
                     items(friendsAvailable) {
                         ListItem(
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -238,10 +290,29 @@ fun DetailContainer(
                             headlineContent = { Text(it.user.name) },
                             supportingContent = { Text(it.user.username) },
                             trailingContent = {
-                                Button(
-                                    onClick = {}
-                                ) {
-                                    Text("Invite")
+                                if(it.user.uid !in invitationReceiverIds) {
+                                    if(it.user.openToAdd) {
+                                        Button(onClick = { viewModel.addParticipant(it.user.uid)}) {
+                                            Text("Add")
+                                        }
+                                    } else {
+                                        Button(
+                                            onClick = { viewModel.inviteFriend(it.user.uid) },
+                                            colors = ButtonDefaults.buttonColors().copy(
+                                                containerColor = MaterialTheme.colorScheme.tertiary,
+                                                contentColor = MaterialTheme.colorScheme.onTertiary,
+                                                disabledContainerColor = MaterialTheme.colorScheme.tertiary,
+                                                disabledContentColor = MaterialTheme.colorScheme.onTertiary
+                                            )
+                                        ) {
+                                            Text("Invite")
+                                        }
+                                    }
+                                } else {
+                                    val invitationId = invitationSent.find { inv -> inv.receiver.uid == it.user.uid }!!.id
+                                    TextButton(onClick = { viewModel.cancelInvitation(invitationId) }) {
+                                        Text("Invited")
+                                    }
                                 }
                             }
                         )

@@ -1,5 +1,6 @@
 package com.mightsana.goodminton.model.repository
 
+import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
@@ -153,14 +154,6 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .set(participant.copy(id = generatedId))
             .await()
     }
-    override suspend fun addParticipantStats(participantStats: ParticipantStats) {
-        val newStatsDoc = participantStatsCollection.document()
-        val generatedId = newStatsDoc.id
-
-        newStatsDoc
-            .set(participantStats.copy(id = generatedId))
-            .await()
-    }
     override suspend fun createNewLeague(league: League) {
         val newLeagueDoc = leaguesCollection.document()
         val generatedId = newLeagueDoc.id
@@ -169,42 +162,26 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .set(league.copy(id = generatedId))
             .await()
 
-        addLeagueParticipant(
-            LeagueParticipant(
-                leagueId = generatedId,
-                userId = league.createdById,
-                role = Role.Creator
-            )
+        addParticipant(
+            leagueId = generatedId,
+            userId = league.createdById,
+            role = Role.Creator
         )
 
         addParticipantStats(
-            ParticipantStats(
-                leagueId = generatedId,
-                userId = league.createdById
-            )
+            leagueId = generatedId,
+            userId = league.createdById
         )
     }
 
     // Retrieve League Data
-    override suspend fun getLeagueIdsByUserId(userId: String): List<String> =
-        try {
-            leagueParticipantsCollection
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("status", Status.Active)
-                .get()
-                .await()
-                .map { it.getString("leagueId")!! }
-                .filter {it.isNotEmpty()}
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
     override suspend fun getLeague(leagueId: String): League =
         leaguesCollection
             .document(leagueId)
             .get()
             .await()
-            .toObject(League::class.java)!!
+            .toObject(League::class.java)
+            ?: League()
     override suspend fun getLeagueJoint(leagueId: String): LeagueJoint {
         val league = getLeague(leagueId)
         val creator = getUser(league.createdById)
@@ -220,6 +197,19 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             createdAt = league.createdAt
         )
     }
+    override suspend fun getLeagueIdsByUserId(userId: String): List<String> =
+        try {
+            leagueParticipantsCollection
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("status", Status.Active)
+                .get()
+                .await()
+                .map { it.getString("leagueId")!! }
+                .filter {it.isNotEmpty()}
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
     override suspend fun getPublicLeagueIds(): List<String> =
         try {
             leaguesCollection
@@ -232,7 +222,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             e.printStackTrace()
             emptyList()
         }
-    override suspend fun getLeagueByIds(ids: List<String>): List<League> =
+    override suspend fun getLeagueJointsByIds(ids: List<String>): List<LeagueJoint> =
         coroutineScope {
             val leagueDeferreds = ids.chunked(batchMaxSize).map { batch ->
                 async {
@@ -243,13 +233,28 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                         .toObjects(League::class.java)
                 }
             }
-            leagueDeferreds.flatMap { it.await() }
+            val leagues = leagueDeferreds.flatMap { it.await() }
+            val creators = getUsersByIds(leagues.map { it.createdById })
+                .associateBy { it.uid }
+            leagues.map {
+                LeagueJoint(
+                    id = it.id,
+                    name = it.name,
+                    matchPoints = it.matchPoints,
+                    private = it.private,
+                    deuceEnabled = it.deuceEnabled,
+                    double = it.double,
+                    fixedDouble = it.fixedDouble,
+                    createdBy = creators[it.createdById]!!,
+                    createdAt = it.createdAt
+                )
+            }
         }
-    override suspend fun getUserAndPublicLeagues(userId: String): List<League> {
+    override suspend fun getUserAndPublicLeagues(userId: String): List<LeagueJoint> {
         val userLeagueIds = getLeagueIdsByUserId(userId).toSet()
         val publicLeagueIds = getPublicLeagueIds().toSet()
         val unionLeagueIds = userLeagueIds.union(publicLeagueIds).toList()
-        return getLeagueByIds(unionLeagueIds)
+        return getLeagueJointsByIds(unionLeagueIds)
     }
     override fun observeLeagueSnapshot(leagueId: String, onLeagueSnapshotUpdate: (DocumentSnapshot?) -> Unit) {
         leaguesCollection
@@ -334,6 +339,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 val participantsQuery = leagueParticipantsCollection.whereEqualTo("leagueId", leagueId).get().await()
                 val statsQuery = participantStatsCollection.whereEqualTo("leagueId", leagueId).get().await()
                 val matchesQuery = matchesCollection.whereEqualTo("leagueId", leagueId).get().await()
+                val invitationsQuery = invitationsCollection.whereEqualTo("leagueId", leagueId).get().await()
 
                 db.runBatch { batch ->
                     // Hapus league
@@ -353,6 +359,11 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     for (document in matchesQuery.documents) {
                         batch.delete(document.reference)
                     }
+
+                    // Hapus semua undangan
+                    for (document in invitationsQuery.documents) {
+                        batch.delete(document.reference)
+                    }
                 }.await()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -361,6 +372,26 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
 
     // Retrieve League Participant Data
+    override suspend fun getParticipantsJoint(leagueId: String): List<LeagueParticipantJoint> {
+        val participants = leagueParticipantsCollection
+            .whereEqualTo("leagueId", leagueId)
+            .whereEqualTo("status", Status.Active)
+            .get()
+            .await()
+            .toObjects(LeagueParticipant::class.java)
+        val league = getLeagueJoint(leagueId)
+        val users = getUsersByIds(participants.map { it.userId }).associateBy { it.uid }
+        return participants.map {
+            LeagueParticipantJoint(
+                id = it.id,
+                league = league,
+                user = users[it.userId]!!,
+                role = it.role,
+                status = it.status,
+                participateAt = it.participateAt
+            )
+        }
+    }
     override fun observeLeagueParticipantsSnapshot(leagueId: String, onParticipantsSnapshotUpdate: (QuerySnapshot?) -> Unit) {
         leagueParticipantsCollection
             .whereEqualTo("leagueId", leagueId)
@@ -411,6 +442,20 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .update("role", newRole)
             .await()
     }
+    override suspend fun addParticipant(leagueId: String, userId: String, role: Role) {
+        val newParticipantDoc = leagueParticipantsCollection.document()
+        val generatedId = newParticipantDoc.id
+
+        newParticipantDoc
+            .set(
+                LeagueParticipant(
+                    id = generatedId,
+                    leagueId = leagueId,
+                    userId = userId,
+                    role = role
+                )
+            )
+    }
 
     // Retrieve Participant Stat Data
     override suspend fun getParticipantStatsByParticipantIds(ids: List<String>): List<ParticipantStats> =
@@ -426,6 +471,19 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             }
             statsDeferreds.flatMap { it.await() }
         }
+    override suspend fun addParticipantStats(leagueId: String, userId: String) {
+        val newStatsDoc = participantStatsCollection.document()
+        val generatedId = newStatsDoc.id
+
+        newStatsDoc
+            .set(
+                ParticipantStats(
+                    id = generatedId,
+                    leagueId = leagueId,
+                    userId = userId
+                )
+            )
+    }
 
     // Retrieve Matches Data
     override fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot?) -> Unit) {
@@ -509,12 +567,6 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
 
     // Friend Action
-    override suspend fun deleteFriend(id: String) {
-        friendsCollection
-            .document(id)
-            .delete()
-            .await()
-    }
     override suspend fun addFriend(userIds: List<String>) {
         val newFriendsDoc = friendsCollection.document()
         val generatedId = newFriendsDoc.id
@@ -526,6 +578,13 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     usersIds = userIds
                 )
             )
+            .await()
+    }
+    override suspend fun deleteFriend(id: String) {
+        friendsCollection
+            .document(id)
+            .delete()
+            .await()
     }
 
     // Retrieve Friend Requests Data
@@ -668,5 +727,79 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                 }
             }
         }
+    }
+    override fun observeLeagueInvitationsReceivedSnapshot(userId: String, onInvitationsReceivedSnapshotUpdate: (QuerySnapshot?) -> Unit) {
+        invitationsCollection
+            .whereEqualTo("receiverId", userId)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    return@addSnapshotListener
+                }
+                onInvitationsReceivedSnapshotUpdate(snapshot)
+            }
+    }
+    override fun observeLeagueInvitationsReceivedJoint(userId: String, onInvitationsReceivedUpdate: (List<InvitationJoint>) -> Unit) {
+        observeLeagueInvitationsReceivedSnapshot(userId) { invitationsSnapshot ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val receiver = getUser(userId)
+                val invitations = invitationsSnapshot?.map { it.toObject(Invitation::class.java) }
+                Log.d("LeagueInvitation", "invitations: $invitations")
+                val senders = invitations?.let { invs ->
+                    getUsersByIds(invs.map { it.senderId })
+                        .associateBy { it.uid }
+                }
+                val leagueJoints = invitations?.let { invs ->
+                    getLeagueJointsByIds(invs.map { it.leagueId })
+                        .associateBy { it.id }
+                }
+                var participants = mutableMapOf<String, List<LeagueParticipantJoint>>()
+                invitations?.let { invs ->
+                    invs.map { it.leagueId }.forEach { leagueId ->
+                        participants[leagueId] = getParticipantsJoint(leagueId)
+                    }
+                }
+                launch(Dispatchers.Main) {
+                    val result = invitations?.map { invitation ->
+                        InvitationJoint(
+                            id = invitation.id,
+                            sender = senders?.get(invitation.senderId)!!,
+                            receiver = receiver,
+                            league = leagueJoints?.get(invitation.leagueId)!!,
+                            participants = participants[invitation.leagueId]!!,
+                            invitedAt = invitation.invitedAt
+                        )
+                    }
+                    onInvitationsReceivedUpdate(result ?: emptyList())
+                }
+            }
+        }
+    }
+
+    // League Invitation Action
+    override suspend fun addInvitation(leagueId: String, senderId: String, receiverId: String) {
+        val newInvitationDoc = invitationsCollection.document()
+        val generatedId = newInvitationDoc.id
+
+        newInvitationDoc
+            .set(
+                Invitation(
+                    id = generatedId,
+                    senderId = senderId,
+                    receiverId = receiverId,
+                    leagueId = leagueId
+                )
+            )
+            .await()
+    }
+    override suspend fun deleteInvitation(invitationId: String) {
+        invitationsCollection
+            .document(invitationId)
+            .delete()
+            .await()
+    }
+    override suspend fun acceptInvitation(invitationId: String, leagueId: String, userId: String) {
+        addParticipant(leagueId, userId)
+        addParticipantStats(userId,leagueId)
+        deleteInvitation(invitationId)
     }
 }

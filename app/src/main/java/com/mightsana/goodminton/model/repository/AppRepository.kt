@@ -10,6 +10,7 @@ import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.ParticipantStats
+import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.repository.friend_requests.FriendRequestJoint
 import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
@@ -37,7 +38,6 @@ interface AppRepository {
 
     // Create League
     suspend fun addLeagueParticipant(participant: LeagueParticipant)
-    suspend fun addParticipantStats(participantStats: ParticipantStats)
     suspend fun createNewLeague(league: League)
 
     // Retrieve League Data
@@ -45,8 +45,8 @@ interface AppRepository {
     suspend fun getLeague(leagueId: String): League
     suspend fun getLeagueJoint(leagueId: String): LeagueJoint
     suspend fun getPublicLeagueIds(): List<String>
-    suspend fun getLeagueByIds(ids: List<String>): List<League>
-    suspend fun getUserAndPublicLeagues(userId: String): List<League>
+    suspend fun getLeagueJointsByIds(ids: List<String>): List<LeagueJoint>
+    suspend fun getUserAndPublicLeagues(userId: String): List<LeagueJoint>
     fun observeLeagueSnapshot(leagueId: String, onLeagueSnapshotUpdate: (DocumentSnapshot?) -> Unit)
     fun observeLeagueJoint(leagueId: String, onLeagueUpdate: (LeagueJoint) -> Unit)
 
@@ -60,14 +60,17 @@ interface AppRepository {
     suspend fun deleteLeague(leagueId: String)
 
     // Retrieve League Participant Data
+    suspend fun getParticipantsJoint(leagueId: String): List<LeagueParticipantJoint>
     fun observeLeagueParticipantsSnapshot(leagueId: String, onParticipantsSnapshotUpdate: (QuerySnapshot?) -> Unit)
     fun observeLeagueParticipantsJoint(leagueId: String, onParticipantsUpdate: (List<LeagueParticipantJoint>) -> Unit)
 
     // Edit League Participant Data
     suspend fun updateParticipantRole(leagueId: String, userId: String, newRole: String)
+    suspend fun addParticipant(leagueId: String, userId: String, role: Role = Role.Player)
 
     // Retrieve Participant Stat Data
     suspend fun getParticipantStatsByParticipantIds(ids: List<String>): List<ParticipantStats>
+    suspend fun addParticipantStats(leagueId: String, userId: String)
 
     // Retrieve Matches Data
     fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot?) -> Unit)
@@ -101,4 +104,11 @@ interface AppRepository {
     // Retrieve League Invitation Data
     fun observeLeagueInvitationsSentSnapshot(leagueId: String, onInvitationsSentSnapshotUpdate: (QuerySnapshot?) -> Unit)
     fun observeLeagueInvitationsSentJoint(leagueId: String, onInvitationsSentUpdate: (List<InvitationJoint>) -> Unit)
+    fun observeLeagueInvitationsReceivedSnapshot(userId: String, onInvitationsReceivedSnapshotUpdate: (QuerySnapshot?) -> Unit)
+    fun observeLeagueInvitationsReceivedJoint(userId: String, onInvitationsReceivedUpdate: (List<InvitationJoint>) -> Unit)
+
+    // League Invitation Action
+    suspend fun addInvitation(leagueId: String, senderId: String, receiverId: String)
+    suspend fun deleteInvitation(invitationId: String)
+    suspend fun acceptInvitation(invitationId: String, leagueId: String, userId: String)
 }

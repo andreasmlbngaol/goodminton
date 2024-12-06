@@ -1,6 +1,5 @@
 package com.mightsana.goodminton.features.main.main
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import com.mightsana.goodminton.League
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.home.HomeScreen
+import com.mightsana.goodminton.features.main.notifications.NotificationsScreen
 import com.mightsana.goodminton.features.main.settings.SettingsScreen
 import com.mightsana.goodminton.features.main.social.SocialScreen
 import com.mightsana.goodminton.features.profile.model.Profile
@@ -95,7 +95,8 @@ fun MainContainer(
                 iconSelected = Icons.Filled.Notifications,
                 iconUnselected = Icons.Outlined.Notifications,
                 label = NOTIFICATIONS,
-                route = Notifications
+                route = Notifications,
+                badgeCount = viewModel.invitationReceived.collectAsState().value.size
             )
         ),
 
@@ -176,9 +177,9 @@ fun MainContainer(
             navController = mainNavController,
             startDestination = Home
         ) {
-            fun backToHome() {
+            fun backToHome(currentRoute: Any) {
                 viewModel.onSelectItem(Home)
-                mainNavController.navigateAndPopUpTo(Home, Settings)
+                mainNavController.navigateAndPopUpTo(Home, currentRoute)
             }
 
             composable<Home> {
@@ -191,7 +192,7 @@ fun MainContainer(
 
             composable<Social> {
                 SocialScreen(
-                    onBack = { backToHome() },
+                    onBack = { backToHome(Social) },
                     onNavigateToProfile = { navController.navigateSingleTop(Profile()) },
                     onNavigateToOtherProfile = { navController.navigateSingleTop(Profile(it))},
                     onOpenDrawer = { drawerState.open() }
@@ -199,16 +200,16 @@ fun MainContainer(
             }
 
             composable<Notifications> {
-                BackHandler { backToHome() }
-//                OtherProfileScreen(
-//                    uid = "VIFCqBAFYYdc9EXKRc1K4HLHdsz1",
-//                    navController = navController
-//                )
+                NotificationsScreen(
+                    onBack = { backToHome(Notifications) },
+                    onOpenDrawer = { drawerState.open() },
+                    onNavigateToLeague = { navController.navigateSingleTop(League(it)) }
+                )
             }
 
             composable<Settings> {
                 SettingsScreen(
-                    onBack = { backToHome() }
+                    onBack = { backToHome(Settings) }
                 )
             }
         }

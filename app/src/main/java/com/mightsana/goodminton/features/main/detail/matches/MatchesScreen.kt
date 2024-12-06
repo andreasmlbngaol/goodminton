@@ -15,7 +15,7 @@ import com.mightsana.goodminton.features.main.detail.DetailViewModel
 
 @Composable
 fun MatchesScreen(viewModel: DetailViewModel) {
-    val participantsJoint by viewModel.leagueParticipantsJoint.collectAsState()
+//    val participantsJoint by viewModel.leagueParticipantsJoint.collectAsState()
     val matchesJoint by viewModel.matchesJoint.collectAsState()
 
     LazyColumn(
@@ -23,10 +23,10 @@ fun MatchesScreen(viewModel: DetailViewModel) {
     ) {
         items(matchesJoint) { match ->
             match.team1.forEach {
-                Text(text = it.nickname)
+                Text(text = "${it.name} -> ${if(it.openToAdd) "Open" else "Closed"}")
             }
             match.team2.forEach {
-                Text(text = it.nickname)
+                Text(text = "${it.name} -> ${if(it.openToAdd) "Open" else "Closed"}")
             }
             Spacer(modifier = Modifier.height(16.dp))
         }

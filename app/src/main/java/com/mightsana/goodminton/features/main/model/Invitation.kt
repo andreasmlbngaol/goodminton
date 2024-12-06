@@ -16,5 +16,6 @@ data class InvitationJoint(
     val sender: MyUser = MyUser(),
     val receiver: MyUser = MyUser(),
     val league: LeagueJoint = LeagueJoint(),
+    val participants: List<LeagueParticipantJoint> = emptyList(),
     val invitedAt: Timestamp = Timestamp.now()
 )
