@@ -12,7 +12,8 @@ data class League(
     val double: Boolean = false,
     val fixedDouble: Boolean? = null,
     val createdById: String = "",
-    val createdAt: Timestamp = Timestamp.now()
+    val createdAt: Timestamp = Timestamp.now(),
+    val status: LeagueStatus = LeagueStatus.Ongoing
 )
 
 data class LeagueJoint(
@@ -24,5 +25,10 @@ data class LeagueJoint(
     val double: Boolean = false,
     val fixedDouble: Boolean? = null,
     val createdBy: MyUser = MyUser(),
-    val createdAt: Timestamp = Timestamp.now()
+    val createdAt: Timestamp = Timestamp.now(),
+    val status: LeagueStatus = LeagueStatus.Ongoing
 )
+
+enum class LeagueStatus {
+    Finished, Ongoing
+}

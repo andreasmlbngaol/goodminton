@@ -194,7 +194,8 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             double = league.double,
             fixedDouble = league.fixedDouble,
             createdBy = creator,
-            createdAt = league.createdAt
+            createdAt = league.createdAt,
+            status = league.status
         )
     }
     override suspend fun getLeagueIdsByUserId(userId: String): List<String> =
@@ -246,7 +247,8 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     double = it.double,
                     fixedDouble = it.fixedDouble,
                     createdBy = creators[it.createdById]!!,
-                    createdAt = it.createdAt
+                    createdAt = it.createdAt,
+                    status = it.status
                 )
             }
         }
@@ -283,7 +285,8 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                             double = league.double,
                             fixedDouble = league.fixedDouble,
                             createdBy = creator!!,
-                            createdAt = league.createdAt
+                            createdAt = league.createdAt,
+                            status = league.status
                         )
                     }
                     onLeagueUpdate(result ?: LeagueJoint())
@@ -513,6 +516,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                         team2 = team2Users,
                         team1Score = match.team1Score,
                         team2Score = match.team2Score,
+                        createdAt = match.createdAt,
                         startedAt = match.startedAt,
                         finishedAt = match.finishedAt,
                         duration = match.duration,
@@ -527,6 +531,22 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         }
     }
 
+    // Matches Action
+    override suspend fun createNewMatch(leagueId: String, team1: List<String>, team2: List<String>) {
+        val newMatchDoc = matchesCollection.document()
+        val generatedId = newMatchDoc.id
+
+        newMatchDoc
+            .set(
+                Match(
+                    id = generatedId,
+                    leagueId = leagueId,
+                    team1Ids = team1,
+                    team2Ids = team2
+                )
+            )
+            .await()
+    }
     // Retrieve Friends Data
     override fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot?) -> Unit) {
         friendsCollection

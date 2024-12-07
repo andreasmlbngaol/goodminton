@@ -77,6 +77,9 @@ interface AppRepository {
     fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot?) -> Unit)
     fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit)
 
+    // Matches Action
+    suspend fun createNewMatch(leagueId: String, team1: List<String>, team2: List<String>)
+
     // Retrieve Friends Data
     fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot?) -> Unit)
     fun observeFriendsJoint(userId: String, onFriendsUpdate: (List<FriendJoint>) -> Unit)

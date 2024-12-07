@@ -1,5 +1,6 @@
 package com.mightsana.goodminton.features.main.detail
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,12 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -61,6 +63,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -96,6 +100,7 @@ fun DetailContainer(
     val playerDropdownExpanded by viewModel.matchPlayersExpanded.collectAsState()
     val playerSelected by viewModel.playerSelected.collectAsState()
     val scope = rememberCoroutineScope()
+    val playerPerMatch = if(league.double) 4 else 2
 
     val navItems = listOf(
         NavigationItem(
@@ -111,14 +116,14 @@ fun DetailContainer(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.End
                     ) {
-                        if(participants.size >= 8) {
+                        if(participants.size >= 2 * playerPerMatch) {
                             FloatingActionButton(
                                 onClick = {}
                             ) {
                                 MyIcon(MyIcons.Generate)
                             }
                         }
-                        if(participants.size >= 4) {
+                        if(participants.size >= playerPerMatch) {
                             ExtendedFloatingActionButton(
                                 text = {
                                     Text("New Match")
@@ -234,7 +239,10 @@ fun DetailContainer(
                                 )
                             },
                             label = { Text(item.label) },
-                            onClick = { viewModel.onSelectItem(index) }
+                            onClick = {
+                                viewModel.onSelectItem(index)
+                                viewModel.resetPlayerSelected()
+                            }
                         )
                     }
                 }
@@ -361,36 +369,80 @@ fun DetailContainer(
                 }
             }
         }
-    }
-    if(viewModel.matchSheetExpanded.collectAsState().value) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                scope.launch {
-                    sheetState.hide()
-                    viewModel.dismissMatchSheet()
-                }
-            },
-            sheetState = sheetState
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Size.padding),
-                verticalArrangement = Arrangement.spacedBy(Size.padding)
+        if(viewModel.matchSheetExpanded.collectAsState().value) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    scope.launch {
+                        sheetState.hide()
+                        viewModel.dismissMatchSheet()
+                    }
+                },
+                sheetState = sheetState
             ) {
-                items(listOf(1, 2, 3, 4)) {
-                    MatchDropdownButton(
-                        dropdownExpandedMap = playerDropdownExpanded,
-                        order = it,
-                        items = participants.filter { p -> p.user.uid !in playerSelected.values },
-                        onToggle = { viewModel.togglePlayerExpanded(it) },
-                        onDismiss = { viewModel.dismissPlayerExpanded(it) },
-                        onSelected = { selectedId -> viewModel.selectPlayer(it, selectedId) }
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth().
+                        padding(Size.padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .widthIn(max = 500.dp),
+                        verticalArrangement = Arrangement.spacedBy(Size.smallPadding),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val playerCount = if(league.double) 4 else 2
+                        itemsIndexed((1..playerCount).toList()) { index, item ->
+                            MatchDropdownButton(
+                                dropdownExpandedMap = playerDropdownExpanded,
+                                order = item,
+                                selectedItemMap = playerSelected,
+                                items = participants,
+                                onToggle = { viewModel.togglePlayerExpanded(it) },
+                                onDismiss = { viewModel.dismissPlayerExpanded(it) },
+                                onSelected = { selectedId -> viewModel.selectPlayer(item, selectedId) }
+                            )
+                            if((index + 1) == (playerCount / 2)) {
+                                Text(
+                                    text = "VS",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = Bold,
+                                    modifier = Modifier.padding(top = Size.smallPadding)
+                                )
+                            }
+                        }
+
+                        item {
+                            Row(
+                                verticalAlignment = CenterVertically,
+                                horizontalArrangement = Arrangement.End,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.resetPlayerSelected()
+                                    }
+                                ) {
+                                    Text("Reset")
+                                }
+                                Spacer(Modifier.width(Size.padding))
+                                Button(
+                                    onClick = {
+                                        scope.launch {
+                                            viewModel.createMatch()
+                                            sheetState.hide()
+                                            viewModel.resetPlayerSelected()
+                                            viewModel.dismissMatchSheet()
+                                        }
+                                    }
+                                ) {
+                                    Text("Create")
+                                }
+                            }
+                        }
+                    }
                 }
             }
-
-            Spacer(Modifier.height(100.dp))
         }
     }
 }
@@ -399,48 +451,87 @@ fun DetailContainer(
 fun MatchDropdownButton(
     dropdownExpandedMap: Map<Int, Boolean>,
     order: Int,
-    label: String = "Player $order",
+    selectedItemMap: Map<Int, String?>,
     items: List<LeagueParticipantJoint>,
     onToggle: (Int) -> Unit,
     onDismiss: (Int) -> Unit,
-    onSelected: (String) -> Unit
+    selectLabel: String = "Select Player $order",
+    changeLabel: String = "Change",
+    onSelected: (String?) -> Unit
 ) {
-    Box {
-        val isDropdownExpanded = dropdownExpandedMap[order] == true
-        Button(onClick = { onToggle(order) }) {
-            Text(label)
-        }
-        DropdownMenu(
-            expanded = isDropdownExpanded,
-            onDismissRequest = { onDismiss(order) }
+    val selectedItem = items.find {
+        Log.d("DetailContainer", "user.uid: ${it.user.uid}")
+        Log.d("DetailContainer", "selectedItemId: ${selectedItemMap[order]}")
+        it.user.uid == selectedItemMap[order]
+    }
+    AnimatedContent(selectedItem, label = "") { selected ->
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
+            verticalAlignment = CenterVertically,
         ) {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            modifier = Modifier.padding(vertical = Size.extraSmallPadding),
-                            horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
-                            verticalAlignment = CenterVertically
-                        ) {
-                            MyImage(
-                                item.user.profilePhotoUrl,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .size(40.dp)
-                            )
-                            Text(
-                                item.user.name,
-                                maxLines = 1,
-                                style = MaterialTheme.typography.titleSmall,
-                                overflow = Ellipsis
+            selected?.let {
+                MyImage(
+                    it.user.profilePhotoUrl,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(40.dp)
+                )
+                Text(
+                    it.user.name,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleSmall,
+                    overflow = Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = { onSelected(null) }) {
+                    MyIcon(MyIcons.Cancel)
+                }
+            }
+            val itemsLeft = items
+                .filter { item -> item.user.uid !in selectedItemMap.values }
+            if(itemsLeft.isNotEmpty()) {
+                Box {
+                    val isDropdownExpanded = dropdownExpandedMap[order] == true
+                    OutlinedButton(onClick = { onToggle(order) }) {
+                        Text(if (selected == null) selectLabel else changeLabel)
+                    }
+                    DropdownMenu(
+                        expanded = isDropdownExpanded,
+                        onDismissRequest = { onDismiss(order) }
+                    ) {
+                        itemsLeft.forEach { item ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = Size.extraSmallPadding),
+                                        horizontalArrangement = Arrangement.spacedBy(Size.smallPadding),
+                                        verticalAlignment = CenterVertically
+                                    ) {
+                                        if (item.user.name != UNSELECT)
+                                            MyImage(
+                                                item.user.profilePhotoUrl,
+                                                modifier = Modifier
+                                                    .clip(CircleShape)
+                                                    .size(40.dp)
+                                            )
+                                        Text(
+                                            item.user.name,
+                                            maxLines = 1,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            overflow = Ellipsis,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            textAlign = if (item.user.name == UNSELECT) TextAlign.Center else TextAlign.Start
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    onSelected(if (item.user.uid.isEmpty()) null else item.user.uid)
+                                    onDismiss(order)
+                                }
                             )
                         }
-                    },
-                    onClick = {
-                        onSelected(item.user.uid)
-                        onDismiss(order)
                     }
-                )
+                }
             }
         }
     }
@@ -450,3 +541,4 @@ const val MATCH = "Match"
 const val STANDINGS = "Standings"
 const val PARTICIPANTS = "Participants"
 const val INFO = "Info"
+const val UNSELECT = "Unselect"

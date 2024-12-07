@@ -331,10 +331,10 @@ class DetailViewModel @Inject constructor(
     private val _matchPlayersExpanded = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
     val matchPlayersExpanded = _matchPlayersExpanded.asStateFlow()
 
-    private val _playerSelected = MutableStateFlow<Map<Int, String>>(emptyMap())
+    private val _playerSelected = MutableStateFlow<Map<Int, String?>>(emptyMap())
     val playerSelected = _playerSelected.asStateFlow()
 
-    fun selectPlayer(playerOrder: Int, playerId: String) {
+    fun selectPlayer(playerOrder: Int, playerId: String?) {
         _playerSelected.value = _playerSelected.value.toMutableMap().apply {
             this[playerOrder] = playerId
         }
@@ -349,6 +349,25 @@ class DetailViewModel @Inject constructor(
     fun dismissPlayerExpanded(playerOrder: Int) {
         _matchPlayersExpanded.value = _matchPlayersExpanded.value.toMutableMap().apply {
             this[playerOrder] = false
+        }
+    }
+
+    fun resetPlayerSelected() {
+        _playerSelected.value = emptyMap()
+    }
+
+    fun createMatch() {
+        val playerPerTeam = if(_leagueJoint.value.double) 2 else 1
+        val teams = _playerSelected.value.values.filterNotNull().chunked(playerPerTeam)
+        Log.d("DetailViewModel", "createMatch: ${ _playerSelected.value.values}")
+        val team1 = teams.getOrNull(0) ?: emptyList()
+        val team2 = teams.getOrNull(1) ?: emptyList()
+        viewModelScope.launch {
+            appRepository.createNewMatch(
+                _leagueJoint.value.id,
+                team1,
+                team2
+            )
         }
     }
 }

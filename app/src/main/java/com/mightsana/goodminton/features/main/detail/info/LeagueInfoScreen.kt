@@ -24,6 +24,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
+import com.mightsana.goodminton.features.main.model.LeagueStatus
+import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDateTime
@@ -46,6 +48,7 @@ fun LeagueInfoScreen(
     val changeNameDialogVisible by viewModel.changeNameDialogVisible.collectAsState()
     val changeMatchPointsDialogVisible by viewModel.changeMatchPointsDialogVisible.collectAsState()
     val deleteLeagueDialogVisible by viewModel.deleteLeagueDialogVisible.collectAsState()
+    val matchAnyFinished = matchesJoint.any { it.status != MatchStatus.Finished}
 
     Column(
         modifier = Modifier
@@ -115,7 +118,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Match Points",
             value = leagueJoint.matchPoints.toString(),
-            icon = if (currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
+            icon = if (currentUserRole == Role.Creator && matchAnyFinished ) {
                 {
                     MyIcon(
                         MyIcons.Edit,
@@ -131,7 +134,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Deuce",
             value = if(leagueJoint.deuceEnabled) "Yes" else "No",
-            icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
+        icon = if(currentUserRole == Role.Creator && matchAnyFinished) {
                 {
                     MyIcon(
                         MyIcons.Flip,
@@ -182,8 +185,14 @@ fun LeagueInfoScreen(
         )
 
 
-        // Delete Button
-        if(currentUserRole == Role.Creator) {
+        // Delete Button & Download Result
+        if(leagueJoint.status == LeagueStatus.Finished) {
+            Button(
+                onClick = { viewModel.comingSoon() }
+            ) {
+                Text("Download Result")
+            }
+        } else if(currentUserRole == Role.Creator) {
             val containerColor = MaterialTheme.colorScheme.errorContainer
             Button(
                 onClick = { viewModel.showDeleteLeagueDialog() },
@@ -195,6 +204,7 @@ fun LeagueInfoScreen(
                 Text("Delete")
             }
         }
+
     }
 
     // League Name Dialog

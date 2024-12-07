@@ -21,7 +21,7 @@ fun MatchesScreen(viewModel: DetailViewModel) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        items(matchesJoint) { match ->
+        items(matchesJoint.sortedBy { it.createdAt }) { match ->
             match.team1.forEach {
                 Text(text = "${it.name} -> ${if(it.openToAdd) "Open" else "Closed"}")
             }
