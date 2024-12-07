@@ -5,7 +5,6 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.google.gms.google.services)
-//    kotlin("plugin.serialization") version "2.0.21"
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -18,8 +17,8 @@ android {
         minSdk = 31
         //noinspection OldTargetApi
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "0.6.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

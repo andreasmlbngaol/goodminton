@@ -157,7 +157,8 @@ fun DetailContainer(
             iconUnselected = Icons.Outlined.People,
             content = { ParticipantsScreen(viewModel = viewModel) },
             fab = {
-                if (participants.find { it.user.uid == user.uid }?.role == Role.Creator) {
+                val myRole = participants.find { it.user.uid == user.uid }?.role
+                if (myRole == Role.Creator || myRole == Role.Admin) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.End
@@ -182,8 +183,6 @@ fun DetailContainer(
                             }
                         )
                     }
-                } else {
-                    Text("For Participant Only")
                 }
             }
         ),
@@ -252,7 +251,7 @@ fun DetailContainer(
                     ExtendedFloatingActionButton(
                         text = { Text("Join") },
                         icon = { MyIcon(MyIcons.Join) },
-                        onClick = {}
+                        onClick = { viewModel.comingSoon() }
                     )
                 } else if(userInvited) {
                     val invitationId = invitationSent.find { it.receiver.uid == user.uid }!!.id

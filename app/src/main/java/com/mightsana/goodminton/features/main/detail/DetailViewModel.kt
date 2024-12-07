@@ -1,7 +1,6 @@
 package com.mightsana.goodminton.features.main.detail
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.features.main.model.InvitationJoint
@@ -20,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.abs
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
@@ -80,7 +80,6 @@ class DetailViewModel @Inject constructor(
     }
 
     private fun observeMatchesJoint(leagueId: String) {
-        Log.d("DetailViewModel", "observeMatchesJoint: $leagueId")
         appRepository.observeMatchesJoint(leagueId) {
             _matchesJoint.value = it
             appLoaded()
@@ -95,7 +94,6 @@ class DetailViewModel @Inject constructor(
 
     private fun observeParticipantsStats(leagueId: String) {
         appRepository.observeParticipantsStatsJoint(leagueId) {
-            Log.d("DetailViewModel", "observeParticipantsStats: $it")
             _participantsStats.value = it
         }
     }
@@ -201,7 +199,6 @@ class DetailViewModel @Inject constructor(
     // League Info
     fun updateLeagueDiscipline(newDouble: Boolean) {
         viewModelScope.launch {
-            Log.d("DetailViewModel", "updateLeagueDiscipline: $newDouble")
             appRepository.updateLeagueDiscipline(_leagueJoint.value.id, newDouble)
         }
     }
@@ -359,7 +356,6 @@ class DetailViewModel @Inject constructor(
     fun createMatch() {
         val playerPerTeam = if(_leagueJoint.value.double) 2 else 1
         val teams = _playerSelected.value.values.filterNotNull().chunked(playerPerTeam)
-        Log.d("DetailViewModel", "createMatch: ${ _playerSelected.value.values}")
         val team1 = teams.getOrNull(0) ?: emptyList()
         val team2 = teams.getOrNull(1) ?: emptyList()
         viewModelScope.launch {
@@ -377,6 +373,42 @@ class DetailViewModel @Inject constructor(
             appRepository.startMatch(matchId)
             isNotProcessing()
         }
+    }
+
+    fun validateScore(match: MatchJoint, onFinish: () -> Unit) {
+        val deuceEnabled = _leagueJoint.value.deuceEnabled
+        val matchPoints = _leagueJoint.value.matchPoints
+        val team1Score = match.team1Score
+        val team2Score = match.team2Score
+
+        var isInvalid: Boolean = false
+        var errorMessage: String = ""
+        if(deuceEnabled) {
+            if(team1Score > matchPoints || team2Score > matchPoints) {
+                isInvalid = abs(team1Score - team2Score) != 2
+                errorMessage = "Score difference must be 2 points at deuce!"
+            } else if(team1Score == matchPoints || team2Score == matchPoints) {
+                isInvalid = abs(team1Score - team2Score) <= 1
+                errorMessage = "Score difference must be more than 1 point!"
+            }
+        } else {
+            if(team1Score > matchPoints || team2Score > matchPoints) {
+                isInvalid = true
+                errorMessage = "Score can't be more than match points!"
+            } else if(team1Score == team2Score) {
+                isInvalid = true
+                errorMessage = "Score can't be equal!"
+            }
+        }
+        if(isInvalid == false && (team1Score < matchPoints && team2Score < matchPoints)) {
+            isInvalid = true
+            errorMessage = "Anyone must reach match points!"
+        }
+
+        if(isInvalid)
+            toast(errorMessage)
+        else
+            onFinish()
     }
 
     fun finishMatch(match: MatchJoint) {

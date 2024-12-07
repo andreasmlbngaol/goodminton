@@ -25,7 +25,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 import com.mightsana.goodminton.features.main.model.LeagueStatus
-import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDateTime
@@ -48,7 +47,7 @@ fun LeagueInfoScreen(
     val changeNameDialogVisible by viewModel.changeNameDialogVisible.collectAsState()
     val changeMatchPointsDialogVisible by viewModel.changeMatchPointsDialogVisible.collectAsState()
     val deleteLeagueDialogVisible by viewModel.deleteLeagueDialogVisible.collectAsState()
-    val matchAnyFinished = matchesJoint.any { it.status != MatchStatus.Finished}
+//    val matchAnyFinished = matchesJoint.any { it.status != MatchStatus.Finished}
 
     Column(
         modifier = Modifier
@@ -118,7 +117,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Match Points",
             value = leagueJoint.matchPoints.toString(),
-            icon = if (currentUserRole == Role.Creator && matchAnyFinished ) {
+            icon = if (currentUserRole == Role.Creator) {
                 {
                     MyIcon(
                         MyIcons.Edit,
@@ -134,7 +133,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Deuce",
             value = if(leagueJoint.deuceEnabled) "Yes" else "No",
-        icon = if(currentUserRole == Role.Creator && matchAnyFinished) {
+        icon = if(currentUserRole == Role.Creator) {
                 {
                     MyIcon(
                         MyIcons.Flip,

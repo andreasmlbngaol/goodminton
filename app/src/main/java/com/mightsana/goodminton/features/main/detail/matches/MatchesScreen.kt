@@ -1,7 +1,14 @@
 package com.mightsana.goodminton.features.main.detail.matches
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.Down
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.Up
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +19,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Card
@@ -37,19 +46,21 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 import com.mightsana.goodminton.features.main.model.MatchStatus
-import com.mightsana.goodminton.model.ext.onTap
+import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.ext.secondToTIme
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MatchesScreen(viewModel: DetailViewModel) {
-//    val participantsJoint by viewModel.leagueParticipantsJoint.collectAsState()
+    val participants by viewModel.leagueParticipantsJoint.collectAsState()
     val user by viewModel.user.collectAsState()
     val matches by viewModel.matchesJoint.collectAsState()
     var now by remember { mutableStateOf(Timestamp.now() ) }
+    val myRole = participants.find { it.user.uid == user.uid }?.role
 
     LaunchedEffect(now) {
         delay(1000L)
@@ -67,13 +78,6 @@ fun MatchesScreen(viewModel: DetailViewModel) {
         val matchOrdered = matches.sortedBy { it.createdAt }
         items(
             matchOrdered
-                .sortedBy {
-                    when(it.status) {
-                        MatchStatus.Playing -> 1
-                        MatchStatus.Scheduled -> 2
-                        else -> 3
-                    }
-                }
         ) { match ->
             val order = matchOrdered.map { it.id }.indexOf(match.id)
             val cardContainerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -130,38 +134,43 @@ fun MatchesScreen(viewModel: DetailViewModel) {
                                 }
                             }
                         }
-                        AnimatedContent(
-                            match.status, label = "",
-                            modifier = Modifier
-                                .padding(horizontal = Size.smallPadding)
-                                .align(Alignment.CenterEnd)
-                        ) { status ->
-                            if (status in listOf(
-                                    MatchStatus.Scheduled,
-                                    MatchStatus.Playing
-                                )
-                            ) {
-                                IconButton(
-                                    enabled = !viewModel.isProcessing.collectAsState().value,
-                                    onClick = {
-                                        if(status == MatchStatus.Scheduled)
-                                            viewModel.startMatch(match.id)
-                                        else
-                                            viewModel.finishMatch(match)
-                                    },
-                                    colors = IconButtonDefaults.iconButtonColors().copy(
-                                        containerColor = contentColorFor(headerBackgroundColor),
-                                        contentColor = headerBackgroundColor
+                        if(myRole == Role.Creator || myRole == Role.Admin) {
+                            AnimatedContent(
+                                match.status, label = "",
+                                modifier = Modifier
+                                    .padding(horizontal = Size.smallPadding)
+                                    .align(Alignment.CenterEnd)
+                            ) { status ->
+                                if (status in listOf(
+                                        MatchStatus.Scheduled,
+                                        MatchStatus.Playing
                                     )
                                 ) {
-                                    if(status == MatchStatus.Scheduled) MyIcon(MyIcons.Play) else MyIcon(MyIcons.Finished)
+                                    IconButton(
+                                        enabled = !viewModel.isProcessing.collectAsState().value,
+                                        onClick = {
+                                            if(status == MatchStatus.Scheduled)
+                                                viewModel.startMatch(match.id)
+                                            else {
+                                                viewModel.validateScore(match) {
+                                                    viewModel.finishMatch(match)
+                                                }
+                                            }
+                                        },
+                                        colors = IconButtonDefaults.iconButtonColors().copy(
+                                            containerColor = contentColorFor(headerBackgroundColor),
+                                            contentColor = headerBackgroundColor
+                                        )
+                                    ) {
+                                        if(status == MatchStatus.Scheduled) MyIcon(MyIcons.Play) else MyIcon(MyIcons.Finished)
+                                    }
                                 }
                             }
                         }
                     }
                     val disabledColor = MaterialTheme.colorScheme.surfaceVariant
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = Size.padding),
+                        modifier = Modifier.fillMaxWidth().padding(start = Size.padding),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(
@@ -179,36 +188,50 @@ fun MatchesScreen(viewModel: DetailViewModel) {
                         }
                         Spacer(Modifier.weight(1f))
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AnimatedVisibility(match.status == MatchStatus.Playing) {
-                                MyIcon(
-                                    MyIcons.Minus,
-                                    modifier = Modifier.onTap { viewModel.reduceTeam1Score(match.id) }
+                            AnimatedVisibility(match.status == MatchStatus.Playing && (myRole == Role.Creator || myRole == Role.Admin)) {
+                                IconButton({ viewModel.reduceTeam1Score(match.id) }) {
+                                    MyIcon(MyIcons.Minus)
+                                }
+                            }
+                            val scoreColor = if(match.status == MatchStatus.Finished && match.team1Score < match.team2Score)
+                                disabledColor
+                            else contentColorFor(cardContainerColor)
+
+                            AnimatedContent(
+                                match.team1Score,
+                                transitionSpec = {
+                                    slideIntoContainer(
+                                        animationSpec = tween(300, easing = EaseIn),
+                                        towards = Down
+                                    ).togetherWith(
+                                        slideOutOfContainer(
+                                            animationSpec = tween(300, easing = EaseOut),
+                                            towards = Up
+                                        )
+                                    )
+                                },
+                                label = ""
+                            ) { score ->
+                                Text(
+                                    score.toString(),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = scoreColor
                                 )
                             }
-
-                            val scoreColor = if(match.status == MatchStatus.Finished && match.team1Score > match.team2Score)
-                                contentColorFor(cardContainerColor)
-                            else disabledColor
-
-                            Text(
-                                match.team1Score.toString(),
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = scoreColor
-                            )
-                            AnimatedVisibility(match.status == MatchStatus.Playing) {
-                                MyIcon(
-                                    MyIcons.Plus,
-                                    modifier = Modifier.onTap { viewModel.addTeam1Score(match.id) }
-                                )
+                            if(match.status != MatchStatus.Playing || (myRole != Role.Creator && myRole != Role.Admin))
+                                Spacer(Modifier.width(Size.padding))
+                            AnimatedVisibility(match.status == MatchStatus.Playing && (myRole == Role.Creator || myRole == Role.Admin)) {
+                                IconButton({ viewModel.addTeam1Score(match.id) }) {
+                                    MyIcon(MyIcons.Plus)
+                                }
                             }
                         }
                     }
                     HorizontalDivider(modifier = Modifier.padding(horizontal = Size.padding))
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = Size.padding),
+                        modifier = Modifier.fillMaxWidth().padding(start = Size.padding),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(
@@ -226,29 +249,44 @@ fun MatchesScreen(viewModel: DetailViewModel) {
                         }
                         Spacer(Modifier.weight(1f))
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AnimatedVisibility(match.status == MatchStatus.Playing) {
-                                MyIcon(
-                                    MyIcons.Minus,
-                                    modifier = Modifier.onTap { viewModel.reduceTeam2Score(match.id) }
+                            AnimatedVisibility(match.status == MatchStatus.Playing && (myRole == Role.Creator || myRole == Role.Admin)) {
+                                IconButton({ viewModel.reduceTeam2Score(match.id) }) {
+                                    MyIcon(MyIcons.Minus)
+                                }
+                            }
+                            val scoreColor = if(match.status == MatchStatus.Finished && match.team1Score > match.team2Score)
+                                disabledColor
+                            else contentColorFor(cardContainerColor)
+
+                            AnimatedContent(
+                                match.team2Score,
+                                transitionSpec = {
+                                    slideIntoContainer(
+                                        animationSpec = tween(300, easing = EaseIn),
+                                        towards = Down
+                                    ).togetherWith(
+                                        slideOutOfContainer(
+                                            animationSpec = tween(300, easing = EaseOut),
+                                            towards = Up
+                                        )
+                                    )
+                                },
+                                label = ""
+                            ) { score ->
+                                Text(
+                                    score.toString(),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = scoreColor
                                 )
                             }
-                            val scoreColor = if(match.status == MatchStatus.Finished && match.team1Score < match.team2Score)
-                                contentColorFor(cardContainerColor)
-                            else disabledColor
-
-                            Text(
-                                match.team2Score.toString(),
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = scoreColor
-                            )
-                            AnimatedVisibility(match.status == MatchStatus.Playing) {
-                                MyIcon(
-                                    MyIcons.Plus,
-                                    modifier = Modifier.onTap { viewModel.addTeam2Score(match.id) }
-                                )
+                            if(match.status != MatchStatus.Playing || (myRole != Role.Creator && myRole != Role.Admin))
+                                Spacer(Modifier.width(Size.padding))
+                            AnimatedVisibility(match.status == MatchStatus.Playing && (myRole == Role.Creator || myRole == Role.Admin)) {
+                                IconButton({ viewModel.addTeam2Score(match.id) }) {
+                                    MyIcon(MyIcons.Plus)
+                                }
                             }
                         }
                     }
@@ -256,6 +294,8 @@ fun MatchesScreen(viewModel: DetailViewModel) {
             }
             Spacer(Modifier.height(Size.padding))
         }
-        item { Spacer(Modifier.height(150.dp)) }
+        item(
+            span = { GridItemSpan(maxLineSpan) }
+        ) { Spacer(Modifier.height(150.dp)) }
     }
 }
