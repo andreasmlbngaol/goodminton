@@ -79,6 +79,17 @@ interface AppRepository {
 
     // Matches Action
     suspend fun createNewMatch(leagueId: String, team1: List<String>, team2: List<String>)
+    suspend fun startMatch(matchId: String)
+    suspend fun finishMatch(
+        matchId: String,
+        leagueId: String,
+        winners: Pair<List<String>, Int>,
+        losers: Pair<List<String>, Int>,
+    )
+    suspend fun addTeam1Score(matchId: String)
+    suspend fun addTeam2Score(matchId: String)
+    suspend fun reduceTeam1Score(matchId: String)
+    suspend fun reduceTeam2Score(matchId: String)
 
     // Retrieve Friends Data
     fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot?) -> Unit)

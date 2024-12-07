@@ -1,8 +1,10 @@
 package com.mightsana.goodminton.model.repository
 
 import android.util.Log
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
@@ -15,6 +17,7 @@ import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.MatchJoint
+import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
 import com.mightsana.goodminton.features.main.model.Role
@@ -519,7 +522,6 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                         createdAt = match.createdAt,
                         startedAt = match.startedAt,
                         finishedAt = match.finishedAt,
-                        duration = match.duration,
                         status = match.status
                     )
                 }
@@ -547,6 +549,91 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             )
             .await()
     }
+    override suspend fun startMatch(matchId: String) {
+        val updates = mapOf(
+            "startedAt" to Timestamp.now(),
+            "status" to MatchStatus.Playing
+        )
+        matchesCollection
+            .document(matchId)
+            .update(updates)
+            .await()
+    }
+    override suspend fun finishMatch(
+        matchId: String,
+        leagueId: String,
+        winners: Pair<List<String>, Int>,
+        losers: Pair<List<String>, Int>
+    ) {
+        val matchUpdates = mapOf(
+            "finishedAt" to Timestamp.now(),
+            "status" to MatchStatus.Finished
+        )
+        matchesCollection
+            .document(matchId)
+            .update(matchUpdates)
+            .await()
+
+        val winnerUpdates = mapOf(
+            "wins" to FieldValue.increment(1),
+            "matches" to FieldValue.increment(1),
+            "pointsConceded" to FieldValue.increment(losers.second.toLong()),
+            "pointsScored" to FieldValue.increment(winners.second.toLong())
+        )
+        winners.first.forEach {
+            val winnerDocs = participantStatsCollection
+                .whereEqualTo("userId", it)
+                .whereEqualTo("leagueId", leagueId)
+                .get()
+                .await()
+
+            winnerDocs.documents.forEach { doc ->
+                doc.reference.update(winnerUpdates)
+            }
+        }
+        val loserUpdates = mapOf(
+            "losses" to FieldValue.increment(1),
+            "matches" to FieldValue.increment(1),
+            "pointsConceded" to FieldValue.increment(winners.second.toLong()),
+            "pointsScored" to FieldValue.increment(losers.second.toLong())
+        )
+        losers.first.forEach {
+            val loserDocs = participantStatsCollection
+                .whereEqualTo("userId", it)
+                .whereEqualTo("leagueId", leagueId)
+                .get()
+                .await()
+
+            loserDocs.documents.forEach { doc ->
+                doc.reference.update(loserUpdates)
+            }
+        }
+    }
+    override suspend fun addTeam1Score(matchId: String) {
+        matchesCollection
+            .document(matchId)
+            .update("team1Score", FieldValue.increment(1))
+            .await()
+    }
+    override suspend fun addTeam2Score(matchId: String) {
+        matchesCollection
+            .document(matchId)
+            .update("team2Score", FieldValue.increment(1))
+            .await()
+    }
+    override suspend fun reduceTeam1Score(matchId: String) {
+        matchesCollection
+            .document(matchId)
+            .update("team1Score", FieldValue.increment(-1))
+            .await()
+    }
+    override suspend fun reduceTeam2Score(matchId: String) {
+        matchesCollection
+            .document(matchId)
+            .update("team2Score", FieldValue.increment(-1))
+            .await()
+    }
+
     // Retrieve Friends Data
     override fun observeFriendsSnapshot(userId: String, onFriendsSnapshotUpdate: (QuerySnapshot?) -> Unit) {
         friendsCollection

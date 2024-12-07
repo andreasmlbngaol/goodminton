@@ -13,7 +13,6 @@ data class Match(
     val createdAt: Timestamp = Timestamp.now(),
     val startedAt: Timestamp? = null,
     val finishedAt: Timestamp? = null,
-    val duration: Timestamp? = null,
     val status: MatchStatus = MatchStatus.Scheduled
 )
 
@@ -33,5 +32,6 @@ data class MatchJoint(
 
 @Suppress("unused")
 enum class MatchStatus {
-    Scheduled, Playing, Finished, Cancelled
+    Scheduled, Playing, Finished
+//    , Cancelled
 }

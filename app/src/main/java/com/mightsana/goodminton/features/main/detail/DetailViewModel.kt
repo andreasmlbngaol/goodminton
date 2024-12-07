@@ -370,4 +370,75 @@ class DetailViewModel @Inject constructor(
             )
         }
     }
+
+    fun startMatch(matchId: String) {
+        viewModelScope.launch {
+            isProcessing()
+            appRepository.startMatch(matchId)
+            isNotProcessing()
+        }
+    }
+
+    fun finishMatch(match: MatchJoint) {
+        viewModelScope.launch {
+            isProcessing()
+            var winnerIds: List<String>
+            var winnerScore: Int
+            var loserIds: List<String>
+            var loserScore: Int
+            if(match.team1Score > match.team2Score) {
+                winnerIds = match.team1.map { it.uid }
+                winnerScore = match.team1Score
+                loserIds = match.team2.map { it.uid }
+                loserScore = match.team2Score
+            } else {
+                winnerIds = match.team2.map { it.uid }
+                winnerScore = match.team2Score
+                loserIds = match.team1.map { it.uid }
+                loserScore = match.team1Score
+            }
+            appRepository.finishMatch(
+                match.id,
+                match.league.id,
+                Pair(winnerIds, winnerScore),
+                Pair(loserIds, loserScore)
+            )
+            isNotProcessing()
+        }
+    }
+
+    fun addTeam1Score(matchId: String) {
+        viewModelScope.launch {
+            appRepository.addTeam1Score(matchId)
+        }
+    }
+
+    fun reduceTeam1Score(matchId: String) {
+        viewModelScope.launch {
+            appRepository.reduceTeam1Score(matchId)
+        }
+    }
+
+    fun addTeam2Score(matchId: String) {
+        viewModelScope.launch {
+            appRepository.addTeam2Score(matchId)
+        }
+    }
+
+    fun reduceTeam2Score(matchId: String) {
+        viewModelScope.launch {
+            appRepository.reduceTeam2Score(matchId)
+        }
+    }
+
+    private val _isProcessing = MutableStateFlow(false)
+    val isProcessing = _isProcessing.asStateFlow()
+
+    fun isProcessing() {
+        _isProcessing.value = true
+    }
+
+    fun isNotProcessing() {
+        _isProcessing.value = false
+    }
 }

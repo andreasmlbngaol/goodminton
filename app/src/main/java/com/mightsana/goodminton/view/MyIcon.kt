@@ -26,11 +26,13 @@ import androidx.compose.material.icons.filled.PeopleAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Person2
 import androidx.compose.material.icons.filled.PhotoAlbum
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Start
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wc
@@ -67,6 +69,8 @@ fun MyIcon(
 
 @Suppress("unused")
 object MyIcons {
+    val Play: ImageVector = Icons.Default.PlayArrow
+    val Finished: ImageVector = Icons.Default.Stop
     val Generate: ImageVector = Icons.Default.AutoAwesome
     val Join: ImageVector = Icons.Default.Start
     val Invitation: ImageVector = Icons.Default.Email

@@ -118,7 +118,7 @@ fun DetailContainer(
                     ) {
                         if(participants.size >= 2 * playerPerMatch) {
                             FloatingActionButton(
-                                onClick = {}
+                                onClick = { viewModel.comingSoon() }
                             ) {
                                 MyIcon(MyIcons.Generate)
                             }
@@ -163,7 +163,7 @@ fun DetailContainer(
                         horizontalAlignment = Alignment.End
                     ) {
                         FloatingActionButton(
-                            onClick = {}
+                            onClick = { viewModel.comingSoon() }
                         ) {
                             MyIcon(MyIcons.Plus)
                         }
@@ -397,7 +397,7 @@ fun DetailContainer(
                                 dropdownExpandedMap = playerDropdownExpanded,
                                 order = item,
                                 selectedItemMap = playerSelected,
-                                items = participants,
+                                items = participants.sortedBy { it.user.name },
                                 onToggle = { viewModel.togglePlayerExpanded(it) },
                                 onDismiss = { viewModel.dismissPlayerExpanded(it) },
                                 onSelected = { selectedId -> viewModel.selectPlayer(item, selectedId) }

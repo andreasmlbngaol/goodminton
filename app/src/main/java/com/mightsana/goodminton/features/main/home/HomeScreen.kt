@@ -197,7 +197,6 @@ fun HomeScreen(
                     columns = GridCells.Adaptive(350.dp),
                     modifier = Modifier
                         .fillMaxSize()
-//                        .padding(innerPadding)
                         .padding(top = 16.dp)
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
