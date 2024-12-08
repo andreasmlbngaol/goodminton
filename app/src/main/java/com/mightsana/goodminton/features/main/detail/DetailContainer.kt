@@ -50,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -68,11 +69,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.detail.info.LeagueInfoScreen
 import com.mightsana.goodminton.features.main.detail.matches.MatchesScreen
 import com.mightsana.goodminton.features.main.detail.participants.ParticipantsScreen
 import com.mightsana.goodminton.features.main.detail.standings.StandingsScreen
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
+import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.model.values.Size
@@ -94,6 +97,7 @@ fun DetailContainer(
     val user by viewModel.user.collectAsState()
     val friends by viewModel.friends.collectAsState()
     val invitationSent by viewModel.invitationSent.collectAsState()
+    val matches by viewModel.matches.collectAsState()
     val league by viewModel.leagueJoint.collectAsState()
     val participants by viewModel.leagueParticipantsJoint.collectAsState()
     val sheetState = rememberModalBottomSheetState()
@@ -116,29 +120,40 @@ fun DetailContainer(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.End
                     ) {
-                        if(participants.size >= 2 * playerPerMatch) {
-                            FloatingActionButton(
-                                onClick = { viewModel.comingSoon() }
-                            ) {
-                                MyIcon(MyIcons.Generate)
-                            }
-                        }
                         if(participants.size >= playerPerMatch) {
-                            ExtendedFloatingActionButton(
-                                text = {
-                                    Text("New Match")
-                                },
-                                icon = {
-                                    MyIcon(MyIcons.Plus)
-                                },
+                            FloatingActionButton(
                                 onClick = {
                                     scope.launch {
                                         viewModel.showMatchSheet()
                                         sheetState.show()
                                     }
                                 }
-                            )
+                            ) {
+                                MyIcon(MyIcons.Plus)
+                            }
                         }
+                        val anyNotFinished = matches.any { it.status == MatchStatus.Scheduled || it.status == MatchStatus.Playing }
+                        val containerColor = if(anyNotFinished) MaterialTheme.colorScheme.surfaceVariant
+                            else MaterialTheme.colorScheme.primary
+                        val contentColor = contentColorFor(containerColor).copy(if(anyNotFinished) 0.38f else 1f)
+                        ExtendedFloatingActionButton(
+                            text = {
+                                Text("Auto Generate")
+                            },
+                            icon = {
+                                MyIcon(MyIcons.Generate)
+                            },
+                            containerColor = containerColor,
+                            contentColor = contentColor,
+                            expanded = !anyNotFinished,
+                            onClick = {
+                                if(anyNotFinished) {
+                                    viewModel.toast(R.string.error_generate_match)
+                                } else {
+                                    viewModel.autoGenerateMatch()
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -399,7 +414,7 @@ fun DetailContainer(
                                 items = participants.sortedBy { it.user.name },
                                 onToggle = { viewModel.togglePlayerExpanded(it) },
                                 onDismiss = { viewModel.dismissPlayerExpanded(it) },
-                                onSelected = { selectedId -> viewModel.selectPlayer(item, selectedId) }
+                                onSelected = { selectedParticipantId -> viewModel.selectPlayer(item, selectedParticipantId) }
                             )
                             if((index + 1) == (playerCount / 2)) {
                                 Text(
@@ -461,7 +476,7 @@ fun MatchDropdownButton(
     val selectedItem = items.find {
         Log.d("DetailContainer", "user.uid: ${it.user.uid}")
         Log.d("DetailContainer", "selectedItemId: ${selectedItemMap[order]}")
-        it.user.uid == selectedItemMap[order]
+        it.id == selectedItemMap[order]
     }
     AnimatedContent(selectedItem, label = "") { selected ->
         Row(
@@ -487,7 +502,7 @@ fun MatchDropdownButton(
                 }
             }
             val itemsLeft = items
-                .filter { item -> item.user.uid !in selectedItemMap.values }
+                .filter { item -> item.id !in selectedItemMap.values }
             if(itemsLeft.isNotEmpty()) {
                 Box {
                     val isDropdownExpanded = dropdownExpandedMap[order] == true
@@ -524,7 +539,7 @@ fun MatchDropdownButton(
                                     }
                                 },
                                 onClick = {
-                                    onSelected(if (item.user.uid.isEmpty()) null else item.user.uid)
+                                    onSelected(item.id.ifEmpty { null })
                                     onDismiss(order)
                                 }
                             )

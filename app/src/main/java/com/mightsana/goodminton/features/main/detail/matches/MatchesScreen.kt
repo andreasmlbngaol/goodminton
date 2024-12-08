@@ -58,7 +58,7 @@ import kotlinx.coroutines.delay
 fun MatchesScreen(viewModel: DetailViewModel) {
     val participants by viewModel.leagueParticipantsJoint.collectAsState()
     val user by viewModel.user.collectAsState()
-    val matches by viewModel.matchesJoint.collectAsState()
+    val matches by viewModel.matches.collectAsState()
     var now by remember { mutableStateOf(Timestamp.now() ) }
     val myRole = participants.find { it.user.uid == user.uid }?.role
 
@@ -81,6 +81,7 @@ fun MatchesScreen(viewModel: DetailViewModel) {
         ) { match ->
             val order = matchOrdered.map { it.id }.indexOf(match.id)
             val cardContainerColor = MaterialTheme.colorScheme.surfaceContainer
+            if(participants.isNotEmpty())
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = cardContainerColor,
@@ -168,7 +169,7 @@ fun MatchesScreen(viewModel: DetailViewModel) {
                             }
                         }
                     }
-                    val disabledColor = MaterialTheme.colorScheme.surfaceVariant
+                    val disabledColor = contentColorFor(cardContainerColor).copy(alpha = 0.3f)
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(start = Size.padding),
                         verticalAlignment = Alignment.CenterVertically
@@ -176,10 +177,11 @@ fun MatchesScreen(viewModel: DetailViewModel) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
                         ) {
-                            match.team1.forEach {
-                                val textColor = if(it.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
+                            match.team1Ids.forEach { id ->
+                                val participant = participants.find { it.id == id }!!
+                                val textColor = if(participant.user.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
                                 Text(
-                                    text = it.name,
+                                    text = participant.user.name,
                                     overflow = TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.titleMedium,
                                     color = textColor
@@ -237,10 +239,11 @@ fun MatchesScreen(viewModel: DetailViewModel) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
                         ) {
-                            match.team2.forEach {
-                                val textColor = if(it.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
+                            match.team2Ids.forEach { id ->
+                                val participant = participants.find { it.id == id }!!
+                                val textColor = if(participant.user.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
                                 Text(
-                                    text = it.name,
+                                    text = participant.user.name,
                                     overflow = TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.titleMedium,
                                     color = textColor

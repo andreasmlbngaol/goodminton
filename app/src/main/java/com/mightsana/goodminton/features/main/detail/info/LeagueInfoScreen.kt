@@ -1,9 +1,10 @@
 package com.mightsana.goodminton.features.main.detail.info
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -25,9 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 import com.mightsana.goodminton.features.main.model.LeagueStatus
+import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDateTime
+import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyTextField
@@ -42,12 +45,8 @@ fun LeagueInfoScreen(
     val participantJoint by viewModel.leagueParticipantsJoint.collectAsState()
     val currentUserRole = participantJoint.find { it.user.uid == uid }?.role
     val leagueJoint by viewModel.leagueJoint.collectAsState()
-    val matchesJoint by viewModel.matchesJoint.collectAsState()
+    val matches by viewModel.matches.collectAsState()
     val clipboardManager = LocalClipboardManager.current
-    val changeNameDialogVisible by viewModel.changeNameDialogVisible.collectAsState()
-    val changeMatchPointsDialogVisible by viewModel.changeMatchPointsDialogVisible.collectAsState()
-    val deleteLeagueDialogVisible by viewModel.deleteLeagueDialogVisible.collectAsState()
-//    val matchAnyFinished = matchesJoint.any { it.status != MatchStatus.Finished}
 
     Column(
         modifier = Modifier
@@ -85,7 +84,7 @@ fun LeagueInfoScreen(
         InfoItem(
             title = "Discipline",
             value = if(leagueJoint.double) "Double" else "Single",
-            icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
+            icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                 {
                     MyIcon(
                         MyIcons.Flip,
@@ -100,7 +99,7 @@ fun LeagueInfoScreen(
             InfoItem(
                 title = "Fixed Double",
                 value = if(leagueJoint.fixedDouble!!) "Yes" else "No",
-                icon = if(currentUserRole == Role.Creator && matchesJoint.isEmpty()) {
+                icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                     {
                         MyIcon(
                             MyIcons.Flip,
@@ -193,44 +192,64 @@ fun LeagueInfoScreen(
             }
         } else if(currentUserRole == Role.Creator) {
             val containerColor = MaterialTheme.colorScheme.errorContainer
-            Button(
-                onClick = { viewModel.showDeleteLeagueDialog() },
-                colors = ButtonDefaults.buttonColors().copy(
-                    containerColor = containerColor,
-                    contentColor = contentColorFor(containerColor)
-                )
-            ) {
-                Text("Delete")
+            Row {
+                if(!viewModel.matches.collectAsState().value.any { match ->
+                    match.status == MatchStatus.Scheduled || match.status == MatchStatus.Playing
+                }) {
+                    Button(
+                        onClick = { viewModel.showEndLeagueDialog() }
+                    ) {
+                        Text("End League")
+                    }
+                }
+                Spacer(Modifier.width(Size.padding))
+                Button(
+                    onClick = { viewModel.showDeleteLeagueDialog() },
+                    colors = ButtonDefaults.buttonColors().copy(
+                        containerColor = containerColor,
+                        contentColor = contentColorFor(containerColor)
+                    )
+                ) {
+                    Text("Delete")
+                }
             }
         }
+    }
 
+    // End League Dialog
+    if(viewModel.endLeagueDialogVisible.collectAsState().value) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissEndLeagueDialog() },
+            confirmButton = {
+                Button(onClick = { viewModel.finishLeague() }) {
+                    Text("End")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { viewModel.dismissEndLeagueDialog() }) {
+                    Text("Cancel")
+                }
+            },
+            title = { Text("End League") },
+            text = { Text("Are you sure you want to end this league?") }
+        )
     }
 
     // League Name Dialog
-    AnimatedVisibility(changeNameDialogVisible) {
+    if(viewModel.changeNameDialogVisible.collectAsState().value) {
         AlertDialog(
-            onDismissRequest = {
-                viewModel.dismissChangeNameDialog()
-            },
+            onDismissRequest = { viewModel.dismissChangeNameDialog() },
             confirmButton = {
-                Button(
-                    onClick = { viewModel.updateLeagueName() }
-                ) {
+                Button(onClick = { viewModel.updateLeagueName() }) {
                     Text("Save")
                 }
             },
             dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        viewModel.dismissChangeNameDialog()
-                    }
-                ) {
+                OutlinedButton(onClick = { viewModel.dismissChangeNameDialog() }) {
                     Text("Cancel")
                 }
             },
-            title = {
-                Text("League Name")
-            },
+            title = { Text("League Name") },
             text = {
                 MyTextField(
                     value = viewModel.leagueName.collectAsState().value,
@@ -242,32 +261,20 @@ fun LeagueInfoScreen(
     }
 
     // Match Points Dialog
-    AnimatedVisibility(changeMatchPointsDialogVisible) {
+    if(viewModel.changeMatchPointsDialogVisible.collectAsState().value) {
         AlertDialog(
-            onDismissRequest = {
-                viewModel.dismissChangeMatchPointsDialog()
-            },
+            onDismissRequest = { viewModel.dismissChangeMatchPointsDialog() },
             confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.updateLeagueMatchPoints()
-                    }
-                ) {
+                Button(onClick = { viewModel.updateLeagueMatchPoints() }) {
                     Text("Save")
                 }
             },
             dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        viewModel.dismissChangeMatchPointsDialog()
-                    }
-                ) {
+                OutlinedButton(onClick = { viewModel.dismissChangeMatchPointsDialog() }) {
                     Text("Cancel")
                 }
             },
-            title = {
-                Text("Match Points")
-            },
+            title = { Text("Match Points") },
             text = {
                 val matchPoints by viewModel.matchPoints.collectAsState()
                 MyTextField(
@@ -280,7 +287,7 @@ fun LeagueInfoScreen(
     }
 
     // Delete League
-    AnimatedVisibility(deleteLeagueDialogVisible) {
+    if(viewModel.deleteLeagueDialogVisible.collectAsState().value) {
         val containerColor = MaterialTheme.colorScheme.errorContainer
         AlertDialog(
             onDismissRequest = { viewModel.dismissDeleteLeagueDialog() },
@@ -291,23 +298,15 @@ fun LeagueInfoScreen(
                         containerColor = containerColor,
                         contentColor = contentColorFor(containerColor)
                     )
-                ) {
-                    Text("Delete")
-                }
+                ) { Text("Delete") }
             },
             dismissButton = {
-                OutlinedButton(
-                    onClick = { viewModel.dismissDeleteLeagueDialog() }
-                ) {
+                OutlinedButton(onClick = { viewModel.dismissDeleteLeagueDialog() }) {
                     Text("Cancel")
                 }
             },
-            title = {
-                Text("Delete League")
-            },
-            text = {
-                Text("Are you sure you want to delete this league?")
-            }
+            title = { Text("Delete League") },
+            text = { Text("Are you sure you want to delete this league?") }
         )
     }
 }

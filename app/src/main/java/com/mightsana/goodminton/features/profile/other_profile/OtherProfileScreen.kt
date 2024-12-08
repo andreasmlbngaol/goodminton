@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +31,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,11 +50,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.ext.onTap
+import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
-import com.mightsana.goodminton.view.MyTextField
 import com.mightsana.goodminton.view.MyTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -249,21 +252,30 @@ fun OtherProfileScreen(
                     }
                 }
                 item {
-                    MyTextField(
-                        value = otherUser.bio ?: "",
-                        onValueChange = {},
-                        readOnly = true,
+                    val containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp),
-                        placeholder = { Text("No bio yet. 😊") },
-                        minLines = 3,
-                        singleLine = false
-                    )
+                        colors = CardDefaults.cardColors().copy(
+                            containerColor = containerColor,
+                            contentColor = contentColorFor(containerColor)
+                        )
+                    ) {
+                        Text(
+                            text = otherUser.bio ?: "No bio yet. 😊",
+                            minLines = 3,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .padding(horizontal = Size.padding)
+                                .padding(top = Size.smallPadding),
+                            lineHeight = MaterialTheme.typography.titleLarge.lineHeight
+                        )
+                    }
                 }
 
             }
-            AnimatedVisibility(viewModel.dialogVisible.collectAsState().value) {
+            if(viewModel.dialogVisible.collectAsState().value) {
                 AlertDialog(
                     modifier = Modifier
                         .padding(horizontal = 16.dp),

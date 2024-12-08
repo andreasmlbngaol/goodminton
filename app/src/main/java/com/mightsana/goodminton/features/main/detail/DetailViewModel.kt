@@ -1,13 +1,15 @@
 package com.mightsana.goodminton.features.main.detail
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
 import com.mightsana.goodminton.features.main.model.InvitationJoint
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
-import com.mightsana.goodminton.features.main.model.MatchJoint
+import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
+import com.mightsana.goodminton.model.ext.sorted
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.repository.users.MyUser
@@ -33,8 +35,11 @@ class DetailViewModel @Inject constructor(
     private val _friends = MutableStateFlow(listOf<FriendJoint>())
     val friends = _friends.asStateFlow()
 
-    private val _matchesJoint = MutableStateFlow<List<MatchJoint>>(emptyList())
-    val matchesJoint = _matchesJoint.asStateFlow()
+//    private val _matchesJoint = MutableStateFlow<List<MatchJoint>>(emptyList())
+//    val matchesJoint = _matchesJoint.asStateFlow()
+
+    private val _matches = MutableStateFlow<List<Match>>(emptyList())
+    val matches = _matches.asStateFlow()
 
     private val _invitationSent = MutableStateFlow<List<InvitationJoint>>(emptyList())
     val invitationSent = _invitationSent.asStateFlow()
@@ -79,9 +84,16 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    private fun observeMatchesJoint(leagueId: String) {
-        appRepository.observeMatchesJoint(leagueId) {
-            _matchesJoint.value = it
+//    private fun observeMatchesJoint(leagueId: String) {
+//        appRepository.observeMatchesJoint(leagueId) {
+//            _matchesJoint.value = it
+//            appLoaded()
+//        }
+//    }
+
+    private fun observeMatches(leagueId: String) {
+        appRepository.observeMatches(leagueId) {
+            _matches.value = it
             appLoaded()
         }
     }
@@ -107,7 +119,8 @@ class DetailViewModel @Inject constructor(
             observeLeagueParticipantsJoint(leagueId)
             observeInvitationSent(leagueId)
             observeParticipantsStats(leagueId)
-            observeMatchesJoint(leagueId)
+//            observeMatchesJoint(leagueId)
+            observeMatches(leagueId)
             onSuccess()
         }
     }
@@ -301,6 +314,24 @@ class DetailViewModel @Inject constructor(
         _deleteLeagueDialogVisible.value = true
     }
 
+    private val _endLeagueDialogVisible = MutableStateFlow(false)
+    val endLeagueDialogVisible = _endLeagueDialogVisible.asStateFlow()
+
+    fun dismissEndLeagueDialog() {
+        _endLeagueDialogVisible.value = false
+    }
+
+    fun showEndLeagueDialog() {
+        _endLeagueDialogVisible.value = true
+    }
+
+    fun finishLeague() {
+        viewModelScope.launch {
+            appRepository.finishLeague(_leagueJoint.value.id)
+            dismissEndLeagueDialog()
+        }
+    }
+
     fun deleteLeague(
         onNavigateToHome: () -> Unit
     ) {
@@ -331,9 +362,9 @@ class DetailViewModel @Inject constructor(
     private val _playerSelected = MutableStateFlow<Map<Int, String?>>(emptyMap())
     val playerSelected = _playerSelected.asStateFlow()
 
-    fun selectPlayer(playerOrder: Int, playerId: String?) {
+    fun selectPlayer(playerOrder: Int, participantId: String?) {
         _playerSelected.value = _playerSelected.value.toMutableMap().apply {
-            this[playerOrder] = playerId
+            this[playerOrder] = participantId
         }
     }
 
@@ -375,14 +406,14 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    fun validateScore(match: MatchJoint, onFinish: () -> Unit) {
+    fun validateScore(match: Match, onFinish: () -> Unit) {
         val deuceEnabled = _leagueJoint.value.deuceEnabled
         val matchPoints = _leagueJoint.value.matchPoints
         val team1Score = match.team1Score
         val team2Score = match.team2Score
 
-        var isInvalid: Boolean = false
-        var errorMessage: String = ""
+        var isInvalid = false
+        var errorMessage = ""
         if(deuceEnabled) {
             if(team1Score > matchPoints || team2Score > matchPoints) {
                 isInvalid = abs(team1Score - team2Score) != 2
@@ -400,7 +431,7 @@ class DetailViewModel @Inject constructor(
                 errorMessage = "Score can't be equal!"
             }
         }
-        if(isInvalid == false && (team1Score < matchPoints && team2Score < matchPoints)) {
+        if(!isInvalid && (team1Score < matchPoints && team2Score < matchPoints)) {
             isInvalid = true
             errorMessage = "Anyone must reach match points!"
         }
@@ -411,27 +442,29 @@ class DetailViewModel @Inject constructor(
             onFinish()
     }
 
-    fun finishMatch(match: MatchJoint) {
+    fun finishMatch(match: Match) {
         viewModelScope.launch {
             isProcessing()
-            var winnerIds: List<String>
-            var winnerScore: Int
-            var loserIds: List<String>
-            var loserScore: Int
+            val team1UserIds = match.team1Ids.map { id -> _leagueParticipantsJoint.value.find { it.id == id }!!.user.uid }
+            val team2UserIds = match.team2Ids.map { id -> _leagueParticipantsJoint.value.find { it.id == id }!!.user.uid }
+
+            val winnerIds: List<String>
+            val winnerScore: Int
+            val loserIds: List<String>
+            val loserScore: Int
             if(match.team1Score > match.team2Score) {
-                winnerIds = match.team1.map { it.uid }
+                winnerIds = team1UserIds.map { id -> _participantsStats.value.find { it.user.uid == id }!!.id }
                 winnerScore = match.team1Score
-                loserIds = match.team2.map { it.uid }
+                loserIds = team2UserIds.map { id -> _participantsStats.value.find { it.user.uid == id }!!.id }
                 loserScore = match.team2Score
             } else {
-                winnerIds = match.team2.map { it.uid }
+                winnerIds = team2UserIds.map { id -> _participantsStats.value.find { it.user.uid == id }!!.id }
                 winnerScore = match.team2Score
-                loserIds = match.team1.map { it.uid }
+                loserIds = team1UserIds.map { id -> _participantsStats.value.find { it.user.uid == id }!!.id }
                 loserScore = match.team1Score
             }
             appRepository.finishMatch(
                 match.id,
-                match.league.id,
                 Pair(winnerIds, winnerScore),
                 Pair(loserIds, loserScore)
             )
@@ -466,11 +499,41 @@ class DetailViewModel @Inject constructor(
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing = _isProcessing.asStateFlow()
 
-    fun isProcessing() {
+    private fun isProcessing() {
         _isProcessing.value = true
     }
 
-    fun isNotProcessing() {
+    private fun isNotProcessing() {
         _isProcessing.value = false
+    }
+
+    fun autoGenerateMatch() {
+        viewModelScope.launch {
+            val playerPerTeam = if (_leagueJoint.value.double) 2 else 1
+            val matchCounts = _participantsStats.value.map { it.matches }.toSet().count()
+            Log.d("autoGenerateMatch", "Match Counts: $matchCounts")
+
+            val sortedParticipants  = if(matchCounts > 1) {
+                _participantsStats.value.sortedBy { it.matches }.take(playerPerTeam * 2).sorted()
+            } else if(_participantsStats.value.count() == playerPerTeam * 2) {
+                _participantsStats.value.shuffled().take(playerPerTeam * 2)
+            } else {
+                _participantsStats.value.sorted().let { it.take(playerPerTeam) + it.takeLast(playerPerTeam) }
+            }
+
+            val sortedUserIds = sortedParticipants.map { it.user.uid }
+
+            val sortedPlayers = sortedUserIds.mapNotNull { id ->
+                _leagueParticipantsJoint.value.find { it.user.uid == id }?.id
+            }.toMutableList()
+
+            val team1Ids = mutableListOf<String>()
+            val team2Ids = mutableListOf<String>()
+            for (i in 0 until playerPerTeam) {
+                team1Ids.add(sortedPlayers[i])
+                team2Ids.add(sortedPlayers[sortedPlayers.size - 1 - i])
+            }
+            appRepository.createNewMatch(_leagueJoint.value.id, team1Ids, team2Ids)
+        }
     }
 }

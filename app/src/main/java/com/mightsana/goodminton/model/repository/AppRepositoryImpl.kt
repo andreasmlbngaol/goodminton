@@ -15,6 +15,7 @@ import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
+import com.mightsana.goodminton.features.main.model.LeagueStatus
 import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.MatchStatus
@@ -377,6 +378,12 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         }
     }
 
+    override suspend fun finishLeague(leagueId: String) {
+        leaguesCollection
+            .document(leagueId)
+            .update("status", LeagueStatus.Finished)
+    }
+
     // Retrieve League Participant Data
     override suspend fun getParticipantsJoint(leagueId: String): List<LeagueParticipantJoint> {
         val participants = leagueParticipantsCollection
@@ -532,6 +539,11 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             }
         }
     }
+    override fun observeMatches(leagueId: String, onMatchesUpdate: (List<Match>) -> Unit) {
+        observeMatchesSnapshot(leagueId) { matchesSnapshot ->
+            onMatchesUpdate(matchesSnapshot?.toObjects(Match::class.java) ?: emptyList())
+        }
+    }
 
     // Matches Action
     override suspend fun createNewMatch(leagueId: String, team1: List<String>, team2: List<String>) {
@@ -561,7 +573,6 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     }
     override suspend fun finishMatch(
         matchId: String,
-        leagueId: String,
         winners: Pair<List<String>, Int>,
         losers: Pair<List<String>, Int>
     ) {
@@ -580,16 +591,12 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             "pointsConceded" to FieldValue.increment(losers.second.toLong()),
             "pointsScored" to FieldValue.increment(winners.second.toLong())
         )
-        winners.first.forEach {
-            val winnerDocs = participantStatsCollection
-                .whereEqualTo("userId", it)
-                .whereEqualTo("leagueId", leagueId)
-                .get()
+        winners.first.forEach { winnerParticipantId ->
+            Log.d("AppRepository", "Updating winner participant: $winnerParticipantId")
+            participantStatsCollection
+                .document(winnerParticipantId)
+                .update(winnerUpdates)
                 .await()
-
-            winnerDocs.documents.forEach { doc ->
-                doc.reference.update(winnerUpdates)
-            }
         }
         val loserUpdates = mapOf(
             "losses" to FieldValue.increment(1),
@@ -597,16 +604,12 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             "pointsConceded" to FieldValue.increment(winners.second.toLong()),
             "pointsScored" to FieldValue.increment(losers.second.toLong())
         )
-        losers.first.forEach {
-            val loserDocs = participantStatsCollection
-                .whereEqualTo("userId", it)
-                .whereEqualTo("leagueId", leagueId)
-                .get()
+        losers.first.forEach { loserParticipantId ->
+            Log.d("AppRepository", "Updating loser participant: $loserParticipantId")
+            participantStatsCollection
+                .document(loserParticipantId)
+                .update(loserUpdates)
                 .await()
-
-            loserDocs.documents.forEach { doc ->
-                doc.reference.update(loserUpdates)
-            }
         }
     }
     override suspend fun addTeam1Score(matchId: String) {

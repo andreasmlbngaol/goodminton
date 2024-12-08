@@ -103,8 +103,9 @@ fun FriendListScreen(
                     )
 
                 sortedFriends.forEach {
+                    val me = it.user.uid == user.uid
                     item(
-                        span = if(it.user.uid == user.uid || sortedFriends.size == 1) {
+                        span = if(me || sortedFriends.size == 1) {
                             { GridItemSpan(maxLineSpan) }
                         } else null
                     ) {
@@ -134,8 +135,9 @@ fun FriendListScreen(
                                     modifier = Modifier.weight(1f),
                                     verticalArrangement = Arrangement.Center
                                 ) {
+                                    val name = "${it.user.name}${if(me) " (Me)" else ""}"
                                     Text(
-                                        text = it.user.name,
+                                        text = name,
                                         style = MaterialTheme.typography.titleMedium,
                                         modifier = Modifier
                                             .onTap {

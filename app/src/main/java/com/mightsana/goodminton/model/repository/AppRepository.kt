@@ -8,6 +8,7 @@ import com.mightsana.goodminton.features.main.model.League
 import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipant
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
+import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.MatchJoint
 import com.mightsana.goodminton.features.main.model.ParticipantStats
 import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
@@ -59,6 +60,7 @@ interface AppRepository {
     suspend fun updateLeagueName(leagueId: String, newName: String)
     suspend fun updateLeagueMatchPoints(leagueId: String, newMatchPoints: Int)
     suspend fun deleteLeague(leagueId: String)
+    suspend fun finishLeague(leagueId: String)
 
     // Retrieve League Participant Data
     suspend fun getParticipantsJoint(leagueId: String): List<LeagueParticipantJoint>
@@ -76,13 +78,13 @@ interface AppRepository {
     // Retrieve Matches Data
     fun observeMatchesSnapshot(leagueId: String, onMatchesSnapshotUpdate: (QuerySnapshot?) -> Unit)
     fun observeMatchesJoint(leagueId: String, onMatchesUpdate: (List<MatchJoint>) -> Unit)
+    fun observeMatches(leagueId: String, onMatchesUpdate: (List<Match>) -> Unit)
 
     // Matches Action
     suspend fun createNewMatch(leagueId: String, team1: List<String>, team2: List<String>)
     suspend fun startMatch(matchId: String)
     suspend fun finishMatch(
         matchId: String,
-        leagueId: String,
         winners: Pair<List<String>, Int>,
         losers: Pair<List<String>, Int>,
     )
