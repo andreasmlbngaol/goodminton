@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.FlipCameraAndroid
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Man
 import androidx.compose.material.icons.filled.MarkEmailUnread
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.NoAccounts
 import androidx.compose.material.icons.filled.Password
@@ -69,6 +70,7 @@ fun MyIcon(
 
 @Suppress("unused")
 object MyIcons {
+    val Menu: ImageVector = Icons.Default.Menu
     val Play: ImageVector = Icons.Default.PlayArrow
     val Finished: ImageVector = Icons.Default.Stop
     val Generate: ImageVector = Icons.Default.AutoAwesome

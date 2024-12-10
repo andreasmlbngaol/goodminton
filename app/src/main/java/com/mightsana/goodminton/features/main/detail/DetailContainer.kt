@@ -141,29 +141,32 @@ fun DetailContainer(
                             ) {
                                 MyIcon(MyIcons.Plus)
                             }
-                        }
-                        val anyNotFinished = matches.any { it.status == MatchStatus.Scheduled || it.status == MatchStatus.Playing }
-                        val containerColor = if(anyNotFinished) MaterialTheme.colorScheme.surfaceVariant
-                            else MaterialTheme.colorScheme.primary
-                        val contentColor = contentColorFor(containerColor).copy(if(anyNotFinished) 0.38f else 1f)
-                        ExtendedFloatingActionButton(
-                            text = {
-                                Text("Auto Generate")
-                            },
-                            icon = {
-                                MyIcon(MyIcons.Generate)
-                            },
-                            containerColor = containerColor,
-                            contentColor = contentColor,
-                            expanded = !anyNotFinished,
-                            onClick = {
-                                if(anyNotFinished) {
-                                    viewModel.toast(R.string.error_generate_match)
-                                } else {
-                                    viewModel.autoGenerateMatch()
+                            val anyNotFinished =
+                                matches.any { it.status == MatchStatus.Scheduled || it.status == MatchStatus.Playing }
+                            val containerColor =
+                                if (anyNotFinished) MaterialTheme.colorScheme.surfaceVariant
+                                else MaterialTheme.colorScheme.primary
+                            val contentColor =
+                                contentColorFor(containerColor).copy(if (anyNotFinished) 0.38f else 1f)
+                            ExtendedFloatingActionButton(
+                                text = {
+                                    Text("Auto Generate")
+                                },
+                                icon = {
+                                    MyIcon(MyIcons.Generate)
+                                },
+                                containerColor = containerColor,
+                                contentColor = contentColor,
+                                expanded = !anyNotFinished,
+                                onClick = {
+                                    if (anyNotFinished) {
+                                        viewModel.toast(R.string.error_generate_match)
+                                    } else {
+                                        viewModel.autoGenerateMatch()
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }

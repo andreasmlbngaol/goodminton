@@ -22,9 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -60,6 +58,7 @@ import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDate
 import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.Loader
+import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
 import com.mightsana.goodminton.view.MyTextField
 import com.mightsana.goodminton.view.PullToRefreshScreen
@@ -116,7 +115,7 @@ fun HomeScreen(
                                     ) {
                                         if (!it)
                                             Icon(
-                                                Icons.Default.Menu,
+                                                MyIcons.Menu,
                                                 contentDescription = null,
                                                 modifier = Modifier.onTap {
                                                     scope.launch {
@@ -126,7 +125,7 @@ fun HomeScreen(
                                             )
                                         else
                                             Icon(
-                                                Icons.AutoMirrored.Filled.ArrowBack,
+                                                MyIcons.Back,
                                                 contentDescription = null,
                                                 modifier = Modifier.onTap {
                                                     viewModel.collapseSearch()

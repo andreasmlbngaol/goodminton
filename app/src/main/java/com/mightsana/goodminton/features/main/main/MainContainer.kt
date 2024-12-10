@@ -186,7 +186,7 @@ fun MainContainer(
                 HomeScreen(
                     onNavigateToProfile = { navController.navigateSingleTop(Profile()) },
                     onNavigateToLeague = { navController.navigateSingleTop(League(it)) },
-                    onOpenDrawer = { drawerState.open() },
+                    onOpenDrawer = { drawerState.open() }
                 )
             }
 
@@ -209,7 +209,8 @@ fun MainContainer(
 
             composable<Settings> {
                 SettingsScreen(
-                    onBack = { backToHome(Settings) }
+                    onBack = { backToHome(Settings) },
+                    onOpenDrawer = { drawerState.open() }
                 )
             }
         }

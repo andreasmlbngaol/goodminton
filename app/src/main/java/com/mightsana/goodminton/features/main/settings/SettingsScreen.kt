@@ -27,6 +27,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -36,16 +37,19 @@ import com.mightsana.goodminton.model.component_model.RequestLocationPermission
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenDrawer: suspend () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     BackHandler { onBack() }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = Modifier
@@ -56,8 +60,12 @@ fun SettingsScreen(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(
-                        onClick = onBack,
-                        content = { MyIcon(MyIcons.Back) }
+                        onClick = {
+                            scope.launch {
+                                onOpenDrawer()
+                            }
+                        },
+                        content = { MyIcon(MyIcons.Menu) }
                     )
                 },
                 scrollBehavior = scrollBehavior
