@@ -14,11 +14,11 @@ android {
 
     defaultConfig {
         applicationId = "com.mightsana.goodminton"
-        minSdk = 31
+        minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.7.0"
+        versionCode = 4
+        versionName = "0.8.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -100,6 +100,19 @@ dependencies {
 
     // Table
     implementation(libs.beetablescompose)
+
+    // API
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // Location
+    implementation(libs.play.services.location)
+
+    // Access Request
+    implementation(libs.accompanist.permissions)
+
+    // PDF
+    implementation(libs.itext7.core)
 }
 
 kapt {

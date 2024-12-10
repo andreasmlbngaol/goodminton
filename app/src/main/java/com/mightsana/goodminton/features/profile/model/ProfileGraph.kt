@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.mightsana.goodminton.Main
 import com.mightsana.goodminton.features.auth.model.AuthGraph
+import com.mightsana.goodminton.features.profile.edit_profile.EditProfileScreen
 import com.mightsana.goodminton.features.profile.friend_list.FriendListScreen
 import com.mightsana.goodminton.features.profile.other_profile.OtherProfileScreen
 import com.mightsana.goodminton.features.profile.self_profile.SelfProfileScreen
@@ -13,11 +14,9 @@ import com.mightsana.goodminton.model.ext.navigateAndPopUpTo
 import com.mightsana.goodminton.model.ext.navigateSingleTop
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class Profile(val uid: String? = null)
-
-@Serializable
-data class FriendList(val uid: String)
+@Serializable data class Profile(val uid: String? = null)
+@Serializable object EditProfile
+@Serializable data class FriendList(val uid: String)
 
 fun NavGraphBuilder.profileGraph(
     navController: NavHostController,
@@ -38,9 +37,16 @@ fun NavGraphBuilder.profileGraph(
             SelfProfileScreen(
                 onBack = { navController.navigateUp() },
                 onSignOut = { navController.navigateAndPopUpTo(AuthGraph, Main) },
-                onNavigateToFriendList = { navigateToFriendList(it) }
+                onNavigateToFriendList = { navigateToFriendList(it) },
+                onNavigateToEditProfile = { navController.navigate(EditProfile) }
             )
         }
+    }
+
+    composable<EditProfile> {
+        EditProfileScreen(
+            onBack = { navController.navigateUp() }
+        )
     }
 
     composable<FriendList> {

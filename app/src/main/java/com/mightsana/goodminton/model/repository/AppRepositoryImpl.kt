@@ -149,6 +149,24 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         }
     }
 
+    // User Data Action
+    override suspend fun editUser(user: MyUser, onSuccess: () -> Unit) {
+        val updates = mapOf(
+            "name" to user.name,
+            "nickname" to user.nickname,
+            "username" to user.username,
+            "bio" to user.bio,
+            "profilePhotoUrl" to user.profilePhotoUrl,
+            "openToAdd" to user.openToAdd
+        )
+        usersCollection
+            .document(user.uid)
+            .update(updates)
+            .addOnSuccessListener {
+                onSuccess()
+            }
+    }
+
     // Create League
     override suspend fun addLeagueParticipant(participant: LeagueParticipant) {
         val newParticipantDoc = leagueParticipantsCollection.document()

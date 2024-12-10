@@ -1,4 +1,5 @@
 package com.mightsana.goodminton.ui.theme
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -9,6 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.mightsana.goodminton.model.component_model.fetchUserLocation
+import com.mightsana.goodminton.model.component_model.fetchWeatherData
+import com.mightsana.goodminton.model.service.WeatherCondition
 
 private val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -257,13 +261,27 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun AppTheme(
+    weatherTheme: Boolean = false,
     dynamicColor: Boolean = true,
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable() () -> Unit
 ) {
     val context = LocalContext.current
     val colorScheme = when {
-        dynamicColor -> if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        weatherTheme -> {
+            fetchUserLocation(context) { lat, long ->
+                fetchWeatherData(lat, long) { response ->
+                    when(response.weather[0].main) {
+                        WeatherCondition.Clear -> lightScheme
+                        else -> darkScheme
+                    }
+                }
+            }
+            lightScheme
+        }
+        (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) -> {
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
         darkTheme -> darkScheme
         else -> lightScheme
     }

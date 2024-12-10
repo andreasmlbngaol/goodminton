@@ -9,6 +9,7 @@ import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.service.AccountService
 import com.mightsana.goodminton.model.values.SharedPreference.PREF_DYNAMIC_COLOR
 import com.mightsana.goodminton.model.values.SharedPreference.PREF_NAME
+import com.mightsana.goodminton.model.values.SharedPreference.PREF_WEATHER_THEME
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,11 +21,21 @@ class SettingsViewModel @Inject constructor(
     appRepository: AppRepository,
     application: Application
 ): MyViewModel(accountService, appRepository, application) {
-    val sharedPreferences: SharedPreferences = application.getSharedPreferences(PREF_NAME, MODE_PRIVATE)
+    private val sharedPreferences: SharedPreferences = application.getSharedPreferences(PREF_NAME, MODE_PRIVATE)
     private val currentDynamicColorEnabled = sharedPreferences.getBoolean(PREF_DYNAMIC_COLOR, false)
+    private val currentWeatherThemeEnabled = sharedPreferences.getBoolean(PREF_WEATHER_THEME, false)
 
     private val _dynamicColorEnabled = MutableStateFlow(currentDynamicColorEnabled)
     val dynamicColorEnabled = _dynamicColorEnabled.asStateFlow()
+
+    private val _weatherThemeEnabled = MutableStateFlow(currentWeatherThemeEnabled)
+    val weatherThemeEnabled = _weatherThemeEnabled.asStateFlow()
+
+    fun setWeatherThemeEnabled(enabled: Boolean) {
+        _weatherThemeEnabled.value = enabled
+        sharedPreferences.edit().putBoolean(PREF_WEATHER_THEME, enabled).apply()
+        setShowSnackbar(_weatherThemeEnabled.value != currentWeatherThemeEnabled)
+    }
 
     fun setDynamicColorEnabled(enabled: Boolean) {
         _dynamicColorEnabled.value = enabled

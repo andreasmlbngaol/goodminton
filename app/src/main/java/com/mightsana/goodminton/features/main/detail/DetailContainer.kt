@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Leaderboard
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -105,6 +106,7 @@ fun DetailContainer(
     val playerSelected by viewModel.playerSelected.collectAsState()
     val scope = rememberCoroutineScope()
     val playerPerMatch = if(league.double) 4 else 2
+    val notParticipant = user.uid !in participants.map { it.user.uid }
 
     val navItems = listOf(
         NavigationItem(
@@ -112,7 +114,15 @@ fun DetailContainer(
             route = MATCH,
             iconSelected = Icons.Filled.Schedule,
             iconUnselected = Icons.Outlined.Schedule,
-            content = { MatchesScreen(viewModel = viewModel) },
+            content = {
+                MatchesScreen(
+                    onNavigateToParticipant = {
+                        viewModel.onSelectItem(2)
+                        viewModel.resetPlayerSelected()
+                    },
+                    viewModel = viewModel
+                )
+            },
             fab = {
                 val role = participants.find { it.user.uid == user.uid }?.role
                 if (role == Role.Creator || role == Role.Admin) {
@@ -215,7 +225,7 @@ fun DetailContainer(
     Loader(viewModel.isLoading.collectAsState().value) {
         val userInvited = user.uid in invitationSent.map { it.receiver.uid }
         Scaffold(
-            floatingActionButtonPosition = if(userInvited || (!league.private && user.uid !in participants.map { it.user.uid }))
+            floatingActionButtonPosition = if(userInvited || (notParticipant))
                 FabPosition.Center else FabPosition.End,
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -262,11 +272,11 @@ fun DetailContainer(
                 }
             },
             floatingActionButton = {
-                if(user.uid !in participants.map { it.user.uid } && !league.private) {
+                if(notParticipant) {
                     ExtendedFloatingActionButton(
                         text = { Text("Join") },
                         icon = { MyIcon(MyIcons.Join) },
-                        onClick = { viewModel.comingSoon() }
+                        onClick = { viewModel.showJoinDialog() }
                     )
                 } else if(userInvited) {
                     val invitationId = invitationSent.find { it.receiver.uid == user.uid }!!.id
@@ -355,7 +365,7 @@ fun DetailContainer(
                             trailingContent = {
                                 if(it.user.uid !in invitationReceiverIds) {
                                     if(it.user.openToAdd) {
-                                        Button(onClick = { viewModel.addParticipant(it.user.uid)}) {
+                                        Button(onClick = { viewModel.addParticipant(it.user.uid) }) {
                                             Text("Add")
                                         }
                                     } else {
@@ -457,6 +467,23 @@ fun DetailContainer(
                     }
                 }
             }
+        }
+        if(viewModel.joinDialogVisible.collectAsState().value) {
+            AlertDialog(
+                onDismissRequest = { viewModel.dismissJoinDialog() },
+                confirmButton = {
+                    Button(onClick = { viewModel.joinLeague() }) {
+                        Text("Join")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { viewModel.dismissJoinDialog() }) {
+                        Text("Cancel")
+                    }
+                },
+                title = { Text("Join League") },
+                text = { Text("Are you sure you want to join this league?") }
+            )
         }
     }
 }

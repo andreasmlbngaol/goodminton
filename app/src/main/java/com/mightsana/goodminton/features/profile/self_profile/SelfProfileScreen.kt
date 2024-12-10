@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -44,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,6 +66,7 @@ fun SelfProfileScreen(
     onBack: () -> Unit,
     onSignOut: () -> Unit,
     onNavigateToFriendList: (String) -> Unit,
+    onNavigateToEditProfile: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SelfProfileViewModel = hiltViewModel()
 ) {
@@ -182,10 +185,7 @@ fun SelfProfileScreen(
                 }
                 item {
                     Button(
-                        {
-//                            navController.navigateSingleTop("$PROFILE/$SETTINGS")
-                            viewModel.comingSoon()
-                        },
+                        onClick = onNavigateToEditProfile,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MyIcon(MyIcons.Edit)
@@ -194,7 +194,7 @@ fun SelfProfileScreen(
                     }
                 }
                 item {
-                    val containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    val containerColor = MaterialTheme.colorScheme.secondaryContainer
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -204,30 +204,22 @@ fun SelfProfileScreen(
                             contentColor = contentColorFor(containerColor)
                         )
                     ) {
-                        Text(
-                            text = user.bio ?: "No bio yet. 😊",
-                            minLines = 3,
-                            style = MaterialTheme.typography.titleMedium,
+                        Box(
                             modifier = Modifier
+                                .fillMaxSize()
+                                .heightIn(min = 150.dp)
                                 .padding(horizontal = Size.padding)
-                                .padding(top = Size.smallPadding),
-                            lineHeight = MaterialTheme.typography.titleLarge.lineHeight
-                        )
+                                .padding(vertical = Size.smallPadding),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                textAlign = TextAlign.Center,
+                                text = user.bio ?: "No bio yet. 😊",
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+                        }
                     }
                 }
-//                item {
-//                    MyTextField(
-//                        value = user.bio ?: "",
-//                        onValueChange = {},
-//                        readOnly = true,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(top = 8.dp),
-//                        placeholder = { Text("No bio yet. 😊") },
-//                        minLines = 3,
-//                        singleLine = false
-//                    )
-//                }
             }
         }
         AnimatedVisibility(

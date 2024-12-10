@@ -38,6 +38,9 @@ interface AppRepository {
     fun observeUsersSnapshot(userIds: List<String>, onUsersUpdate: (QuerySnapshot?) -> Unit)
     fun observeUsersJoint(userIds: List<String>, onUsersUpdate: (List<MyUser>) -> Unit)
 
+    // User Data Action
+    suspend fun editUser(user: MyUser, onSuccess: () -> Unit)
+
     // Create League
     suspend fun addLeagueParticipant(participant: LeagueParticipant)
     suspend fun createNewLeague(league: League)

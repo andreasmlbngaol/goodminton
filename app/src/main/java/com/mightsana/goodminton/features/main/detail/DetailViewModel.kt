@@ -35,9 +35,6 @@ class DetailViewModel @Inject constructor(
     private val _friends = MutableStateFlow(listOf<FriendJoint>())
     val friends = _friends.asStateFlow()
 
-//    private val _matchesJoint = MutableStateFlow<List<MatchJoint>>(emptyList())
-//    val matchesJoint = _matchesJoint.asStateFlow()
-
     private val _matches = MutableStateFlow<List<Match>>(emptyList())
     val matches = _matches.asStateFlow()
 
@@ -46,6 +43,22 @@ class DetailViewModel @Inject constructor(
 
     private val _participantsStats = MutableStateFlow(listOf<ParticipantStatsJoint>())
     val participantsStats = _participantsStats.asStateFlow()
+
+    private val _joinDialogVisible = MutableStateFlow(false)
+    val joinDialogVisible = _joinDialogVisible.asStateFlow()
+
+    fun dismissJoinDialog() {
+        _joinDialogVisible.value = false
+    }
+
+    fun showJoinDialog() {
+        _joinDialogVisible.value = true
+    }
+
+    fun joinLeague() {
+        addParticipant(accountService.currentUserId)
+        dismissJoinDialog()
+    }
 
     private fun observeUser() {
         viewModelScope.launch {

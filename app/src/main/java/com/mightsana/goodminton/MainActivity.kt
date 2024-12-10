@@ -10,7 +10,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
@@ -34,11 +33,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val sharedPreferences = getSharedPreferences(SharedPreference.PREF_NAME, MODE_PRIVATE)
         val isDynamicColorEnabled = sharedPreferences.getBoolean(SharedPreference.PREF_DYNAMIC_COLOR, false)
+        val isWeatherThemeEnabled = sharedPreferences.getBoolean(SharedPreference.PREF_WEATHER_THEME, false)
+//        val language = sharedPreferences.getString(SharedPreference.PREF_LANGUAGE, "en")
 
         enableEdgeToEdge()
         setContent {
-            val dynamicColorState = rememberSaveable { mutableStateOf(isDynamicColorEnabled) }
-
             val navController = rememberNavController()
             var navStart: Any? by remember { mutableStateOf(null) }
             var authStart: Any by remember { mutableStateOf(SignIn) }
@@ -48,7 +47,10 @@ class MainActivity : ComponentActivity() {
                 authStart = auth
             }
 
-            AppTheme(dynamicColorState.value) {
+            AppTheme(
+                weatherTheme = isWeatherThemeEnabled,
+                dynamicColor = isDynamicColorEnabled
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
