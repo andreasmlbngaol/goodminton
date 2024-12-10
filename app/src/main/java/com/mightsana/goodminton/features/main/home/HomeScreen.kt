@@ -381,7 +381,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Fixed Double?"
+                                text = "Fixed Double? (Experimental)"
                             )
                             Switch(
                                 checked = viewModel.isFixedDouble.collectAsState().value,
