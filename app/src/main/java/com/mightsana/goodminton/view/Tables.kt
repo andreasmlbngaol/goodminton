@@ -10,9 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +59,7 @@ inline fun <reified T : Any> Tables(
     columnToIndexIncreaseWidth: Int? = null,
     columnToColorModified: Map<Int, Color> = emptyMap(),
     columnToFontWeightModified: Map<Int, FontWeight> = emptyMap(),
-    headerScrollableHide: Boolean = false,
+//    headerScrollableHide: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     OutlinedCard(
@@ -70,10 +68,7 @@ inline fun <reified T : Any> Tables(
         border = borderStroke,
         modifier = modifier
     ) {
-        Column(
-            modifier = if(!headerScrollableHide) Modifier
-            else Modifier.verticalScroll(rememberScrollState())
-        ) {
+        Column {
             if (enableTableHeaderTitles) {
                 if (disableVerticalDividers) {
                     TableHeaderComponentWithoutColumnDividers(
@@ -101,11 +96,7 @@ inline fun <reified T : Any> Tables(
                 }
             }
 
-
-            Column(
-                modifier = if(headerScrollableHide) Modifier
-                else Modifier.verticalScroll(rememberScrollState())
-            ) {
+            Column {
                 data.forEachIndexed { index, data ->
                     val rowData = extractMembers(data).map {
                         it.second // getting the value from the returned Pair

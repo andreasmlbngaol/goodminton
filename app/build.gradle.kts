@@ -112,6 +112,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     // PDF
+    implementation(libs.capturable)
     implementation(libs.itext7.core)
 }
 

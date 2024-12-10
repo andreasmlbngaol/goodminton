@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalTextStyle
@@ -65,23 +67,24 @@ fun LeagueReport(
     league: LeagueJoint,
     participants: List<LeagueParticipantJoint>,
     participantsStats: List<ParticipantStatsJoint>,
-    matches: List<Match>
+    matches: List<Match>,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(MaterialTheme.colorScheme.background)
-            .padding(Size.padding),
-        verticalArrangement = Arrangement.spacedBy(Size.padding)
+            .padding(horizontal = Size.smallPadding),
+        verticalArrangement = Arrangement.spacedBy(Size.smallPadding),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ReportTitle(league.name)
         ReportSubtitle(league, matches, participants.size)
         HorizontalDivider(thickness = 2.dp)
         Champions(participantsStats)
-        Spacer(Modifier.height(Size.largePadding))
+        Spacer(Modifier.height(Size.smallPadding))
         StandingsReport(participantsStats)
-        Spacer(Modifier.height(Size.largePadding))
-        MatchesReport(matches, participants)
     }
 }
 
@@ -147,26 +150,22 @@ fun RowScope.Podium(
 }
 
 @Composable
-fun ColumnScope.Champions(participantsStats: List<ParticipantStatsJoint>) {
+fun ColumnScope.Champions(
+    participantsStats: List<ParticipantStatsJoint>,
+) {
     val stats = participantsStats.sorted()
     val firstChampion = stats.elementAt(0)
     val secondChampion = stats.elementAt(1)
     val thirdChampion = stats.elementAt(2)
-
-    Text(
-        text = "Champions",
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.align(Alignment.CenterHorizontally)
-    )
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Size.padding),
         verticalAlignment = Alignment.Bottom
     ) {
-        val firstHeight = 125.dp
-        val secondHeight = 100.dp
-        val thirdHeight = 80.dp
+        val firstHeight = 90.dp
+        val secondHeight = 75.dp
+        val thirdHeight = 50.dp
 
         Podium(secondChampion, secondHeight, 2, "nd", MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.secondary)
         Podium(firstChampion, firstHeight, 1, "st", MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
@@ -175,9 +174,9 @@ fun ColumnScope.Champions(participantsStats: List<ParticipantStatsJoint>) {
 }
 
 @Composable
-fun ColumnScope.ReportTitle(leagueName: String) {
+fun ReportTitle(leagueName: String) {
     PrevText(
-        modifier = Modifier.align(Alignment.CenterHorizontally),
+//        modifier = Modifier.align(Alignment.CenterHorizontally),
         text = leagueName,
         style = MaterialTheme.typography.titleLarge,
         textDecoration = TextDecoration.Underline
@@ -231,7 +230,7 @@ fun ReportSubtitle(league: LeagueJoint, matches: List<Match>, participantCount: 
 }
 
 @Composable
-fun ColumnScope.StandingsReport(participantsStats: List<ParticipantStatsJoint>) {
+fun StandingsReport(participantsStats: List<ParticipantStatsJoint>) {
     val tableColumns = listOf("No", "Name", "M", "W", "L", "PS", "PC", "PD")
     val tableData = participantsStats
         .sorted()
@@ -251,9 +250,10 @@ fun ColumnScope.StandingsReport(participantsStats: List<ParticipantStatsJoint>) 
     PrevText(
         text = "Standings",
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.align(Alignment.CenterHorizontally)
+//        modifier = Modifier.align(Alignment.CenterHorizontally)
     )
 
+    Spacer(Modifier.height(Size.smallPadding))
 
     Tables(
         data = tableData,
@@ -273,16 +273,18 @@ fun ColumnScope.StandingsReport(participantsStats: List<ParticipantStatsJoint>) 
     )
 }
 
+@Suppress("unused")
 @Composable
-fun ColumnScope.MatchesReport(matches: List<Match>, participants: List<LeagueParticipantJoint>) {
+fun MatchesReport(matches: List<Match>, participants: List<LeagueParticipantJoint>) {
     PrevText(
         text = "${matches.size} Matches",
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.align(Alignment.CenterHorizontally)
+//        modifier = Modifier.align(Alignment.CenterHorizontally)
     )
-
-    matches.forEach { match ->
-        val order = matches.sortedBy { it.createdAt }.map { it.id }.indexOf(match.id)
+    Spacer(Modifier.height(Size.smallPadding))
+    matches
+        .sortedBy { it.createdAt }
+        .forEachIndexed { index, match ->
         Card(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -303,7 +305,7 @@ fun ColumnScope.MatchesReport(matches: List<Match>, participants: List<LeaguePar
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         PrevText(
-                            text = "Match ${order + 1}",
+                            text = "Match ${index + 1}",
                             style = MaterialTheme.typography.titleLarge,
                             color = contentColorFor(headerBackgroundColor)
                         )
@@ -355,6 +357,7 @@ fun ColumnScope.MatchesReport(matches: List<Match>, participants: List<LeaguePar
                 Spacer(Modifier.height(Size.smallPadding))
             }
         }
+        Spacer(Modifier.height(Size.smallPadding))
     }
 }
 
@@ -452,7 +455,7 @@ fun LeagueReportPreview() {
             league = league,
             participants = participants,
             participantsStats = participantsStats,
-            matches = matches
+            matches = matches,
         )
     }
 }

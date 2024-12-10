@@ -21,15 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
-import com.mightsana.goodminton.features.main.model.LeagueStatus
 import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
-import com.mightsana.goodminton.features.main.result.generateAndSaveReportToMediaStore
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDateTime
 import com.mightsana.goodminton.model.values.Size
@@ -38,15 +35,12 @@ import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyTextField
 
 @Composable
-@Suppress("unused")
 fun LeagueInfoScreen(
     viewModel: DetailViewModel,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
     val uid = viewModel.user.collectAsState().value.uid
     val participantsJoint by viewModel.leagueParticipantsJoint.collectAsState()
-    val participantsStats by viewModel.participantsStats.collectAsState()
     val currentUserRole = participantsJoint.find { it.user.uid == uid }?.role
     val leagueJoint by viewModel.leagueJoint.collectAsState()
     val matches by viewModel.matches.collectAsState()
@@ -187,23 +181,8 @@ fun LeagueInfoScreen(
         )
 
 
-        // Delete Button & Download Result
-        if(leagueJoint.status == LeagueStatus.Finished) {
-            Button(
-                onClick = {
-                    generateAndSaveReportToMediaStore(
-                        context = context,
-                        fileName = "${leagueJoint.name}_report",
-                        league = leagueJoint,
-                        participants = participantsJoint,
-                        participantsStats = participantsStats,
-                        matches = matches
-                    )
-                }
-            ) {
-                Text("Download Result")
-            }
-        } else if(currentUserRole == Role.Creator) {
+        // Delete Button & End League
+        if(currentUserRole == Role.Creator) {
             val containerColor = MaterialTheme.colorScheme.errorContainer
             Row {
                 if(!viewModel.matches.collectAsState().value.any { match ->

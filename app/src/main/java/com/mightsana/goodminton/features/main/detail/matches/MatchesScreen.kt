@@ -184,10 +184,10 @@ fun MatchesScreen(
                                     verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
                                 ) {
                                     match.team1Ids.forEach { id ->
-                                        val participant = participants.find { it.id == id }!!
-                                        val textColor = if(participant.user.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
+                                        val participant = participants.find { it.id == id }
+                                        val textColor = if(participant?.user?.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
                                         Text(
-                                            text = participant.user.name,
+                                            text = participant?.user?.name.orEmpty(),
                                             overflow = TextOverflow.Ellipsis,
                                             style = MaterialTheme.typography.titleMedium,
                                             color = textColor

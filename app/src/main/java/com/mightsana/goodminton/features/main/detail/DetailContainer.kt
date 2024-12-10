@@ -76,6 +76,7 @@ import com.mightsana.goodminton.features.main.detail.matches.MatchesScreen
 import com.mightsana.goodminton.features.main.detail.participants.ParticipantsScreen
 import com.mightsana.goodminton.features.main.detail.standings.StandingsScreen
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
+import com.mightsana.goodminton.features.main.model.LeagueStatus
 import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.component_model.NavigationItem
@@ -125,7 +126,7 @@ fun DetailContainer(
             },
             fab = {
                 val role = participants.find { it.user.uid == user.uid }?.role
-                if (role == Role.Creator || role == Role.Admin) {
+                if ((role == Role.Creator || role == Role.Admin) && league.status != LeagueStatus.Finished) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.End
@@ -186,7 +187,7 @@ fun DetailContainer(
             content = { ParticipantsScreen(viewModel = viewModel) },
             fab = {
                 val myRole = participants.find { it.user.uid == user.uid }?.role
-                if (myRole == Role.Creator || myRole == Role.Admin) {
+                if ((myRole == Role.Creator || myRole == Role.Admin) && league.status != LeagueStatus.Finished) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.End
@@ -219,7 +220,12 @@ fun DetailContainer(
             route = INFO,
             iconSelected = Icons.Filled.Info,
             iconUnselected = Icons.Outlined.Info,
-            content = { LeagueInfoScreen(viewModel, onBack) }
+            content = {
+                LeagueInfoScreen(
+                    viewModel,
+                    onBack
+                )
+            }
         )
     )
     val selectedItem by viewModel.selectedItem.collectAsState()
