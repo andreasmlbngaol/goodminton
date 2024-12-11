@@ -193,7 +193,9 @@ fun DetailContainer(
                         horizontalAlignment = Alignment.End
                     ) {
                         FloatingActionButton(
-                            onClick = { viewModel.comingSoon() }
+                            onClick = {
+                                viewModel.comingSoon()
+                            }
                         ) {
                             MyIcon(MyIcons.Plus)
                         }

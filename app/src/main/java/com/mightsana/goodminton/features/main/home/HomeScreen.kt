@@ -192,46 +192,60 @@ fun HomeScreen(
             }
         ) { innerPadding ->
             PullToRefreshScreen( { viewModel.loadLeagues() }, Modifier.padding(innerPadding) ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(350.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(leagues.sortedByDescending { it.createdAt }) {
-                        Card(
-                            shape = MaterialTheme.shapes.medium,
-                            modifier = Modifier.clickable {
-                                onNavigateToLeague(it.id)
-                            }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
+                if(leagues.isNotEmpty()) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(350.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 16.dp)
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(leagues.sortedByDescending { it.createdAt }) {
+                            Card(
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier.clickable {
+                                    onNavigateToLeague(it.id)
+                                }
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        it.name,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        maxLines = 1,
-                                        overflow = Ellipsis
-                                    )
-                                    Text(
-                                        it.createdAt.showDate(),
-                                        maxLines = 1,
-                                        overflow = Ellipsis
-                                    )
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            it.name,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            maxLines = 1,
+                                            overflow = Ellipsis
+                                        )
+                                        Text(
+                                            it.createdAt.showDate(),
+                                            maxLines = 1,
+                                            overflow = Ellipsis
+                                        )
+                                    }
                                 }
                             }
                         }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No League Found",
+                            style = MaterialTheme.typography.titleLarge
+                        )
                     }
                 }
             }
