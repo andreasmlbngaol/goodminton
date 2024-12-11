@@ -29,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
@@ -44,6 +45,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -75,7 +77,6 @@ fun SelfProfileScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val profilePictureExpanded by viewModel.profilePictureExpanded.collectAsState()
-//    val imagePosition = remember { mutableStateOf(IntOffset(0, 0)) }
     val imageExpandedDuration = 600
     val imageMinWidth = 100.dp
     val imageMaxWidth = 400.dp
@@ -124,15 +125,15 @@ fun SelfProfileScreen(
             LazyColumn(
                 modifier = modifier
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 8.dp)
+                    .padding(horizontal = Size.padding)
+                    .padding(top = Size.smallPadding)
                     .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Size.smallPadding)
             ) {
                 item {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Size.padding)
                     ) {
                         if(user.profilePhotoUrl == null)
                             MyImage(
@@ -149,22 +150,17 @@ fun SelfProfileScreen(
                                     .width(imageMinWidth)
                                     .aspectRatio(1f)
                                     .clip(CircleShape)
-//                                    .onGloballyPositioned { coordinates ->
-//                                        imagePosition.value = IntOffset(
-//                                            x = coordinates.positionInRoot().x.toInt(),
-//                                            y = coordinates.positionInRoot().y.toInt()
-//                                        )
-//                                    }
                                     .onTap { viewModel.expandProfilePicture() }
                                     .alpha(imageAlpha)
                             )
                         Row(
                             modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(Size.smallPadding),
                                 modifier = Modifier
                                     .onTap {
                                         if (friendsJoint.isNotEmpty())
@@ -172,7 +168,22 @@ fun SelfProfileScreen(
                                     }
                             ) {
                                 Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "${friendsJoint.size}")
-                                Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = if(friendsJoint.size == 1) "Friend" else "Friends")
+                                Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.friends))
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .onTap {
+                                        if (friendsJoint.isNotEmpty())
+                                            onNavigateToFriendList(user.uid)
+                                    }
+                            ) {
+                                Switch(
+                                    checked = user.openToAdd,
+                                    onCheckedChange = { viewModel.updateOpenToAdd(it) }
+                                )
+                                Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.public_text))
                             }
                         }
                     }
@@ -189,8 +200,8 @@ fun SelfProfileScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MyIcon(MyIcons.Edit)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Edit Profile")
+                        Spacer(modifier = Modifier.width(Size.smallPadding))
+                        Text(stringResource(R.string.edit_profile))
                     }
                 }
                 item {
@@ -198,7 +209,7 @@ fun SelfProfileScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
+                            .padding(top = Size.smallPadding),
                         colors = CardDefaults.cardColors().copy(
                             containerColor = containerColor,
                             contentColor = contentColorFor(containerColor)
@@ -214,7 +225,7 @@ fun SelfProfileScreen(
                         ) {
                             Text(
                                 textAlign = TextAlign.Center,
-                                text = user.bio ?: "No bio yet. 😊",
+                                text = user.bio ?: stringResource(R.string.no_bio),
                                 style = MaterialTheme.typography.titleLarge,
                             )
                         }
@@ -237,7 +248,7 @@ fun SelfProfileScreen(
                     model = user.profilePhotoUrl,
                     modifier = Modifier
                         .width(expandedImageWidth)
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = Size.padding)
                         .aspectRatio(1f)
                         .clip(CircleShape)
                         .clickable(false) {}
@@ -248,9 +259,9 @@ fun SelfProfileScreen(
             AlertDialog(
                 onDismissRequest = { viewModel.dismissSignOutDialog() },
                 modifier = Modifier
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = Size.padding),
                 text = {
-                    Text("Are you sure you want to sign out?")
+                    Text(stringResource(R.string.sign_out_text))
                 },
                 confirmButton = {
                     Button(
@@ -268,7 +279,7 @@ fun SelfProfileScreen(
                             disabledContentColor = MaterialTheme.colorScheme.onErrorContainer
                         )
                     ) {
-                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Sign Out")
+                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.sign_out_button_label))
                     }
                 },
                 dismissButton = {
@@ -277,7 +288,7 @@ fun SelfProfileScreen(
                             viewModel.dismissSignOutDialog()
                         }
                     ) {
-                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Cancel")
+                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.cancel))
                     }
                 }
             )

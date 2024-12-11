@@ -21,9 +21,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
@@ -53,7 +55,7 @@ fun LeagueInfoScreen(
     ) {
         // League Name
         InfoItem(
-            title = "League Name",
+            title = stringResource(R.string.league_name_label),
             value = leagueJoint.name,
             icon = {
                 if (currentUserRole == Role.Creator) {
@@ -74,14 +76,14 @@ fun LeagueInfoScreen(
 
         // Participants
         InfoItem(
-            title = "Participants",
+            title = stringResource(R.string.participants),
             value = participantsJoint.size.toString(),
         )
 
         // Discipline
         InfoItem(
-            title = "Discipline",
-            value = if(leagueJoint.double) "Double" else "Single",
+            title = stringResource(R.string.discipline),
+            value = if(leagueJoint.double) stringResource(R.string.double_label) else stringResource(R.string.single_label),
             icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                 {
                     MyIcon(
@@ -95,8 +97,8 @@ fun LeagueInfoScreen(
         // Double Fixed
         if(leagueJoint.fixedDouble != null) {
             InfoItem(
-                title = "Fixed Double",
-                value = if(leagueJoint.fixedDouble!!) "Yes" else "No",
+                title = stringResource(R.string.fixed_double),
+                value = if(leagueJoint.fixedDouble!!) stringResource(R.string.yes) else stringResource(R.string.no),
                 icon = if(currentUserRole == Role.Creator && matches.isEmpty()) {
                     {
                         MyIcon(
@@ -112,7 +114,7 @@ fun LeagueInfoScreen(
 
         // League Match Points
         InfoItem(
-            title = "Match Points",
+            title = stringResource(R.string.match_points_label),
             value = leagueJoint.matchPoints.toString(),
             icon = if (currentUserRole == Role.Creator) {
                 {
@@ -128,8 +130,8 @@ fun LeagueInfoScreen(
 
         // Deuce
         InfoItem(
-            title = "Deuce",
-            value = if(leagueJoint.deuceEnabled) "Yes" else "No",
+            title = stringResource(R.string.deuce),
+            value = if(leagueJoint.deuceEnabled) stringResource(R.string.yes) else stringResource(R.string.no),
         icon = if(currentUserRole == Role.Creator) {
                 {
                     MyIcon(
@@ -142,8 +144,8 @@ fun LeagueInfoScreen(
 
         // Visibility
         InfoItem(
-            title = "Visibility",
-            value = if(leagueJoint.private) "Private" else "Public",
+            title = stringResource(R.string.visibility_label),
+            value = if(leagueJoint.private) stringResource(R.string.private_league_label) else stringResource(R.string.public_text),
             icon = if(currentUserRole == Role.Creator) {
                 {
                     MyIcon(
@@ -156,7 +158,7 @@ fun LeagueInfoScreen(
 
         //League ID
         InfoItem(
-            title = "ID",
+            title = stringResource(R.string.league_id_label),
             value = leagueJoint.id,
             icon = {
                 MyIcon(
@@ -170,13 +172,13 @@ fun LeagueInfoScreen(
 
         // Created At
         InfoItem(
-            title = "Time Created",
+            title = stringResource(R.string.created_at_label),
             value = leagueJoint.createdAt.showDateTime()
         )
 
         // Created By
         InfoItem(
-            title = "Creator",
+            title = stringResource(R.string.created_by_label),
             value = leagueJoint.createdBy.name
         )
 
@@ -191,7 +193,7 @@ fun LeagueInfoScreen(
                     Button(
                         onClick = { viewModel.showEndLeagueDialog() }
                     ) {
-                        Text("End League")
+                        Text(stringResource(R.string.end_league))
                     }
                 }
                 Spacer(Modifier.width(Size.padding))
@@ -202,7 +204,7 @@ fun LeagueInfoScreen(
                         contentColor = contentColorFor(containerColor)
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             }
         }
@@ -214,16 +216,16 @@ fun LeagueInfoScreen(
             onDismissRequest = { viewModel.dismissEndLeagueDialog() },
             confirmButton = {
                 Button(onClick = { viewModel.finishLeague() }) {
-                    Text("End")
+                    Text(stringResource(R.string.end))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { viewModel.dismissEndLeagueDialog() }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
-            title = { Text("End League") },
-            text = { Text("Are you sure you want to end this league?") }
+            title = { Text(stringResource(R.string.end_league)) },
+            text = { Text(stringResource(R.string.end_league_description)) }
         )
     }
 
@@ -233,15 +235,15 @@ fun LeagueInfoScreen(
             onDismissRequest = { viewModel.dismissChangeNameDialog() },
             confirmButton = {
                 Button(onClick = { viewModel.updateLeagueName() }) {
-                    Text("Save")
+                    Text(stringResource(R.string.save))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { viewModel.dismissChangeNameDialog() }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
-            title = { Text("League Name") },
+            title = { Text(stringResource(R.string.league_name_label)) },
             text = {
                 MyTextField(
                     value = viewModel.leagueName.collectAsState().value,
@@ -258,15 +260,15 @@ fun LeagueInfoScreen(
             onDismissRequest = { viewModel.dismissChangeMatchPointsDialog() },
             confirmButton = {
                 Button(onClick = { viewModel.updateLeagueMatchPoints() }) {
-                    Text("Save")
+                    Text(stringResource(R.string.save))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { viewModel.dismissChangeMatchPointsDialog() }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
-            title = { Text("Match Points") },
+            title = { Text(stringResource(R.string.match_points_label)) },
             text = {
                 val matchPoints by viewModel.matchPoints.collectAsState()
                 MyTextField(
@@ -290,15 +292,15 @@ fun LeagueInfoScreen(
                         containerColor = containerColor,
                         contentColor = contentColorFor(containerColor)
                     )
-                ) { Text("Delete") }
+                ) { Text(stringResource(R.string.delete)) }
             },
             dismissButton = {
                 OutlinedButton(onClick = { viewModel.dismissDeleteLeagueDialog() }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
-            title = { Text("Delete League") },
-            text = { Text("Are you sure you want to delete this league?") }
+            title = { Text(stringResource(R.string.delete_league)) },
+            text = { Text(stringResource(R.string.delete_league_description)) }
         )
     }
 }
@@ -308,7 +310,6 @@ fun InfoItem(
     title: String,
     value: String,
     icon: @Composable (() -> Unit)? = null,
-//    bottomLine: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     //League ID
@@ -334,6 +335,4 @@ fun InfoItem(
             }
         }
     )
-//    if(bottomLine)
-//        HorizontalDivider()
 }

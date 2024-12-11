@@ -35,6 +35,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 
 class AppRepositoryImpl @Inject constructor(): AppRepository {
@@ -67,6 +68,20 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .document(user.uid)
             .set(user)
             .await()
+    }
+    override suspend fun createGuestParticipant(leagueId: String, name: String, nickname: String) {
+        val uniqueID = UUID.randomUUID().toString()
+        val newUserID = "zGUEST_$uniqueID" // Biar di paling bawah di firestore
+        val newUser = MyUser(
+            uid = newUserID,
+            name = name,
+            nickname = nickname,
+            username = "guest_${nickname.lowercase()}",
+            profilePhotoUrl = "https://lh3.googleusercontent.com/a/ACg8ocJqioouAGDYYtGzu3L9ZQ5GGWj9JOaUC4XN_7hk9PLDy3gIQPs=s360-c-no"
+        )
+        createNewUser(newUser)
+        addParticipant(leagueId, newUserID)
+        addParticipantStats(leagueId, newUserID)
     }
     override suspend fun isUserRegistered(userId: String): Boolean =
         usersCollection
@@ -104,12 +119,14 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             }
             userDeferreds.flatMap { it.await() }
         }
-    override suspend fun getUser(userId: String): MyUser =
-        usersCollection
-            .document(userId)
-            .get()
-            .await()
-            .toObject(MyUser::class.java)!!
+    override suspend fun getUser(userId: String): MyUser {
+        if (userId.isEmpty()) return MyUser()
+        return usersCollection
+                .document(userId)
+                .get()
+                .await()
+                .toObject(MyUser::class.java)!!
+    }
     override fun observeUserSnapshot(userId: String, onUserSnapshotUpdate: (DocumentSnapshot?) -> Unit) {
         usersCollection
             .document(userId)
@@ -165,6 +182,12 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .addOnSuccessListener {
                 onSuccess()
             }
+    }
+
+    override suspend fun updateUserOpenToAdd(userId: String, openToAdd: Boolean) {
+        usersCollection
+            .document(userId)
+            .update("openToAdd", openToAdd)
     }
 
     // Create League
@@ -357,7 +380,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
             .update("matchPoints", newMatchPoints)
             .await()
     }
-    override suspend fun deleteLeague(leagueId: String) {
+    override suspend fun deleteLeague(leagueId: String, guestIds: List<String>) {
         withContext(Dispatchers.IO) {  // Pindahkan ke thread latar belakang
             try {
                 val leaguesRef = leaguesCollection.document(leagueId)
@@ -388,6 +411,11 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
                     // Hapus semua undangan
                     for (document in invitationsQuery.documents) {
                         batch.delete(document.reference)
+                    }
+
+                    // Hapus semua guest
+                    for (guestId in guestIds) {
+                        batch.delete(usersCollection.document(guestId))
                     }
                 }.await()
             } catch (e: Exception) {

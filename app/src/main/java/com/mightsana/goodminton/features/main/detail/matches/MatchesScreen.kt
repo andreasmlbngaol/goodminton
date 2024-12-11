@@ -43,13 +43,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
-import com.mightsana.goodminton.model.ext.secondToTIme
+import com.mightsana.goodminton.model.ext.secondToTime
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
@@ -76,10 +78,10 @@ fun MatchesScreen(
         LazyVerticalGrid(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = Size.padding),
             columns = GridCells.Adaptive(350.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(Size.padding),
+            verticalArrangement = Arrangement.spacedBy(Size.padding)
         ) {
             val matchOrdered = matches.sortedBy { it.createdAt }
             items(
@@ -117,7 +119,7 @@ fun MatchesScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Match ${order + 1}",
+                                        text = stringResource(R.string.match_card_label, order + 1),
                                         style = MaterialTheme.typography.titleLarge,
                                         color = contentColorFor(headerBackgroundColor)
                                     )
@@ -126,7 +128,7 @@ fun MatchesScreen(
                                             val startedAt = match.startedAt
                                             val timePlaying = now.seconds - startedAt.seconds
                                             Text(
-                                                text = "Duration: ${timePlaying.secondToTIme()}",
+                                                text = stringResource(R.string.match_card_duration_label, timePlaying.secondToTime()),
                                                 style = MaterialTheme.typography.titleSmall,
                                                 color = contentColorFor(headerBackgroundColor)
                                             )
@@ -134,7 +136,7 @@ fun MatchesScreen(
                                             val duration =
                                                 match.finishedAt.seconds - match.startedAt.seconds
                                             Text(
-                                                text = "Duration: ${duration.secondToTIme()}",
+                                                text = stringResource(R.string.match_card_duration_label, duration.secondToTime()),
                                                 style = MaterialTheme.typography.titleSmall,
                                                 color = contentColorFor(headerBackgroundColor)
                                             )
@@ -317,14 +319,14 @@ fun MatchesScreen(
             val playerPerMatch = if(league.double) 4 else 2
             val participantNotEnough = participants.size < playerPerMatch
             val text = when {
-                participantNotEnough -> "Not enough players"
-                else -> "No matches"
+                participantNotEnough -> stringResource(R.string.not_enough_participants)
+                else -> stringResource(R.string.no_matches)
             }
             Text(text, style = MaterialTheme.typography.headlineSmall)
             if(participantNotEnough) {
                 Spacer(Modifier.height(Size.padding))
                 Button(onClick = onNavigateToParticipant) {
-                    Text("Add Participant", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.add_participants_button_label), style = MaterialTheme.typography.titleMedium)
                 }
             }
         }

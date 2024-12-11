@@ -42,6 +42,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,13 +50,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.ext.showDate
+import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyIcons
@@ -68,17 +72,17 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     onNavigateToProfile: () -> Unit,
-    onNavigateToLeague: (String) -> Unit, // League ID
+    onNavigateToLeague: (leagueId: String) -> Unit,
     onOpenDrawer: suspend () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-
+    LaunchedEffect(Unit) { viewModel.loadLeagues() }
     val user by viewModel.user.collectAsState()
     val leagues by viewModel.leagues.collectAsState()
     val searchExpanded by viewModel.searchExpanded.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val horizontalPadding by animateDpAsState(
-        if (searchExpanded) 0.dp else 16.dp,
+        if (searchExpanded) 0.dp else Size.padding,
         animationSpec = tween(300),
         label = ""
     )
@@ -107,7 +111,7 @@ fun HomeScreen(
                                 onSearch = { viewModel.collapseSearch() },
                                 expanded = searchExpanded,
                                 onExpandedChange = { viewModel.onSearchExpandedChange(it) },
-                                placeholder = { Text("Search league name...") },
+                                placeholder = { Text(stringResource(R.string.league_search_placeholder)) },
                                 leadingIcon = {
                                     AnimatedContent(
                                         searchExpanded,
@@ -179,7 +183,7 @@ fun HomeScreen(
             floatingActionButton = {
                 AnimatedVisibility(!searchExpanded) {
                     ExtendedFloatingActionButton(
-                        text = { Text("New League") },
+                        text = { Text(stringResource(R.string.new_league_fab_label)) },
                         icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                         onClick = {
                             scope.launch {
@@ -237,13 +241,11 @@ fun HomeScreen(
                     }
                 } else {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No League Found",
+                            text = stringResource(R.string.no_league_found),
                             style = MaterialTheme.typography.titleLarge
                         )
                     }
@@ -277,14 +279,14 @@ fun HomeScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(Size.padding)
                         .widthIn(max = 350.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(Size.smallPadding)
                 ) {
                     // Title
                     Text(
-                        text = "Add New League",
+                        text = stringResource(R.string.add_new_league),
                         style = MaterialTheme.typography.titleLarge,
                         textDecoration = TextDecoration.Underline
                     )
@@ -293,14 +295,12 @@ fun HomeScreen(
                     val nameErrorMessage by viewModel.nameErrorMessage.collectAsState()
                     MyTextField(
                         isError = nameErrorMessage != null,
-                        label = { Text("League Name") },
+                        label = { Text(stringResource(R.string.league_name_label)) },
                         value = viewModel.leagueName.collectAsState().value,
                         onValueChange = { viewModel.updateLeagueName(it) },
                         modifier = Modifier.fillMaxWidth(),
                         supportingText = nameErrorMessage?.let {
-                            {
-                                ErrorSupportingText(message = it)
-                            }
+                            { ErrorSupportingText(message = it) }
                         }
                     )
 
@@ -308,7 +308,7 @@ fun HomeScreen(
                     val matchPointsErrorMessage by viewModel.matchPointsErrorMessage.collectAsState()
                     MyTextField(
                         isError = matchPointsErrorMessage != null,
-                        label = { Text("Match Points") },
+                        label = { Text(stringResource(R.string.match_points_label)) },
                         value = if(matchPoints == 0) "" else matchPoints.toString() ,
                         onValueChange = { viewModel.updateMatchPoints(it)},
                         modifier = Modifier.fillMaxWidth(),
@@ -316,7 +316,7 @@ fun HomeScreen(
                             autoCorrectEnabled = false,
                             keyboardType = KeyboardType.Number
                         ),
-                        placeholder = { Text("21") },
+                        placeholder = { Text(stringResource(R.string.match_points_placeholder)) },
                         supportingText = matchPointsErrorMessage?.let {
                             {
                                 ErrorSupportingText(message = it)
@@ -329,11 +329,11 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(horizontal = 8.dp)
+                            .padding(horizontal = Size.smallPadding)
                             .onTap { viewModel.togglePrivate() }
                     ) {
                         Text(
-                            text = "Public"
+                            text = stringResource(R.string.public_text)
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Switch(
@@ -342,7 +342,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
-                            text = "Private"
+                            text = stringResource(R.string.private_league_label)
                         )
                     }
 
@@ -355,7 +355,7 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Enable Deuce?"
+                            text = stringResource(R.string.enabled_deuce_label)
                         )
                         Switch(
                             checked = viewModel.deuceEnabled.collectAsState().value,
@@ -368,11 +368,11 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(horizontal = 8.dp)
+                            .padding(horizontal = Size.smallPadding)
                             .onTap { viewModel.toggleDouble() }
                     ) {
                         Text(
-                            text = "Single"
+                            text = stringResource(R.string.single_label)
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Switch(
@@ -381,7 +381,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
-                            text = "Double"
+                            text = stringResource(R.string.double_label)
                         )
                     }
 
@@ -390,12 +390,12 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
+                                .padding(horizontal = Size.smallPadding),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Fixed Double? (Experimental)"
+                                text = stringResource(R.string.fixed_double_label)
                             )
                             Switch(
                                 checked = viewModel.isFixedDouble.collectAsState().value,
@@ -409,11 +409,11 @@ fun HomeScreen(
                     // Confirm Button
                     Row(
                         modifier = Modifier.align(Alignment.End),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
                     ) {
                         OutlinedButton(
                             onClick = { viewModel.resetForm() }
-                        ) { Text("Reset") }
+                        ) { Text(stringResource(R.string.reset_button_label)) }
                         Button(
                             onClick = {
                                 viewModel.addLeague {
@@ -425,7 +425,7 @@ fun HomeScreen(
                                 }
                             }
                         ) {
-                            Text("Save")
+                            Text(stringResource(R.string.save_button_label))
                         }
                     }
                 }

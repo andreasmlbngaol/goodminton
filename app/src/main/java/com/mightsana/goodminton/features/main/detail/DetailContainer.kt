@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Leaderboard
@@ -65,7 +67,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
@@ -81,12 +85,15 @@ import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.model.values.Size
+import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.Loader
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
+import com.mightsana.goodminton.view.MyTextField
 import com.mightsana.goodminton.view.PullToRefreshScreen
 import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,8 +118,8 @@ fun DetailContainer(
 
     val navItems = listOf(
         NavigationItem(
-            label = MATCH,
-            route = MATCH,
+            label = stringResource(R.string.matches_label),
+            route = stringResource(R.string.matches_label),
             iconSelected = Icons.Filled.Schedule,
             iconUnselected = Icons.Outlined.Schedule,
             content = {
@@ -151,7 +158,7 @@ fun DetailContainer(
                                 contentColorFor(containerColor).copy(if (anyNotFinished) 0.38f else 1f)
                             ExtendedFloatingActionButton(
                                 text = {
-                                    Text("Auto Generate")
+                                    Text(stringResource(R.string.generate_match))
                                 },
                                 icon = {
                                     MyIcon(MyIcons.Generate)
@@ -173,15 +180,15 @@ fun DetailContainer(
             }
         ),
         NavigationItem(
-            label = STANDINGS,
-            route = STANDINGS,
+            label = stringResource(R.string.standings_label),
+            route = stringResource(R.string.standings_label),
             iconSelected = Icons.Filled.Leaderboard,
             iconUnselected = Icons.Outlined.Leaderboard,
             content = { StandingsScreen(viewModel = viewModel) }
         ),
         NavigationItem(
-            label = PARTICIPANTS,
-            route = PARTICIPANTS,
+            label = stringResource(R.string.participants_label),
+            route = stringResource(R.string.participants_label),
             iconSelected = Icons.Filled.People,
             iconUnselected = Icons.Outlined.People,
             content = { ParticipantsScreen(viewModel = viewModel) },
@@ -192,16 +199,12 @@ fun DetailContainer(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.End
                     ) {
-                        FloatingActionButton(
-                            onClick = {
-                                viewModel.comingSoon()
-                            }
-                        ) {
+                        FloatingActionButton(onClick = { viewModel.showGuestParticipantSheet() }) {
                             MyIcon(MyIcons.Plus)
                         }
                         ExtendedFloatingActionButton(
                             text = {
-                                Text("Add Friend")
+                                Text(stringResource(R.string.add_friends))
                             },
                             icon = {
                                 MyIcon(MyIcons.Invitation)
@@ -218,8 +221,8 @@ fun DetailContainer(
             }
         ),
         NavigationItem(
-            label = INFO,
-            route = INFO,
+            label = stringResource(R.string.info_label),
+            route = stringResource(R.string.info_label),
             iconSelected = Icons.Filled.Info,
             iconUnselected = Icons.Outlined.Info,
             content = {
@@ -233,7 +236,7 @@ fun DetailContainer(
     val selectedItem by viewModel.selectedItem.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    Loader(viewModel.isLoading.collectAsState().value) {
+    Loader(viewModel.isLoading.collectAsState().value || participants.isEmpty() ) {
         val userInvited = user.uid in invitationSent.map { it.receiver.uid }
         Scaffold(
             floatingActionButtonPosition = if(userInvited || (notParticipant))
@@ -257,8 +260,8 @@ fun DetailContainer(
                 NavigationBar(
                     modifier = Modifier
                         .clip(RoundedCornerShape(
-                            topStart = 20.dp,
-                            topEnd = 20.dp,
+                            topStart = Size.padding,
+                            topEnd = Size.padding,
                             bottomStart = 0.dp,
                             bottomEnd = 0.dp
                         ))
@@ -285,7 +288,7 @@ fun DetailContainer(
             floatingActionButton = {
                 if(notParticipant) {
                     ExtendedFloatingActionButton(
-                        text = { Text("Join") },
+                        text = { Text(stringResource(R.string.join)) },
                         icon = { MyIcon(MyIcons.Join) },
                         onClick = { viewModel.showJoinDialog() }
                     )
@@ -300,7 +303,7 @@ fun DetailContainer(
                                 )
                             }
                         ) {
-                            Text("Accept")
+                            Text(stringResource(R.string.accept_button_label))
                         }
                         Spacer(Modifier.width(Size.padding))
                         OutlinedButton(
@@ -308,7 +311,7 @@ fun DetailContainer(
                                 viewModel.declineInvitation(invitationId)
                             }
                         ) {
-                            Text("Decline")
+                            Text(stringResource(R.string.decline_button_label))
                         }
                     }
                 } else {
@@ -427,19 +430,21 @@ fun DetailContainer(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         val playerCount = if(league.double) 4 else 2
-                        itemsIndexed((1..playerCount).toList()) { index, item ->
+                        itemsIndexed((1..playerCount).toList()) { index, order ->
                             MatchDropdownButton(
                                 dropdownExpandedMap = playerDropdownExpanded,
-                                order = item,
+                                order = order,
+                                selectLabel = stringResource(R.string.select_player, order),
+                                changeLabel = stringResource(R.string.change_label),
                                 selectedItemMap = playerSelected,
                                 items = participants.sortedBy { it.user.name },
                                 onToggle = { viewModel.togglePlayerExpanded(it) },
                                 onDismiss = { viewModel.dismissPlayerExpanded(it) },
-                                onSelected = { selectedParticipantId -> viewModel.selectPlayer(item, selectedParticipantId) }
+                                onSelected = { selectedParticipantId -> viewModel.selectPlayer(order, selectedParticipantId) }
                             )
                             if((index + 1) == (playerCount / 2)) {
                                 Text(
-                                    text = "VS",
+                                    text = stringResource(R.string.vs),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = Bold,
                                     modifier = Modifier.padding(top = Size.smallPadding)
@@ -458,7 +463,7 @@ fun DetailContainer(
                                         viewModel.resetPlayerSelected()
                                     }
                                 ) {
-                                    Text("Reset")
+                                    Text(stringResource(R.string.reset_button_label))
                                 }
                                 Spacer(Modifier.width(Size.padding))
                                 Button(
@@ -471,7 +476,7 @@ fun DetailContainer(
                                         }
                                     }
                                 ) {
-                                    Text("Create")
+                                    Text(stringResource(R.string.create_button_label))
                                 }
                             }
                         }
@@ -484,17 +489,98 @@ fun DetailContainer(
                 onDismissRequest = { viewModel.dismissJoinDialog() },
                 confirmButton = {
                     Button(onClick = { viewModel.joinLeague() }) {
-                        Text("Join")
+                        Text(stringResource(R.string.join))
                     }
                 },
                 dismissButton = {
                     OutlinedButton(onClick = { viewModel.dismissJoinDialog() }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 },
-                title = { Text("Join League") },
-                text = { Text("Are you sure you want to join this league?") }
+                title = { Text(stringResource(R.string.join_league)) },
+                text = { Text(stringResource(R.string.join_league_description)) }
             )
+        }
+        if(viewModel.guestParticipantSheetExpanded.collectAsState().value) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    scope.launch {
+                        sheetState.hide()
+                        viewModel.dismissGuestParticipantSheet()
+                    }
+                },
+                sheetState = sheetState
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .padding(Size.padding),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.guest_participant_title),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(Modifier.height(Size.padding))
+                    }
+
+                    item {
+                        MyTextField(
+                            keyboardOptions = KeyboardOptions(KeyboardCapitalization.Words),
+                            isError = !viewModel.fullNameErrorMessage.collectAsState().value.isNullOrEmpty(),
+                            value = viewModel.guestFullName.collectAsState().value,
+                            onValueChange = { viewModel.changeGuestFullName(it) },
+                            label = { Text(stringResource(R.string.name_label)) },
+                            supportingText = {
+                                val error = viewModel.fullNameErrorMessage.collectAsState().value
+                                error?.let { ErrorSupportingText(true, error) }
+                            }
+                        )
+                    }
+
+                    item {
+                        MyTextField(
+                            keyboardOptions = KeyboardOptions(KeyboardCapitalization.Words),
+                            isError = !viewModel.nicknameErrorMessage.collectAsState().value.isNullOrEmpty(),
+                            value = viewModel.guestNickname.collectAsState().value,
+                            onValueChange = { viewModel.changeGuestNickname(it) },
+                            label = { Text(stringResource(R.string.nickname_label)) },
+                            supportingText = {
+                                val error = viewModel.nicknameErrorMessage.collectAsState().value
+                                error?.let { ErrorSupportingText(true, error) }
+                            }
+                        )
+                    }
+
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            OutlinedButton(onClick = { viewModel.resetGuestForm() }) {
+                                Text(stringResource(R.string.reset_button_label))
+                            }
+                            Spacer(Modifier.width(Size.padding))
+                            Button(
+                                onClick = {
+                                    viewModel.validateGuestForm {
+                                        scope.launch {
+                                            viewModel.createGuestParticipant()
+                                            sheetState.hide()
+                                            viewModel.dismissGuestParticipantSheet()
+                                            viewModel.resetGuestForm()
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(stringResource(R.string.add))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -507,8 +593,8 @@ fun MatchDropdownButton(
     items: List<LeagueParticipantJoint>,
     onToggle: (Int) -> Unit,
     onDismiss: (Int) -> Unit,
-    selectLabel: String = "Select Player $order",
-    changeLabel: String = "Change",
+    selectLabel: String,
+    changeLabel: String,
     onSelected: (String?) -> Unit
 ) {
     val selectedItem = items.find {
@@ -589,8 +675,4 @@ fun MatchDropdownButton(
     }
 }
 
-const val MATCH = "Match"
-const val STANDINGS = "Standings"
-const val PARTICIPANTS = "Participants"
-const val INFO = "Info"
 const val UNSELECT = "Unselect"

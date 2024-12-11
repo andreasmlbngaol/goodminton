@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -123,15 +124,15 @@ fun OtherProfileScreen(
             LazyColumn(
                 modifier = modifier
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 8.dp)
+                    .padding(horizontal = Size.padding)
+                    .padding(top = Size.smallPadding)
                     .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Size.smallPadding)
             ) {
                 item {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Size.padding)
                     ) {
                         if(otherUser.profilePhotoUrl == null)
                             MyImage(
@@ -157,14 +158,18 @@ fun OtherProfileScreen(
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(Size.smallPadding),
                                 modifier = Modifier.onTap {
                                     if (friendsJoint.isNotEmpty())
                                         onNavigateToFriendList(otherUser.uid)
                                 }
                             ) {
                                 Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "${friendsJoint.size}")
-                                Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = if(friendsJoint.size == 1) "Friend" else "Friends")
+                                Text(
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    text = stringResource(R.string.friends)
+                                )
                             }
                         }
                     }
@@ -190,8 +195,12 @@ fun OtherProfileScreen(
                             )
                         ) {
                             MyIcon(MyIcons.Delete)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Unfriend")
+                            Spacer(modifier = Modifier.width(Size.smallPadding))
+                            Text(
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                text = stringResource(R.string.unfriend)
+                            )
                         }
                     } else if (isFriendRequested) {
                         Button(
@@ -206,13 +215,17 @@ fun OtherProfileScreen(
                             )
                         ) {
                             MyIcon(MyIcons.Cancel)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Cancel Request")
+                            Spacer(modifier = Modifier.width(Size.smallPadding))
+                            Text(
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                text = stringResource(R.string.cancel_friend_request)
+                            )
                         }
                     } else if (isFriendRequestReceived) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Size.padding),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Button(
@@ -223,7 +236,7 @@ fun OtherProfileScreen(
                                 Text(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    text = "Accept"
+                                    text = stringResource(R.string.accept_button_label)
                                 )
                             }
                             OutlinedButton(
@@ -234,7 +247,7 @@ fun OtherProfileScreen(
                                 Text(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    text = "Decline"
+                                    text = stringResource(R.string.decline_button_label)
                                 )
                             }
                         }
@@ -245,8 +258,12 @@ fun OtherProfileScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             MyIcon(MyIcons.Plus)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Request Friend")
+                            Spacer(modifier = Modifier.width(Size.smallPadding))
+                            Text(
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                text = stringResource(R.string.request_friend)
+                            )
                         }
 
                     }
@@ -256,14 +273,14 @@ fun OtherProfileScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
+                            .padding(top = Size.smallPadding),
                         colors = CardDefaults.cardColors().copy(
                             containerColor = containerColor,
                             contentColor = contentColorFor(containerColor)
                         )
                     ) {
                         Text(
-                            text = otherUser.bio ?: "No bio yet. 😊",
+                            text = otherUser.bio ?: stringResource(R.string.no_bio),
                             minLines = 3,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
@@ -278,12 +295,13 @@ fun OtherProfileScreen(
             if(viewModel.dialogVisible.collectAsState().value) {
                 AlertDialog(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = Size.padding),
                     onDismissRequest = {
                         viewModel.hideDialog()
                     },
                     text = {
-                        Text("Are you sure you want to unfriend ${otherUser.username}?")
+                        Text(
+                            text = stringResource(R.string.unfrined_description, otherUser.username))
                     },
                     confirmButton = {
                         Button(
@@ -298,7 +316,7 @@ fun OtherProfileScreen(
                                 disabledContentColor = MaterialTheme.colorScheme.onErrorContainer
                             )
                         ) {
-                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Unfriend")
+                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.unfriend))
                         }
                     },
                     dismissButton = {
@@ -307,7 +325,7 @@ fun OtherProfileScreen(
                                 viewModel.hideDialog()
                             }
                         ) {
-                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Cancel")
+                            Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.cancel))
                         }
                     }
                 )
@@ -334,7 +352,7 @@ fun OtherProfileScreen(
                     model = otherUser.profilePhotoUrl,
                     modifier = Modifier
                         .width(expandedImageWidth)
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = Size.padding)
                         .aspectRatio(1f)
                         .clip(CircleShape)
                         .clickable(false) {}

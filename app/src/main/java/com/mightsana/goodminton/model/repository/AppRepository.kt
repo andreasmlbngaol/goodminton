@@ -26,6 +26,7 @@ interface AppRepository {
 
     // Register
     suspend fun createNewUser(user: MyUser)
+    suspend fun createGuestParticipant(leagueId: String, name: String, nickname: String)
     suspend fun isUserRegistered(userId: String): Boolean
     suspend fun isUsernameAvailable(username: String): Boolean
 
@@ -40,6 +41,7 @@ interface AppRepository {
 
     // User Data Action
     suspend fun editUser(user: MyUser, onSuccess: () -> Unit)
+    suspend fun updateUserOpenToAdd(userId: String, openToAdd: Boolean)
 
     // Create League
     suspend fun addLeagueParticipant(participant: LeagueParticipant)
@@ -62,7 +64,7 @@ interface AppRepository {
     suspend fun updateLeagueVisibility(leagueId: String, private: Boolean)
     suspend fun updateLeagueName(leagueId: String, newName: String)
     suspend fun updateLeagueMatchPoints(leagueId: String, newMatchPoints: Int)
-    suspend fun deleteLeague(leagueId: String)
+    suspend fun deleteLeague(leagueId: String, guestIds: List<String>)
     suspend fun finishLeague(leagueId: String)
 
     // Retrieve League Participant Data

@@ -36,7 +36,7 @@ fun Long.showDate(): String {
 }
 
 @SuppressLint("DefaultLocale")
-fun Long.secondToTIme(): String {
+fun Long.secondToTime(): String {
     val minutes = this / 60
     val remainingSeconds = this % 60
     return String.format("%02d:%02d", minutes, remainingSeconds)

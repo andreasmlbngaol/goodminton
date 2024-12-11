@@ -31,8 +31,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.component_model.RequestLocationPermission
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
@@ -57,7 +58,7 @@ fun SettingsScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_label)) },
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -90,10 +91,10 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Weather Theme (Experimental)")
+                    Text(stringResource(R.string.weather_theme_label))
                     RequestLocationPermission(
                         askForPermissionContent = { askPermission ->
-                            Button(onClick = askPermission) { Text("Location Needed") }
+                            Button(onClick = askPermission) { Text(stringResource(R.string.location_permission_label)) }
                         }
                     ) {
                         Switch(
@@ -109,7 +110,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Dynamic Color")
+                    Text(stringResource(R.string.dynamic_color_label))
                     Switch(
                         checked = viewModel.dynamicColorEnabled.collectAsState().value,
                         onCheckedChange = { viewModel.setDynamicColorEnabled(it) },
@@ -120,8 +121,8 @@ fun SettingsScreen(
             AnimatedVisibility(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
-                    .padding(horizontal = 16.dp),
+                    .padding(bottom = Size.padding)
+                    .padding(horizontal = Size.padding),
                 visible = viewModel.showSnackbar.collectAsState().value,
             ) {
                 Snackbar(
@@ -134,7 +135,7 @@ fun SettingsScreen(
                                 viewModel.restartApp()
                             }
                         ) {
-                            Text("Restart")
+                            Text(stringResource(R.string.restart))
                         }
                     },
                     dismissAction = {
@@ -146,11 +147,11 @@ fun SettingsScreen(
                                 viewModel.setShowSnackbar(false)
                             }
                         ) {
-                            Text("Dismiss")
+                            Text(stringResource(R.string.dismiss))
                         }
                     }
                 ) {
-                    Text("Restart app to apply changes.")
+                    Text(stringResource(R.string.restart_description))
                 }
             }
         }

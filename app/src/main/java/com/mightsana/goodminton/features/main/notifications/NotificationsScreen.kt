@@ -37,10 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.Loader
@@ -67,16 +69,14 @@ fun NotificationsScreen(
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Notifications") },
+                    title = { Text(stringResource(R.string.notifications_label)) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { onOpenDrawer() } }) {
                             Icon(
                                 Icons.Default.Menu,
                                 contentDescription = null,
                                 modifier = Modifier.onTap {
-                                    scope.launch {
-                                        onOpenDrawer()
-                                    }
+                                    scope.launch { onOpenDrawer() }
                                 }
                             )
                         }
@@ -90,17 +90,17 @@ fun NotificationsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(top = Size.padding)
+                    .padding(horizontal = Size.padding),
+                horizontalArrangement = Arrangement.spacedBy(Size.padding),
+                verticalArrangement = Arrangement.spacedBy(Size.padding)
             ) {
                 val invitationsCount = invitationsReceived.size
 
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Column {
                         Text(
-                            text = "Invitations (${invitationsCount})",
+                            text = stringResource(R.string.invitations_title, invitationsCount),
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(bottom = Size.smallPadding)
                         )
@@ -119,7 +119,7 @@ fun NotificationsScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(16.dp),
+                                    .padding(Size.padding),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(Size.smallPadding)
                             ) {
@@ -139,7 +139,7 @@ fun NotificationsScreen(
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text("Participants:")
+                                    Text(stringResource(R.string.participants))
                                     StackedAvatar(
                                         avatars = profilePictures,
                                         size = imageSize
@@ -157,7 +157,7 @@ fun NotificationsScreen(
                                         Text(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
-                                            text = "Accept"
+                                            text = stringResource(R.string.accept_button_label)
                                         )
                                     }
                                     OutlinedButton(
@@ -168,7 +168,7 @@ fun NotificationsScreen(
                                         Text(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
-                                            text = "Decline"
+                                            text = stringResource(R.string.decline_button_label)
                                         )
                                     }
                                 }
@@ -178,7 +178,7 @@ fun NotificationsScreen(
                 } else {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
-                            text = "No Invitations.",
+                            text = stringResource(R.string.no_invitations),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = Size.padding),

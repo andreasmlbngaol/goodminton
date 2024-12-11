@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 import com.mightsana.goodminton.features.main.model.Role
+import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
 import com.mightsana.goodminton.view.MyImage
 
@@ -78,15 +79,14 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
                             )
                         },
                         trailingContent = {
-                            if (currentUserRole == Role.Creator && participant.role != Role.Creator) {
+                            if (currentUserRole == Role.Creator && participant.role != Role.Creator && !participant.user.uid.contains("GUEST")) {
                                 OutlinedButton(
                                     onClick = { viewModel.toggleParticipantsRoleExpanded(participant.user.uid) },
-                                    contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
-//                                enabled = participant.role != Role.Creator
+                                    contentPadding = PaddingValues(start = Size.padding, end = Size.smallPadding),
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(Size.smallPadding)
                                     ) {
                                         Text(participant.role.name)
                                         MyIcon(if (isDropdownExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown)
@@ -132,26 +132,9 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
                             }
                         }
                     )
-//                Text("League ID: ${participant.info.leagueId}", maxLines = 1)
-//                Text("Uid: ${participant.info.id}", maxLines = 1)
-//                Text("Uid: ${participant.info.id}", maxLines = 1)
-//            Text("Name: ${participant.user.name}", maxLines = 1)
-//            Text("Nickname: ${participant.user.nickname}", maxLines = 1)
-//            Text("Username: ${participant.user.username}", maxLines = 1)
-//            Text("Email: ${participant.user.email}", maxLines = 1)
-//            Text("Photo URL: ${participant.user.profilePhotoUrl}", maxLines = 1)
-//            Text("Phone Number: ${participant.user.phoneNumber}", maxLines = 1)
-//            Text("Bio: ${participant.user.bio}", maxLines = 1)
-//            Text("Birthday: ${participant.user.birthDate.toString()}", maxLines = 1)
-//            Text("Gender: ${participant.user.gender}", maxLines = 1)
-//            Text("Address: ${participant.user.address}", maxLines = 1)
-//            Text("Created At: ${participant.user.createdAt}", maxLines = 1)
-//            Text("Is Verified: ${participant.user.verified}", maxLines = 1)
-//            Text("\n")
                 }
         }
         item { Spacer(Modifier.height(150.dp)) }
-
     }
 }
 

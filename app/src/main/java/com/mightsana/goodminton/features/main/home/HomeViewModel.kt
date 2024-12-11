@@ -190,7 +190,6 @@ class HomeViewModel @Inject constructor(
 
     init {
         appLoading()
-        loadLeagues()
         observeUser()
     }
 

@@ -48,10 +48,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.repository.users.MyUser
 import com.mightsana.goodminton.model.values.Size
@@ -72,12 +74,11 @@ fun SocialScreen(
     val allUsers by viewModel.allUsers.collectAsState()
     val isProcessing by viewModel.isProcessing.collectAsState()
     val user by viewModel.user.collectAsState()
-//    val requestSent by viewModel.friendRequestSent.collectAsState()
     val requestReceived by viewModel.friendRequestReceived.collectAsState()
     val searchExpanded by viewModel.searchExpanded.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val horizontalPadding by animateDpAsState(
-        if (searchExpanded) 0.dp else 16.dp,
+        if (searchExpanded) 0.dp else Size.padding,
         animationSpec = tween(300),
         label = ""
     )
@@ -106,7 +107,7 @@ fun SocialScreen(
                                 onSearch = { viewModel.collapseSearch() },
                                 expanded = searchExpanded,
                                 onExpandedChange = { viewModel.onSearchExpandedChange(it) },
-                                placeholder = { Text("Search name or username...") },
+                                placeholder = { Text(stringResource(R.string.search_user_placeholder)) },
                                 leadingIcon = {
                                     AnimatedContent(
                                         searchExpanded,
@@ -176,7 +177,7 @@ fun SocialScreen(
                                     if(userFiltered.isEmpty())
                                         item {
                                             Text(
-                                                text = "No User Found",
+                                                text = stringResource(R.string.no_user_found),
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .padding(top = 32.dp),
@@ -216,16 +217,16 @@ fun SocialScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(top = Size.padding)
+                    .padding(horizontal = Size.padding),
+                horizontalArrangement = Arrangement.spacedBy(Size.padding),
+                verticalArrangement = Arrangement.spacedBy(Size.padding)
             ) {
                 val requestCount = requestReceived.size
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Column {
                         Text(
-                            text = "Friend Requests (${requestCount})",
+                            text = stringResource(R.string.friend_requests_title, requestCount),
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(bottom = Size.smallPadding)
                         )
@@ -288,7 +289,7 @@ fun SocialScreen(
                                             Text(
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
-                                                text = "Accept"
+                                                text = stringResource(R.string.accept_button_label)
                                             )
                                         }
                                         OutlinedButton(
@@ -299,7 +300,7 @@ fun SocialScreen(
                                             Text(
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
-                                                text = "Decline"
+                                                text = stringResource(R.string.decline_button_label)
                                             )
                                         }
                                     }
@@ -310,7 +311,7 @@ fun SocialScreen(
                 else
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
-                            text = "No Friend Requests.",
+                            text = stringResource(R.string.no_friend_requests),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = Size.padding),

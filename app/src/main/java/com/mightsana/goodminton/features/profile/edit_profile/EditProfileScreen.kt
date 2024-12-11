@@ -28,8 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.ErrorSupportingText
 import com.mightsana.goodminton.view.MyIcon
@@ -53,7 +55,7 @@ fun EditProfileScreen(
         topBar = {
             TopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text("Edit Profile") },
+                title = { Text(stringResource(R.string.edit_profile)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
@@ -99,13 +101,14 @@ fun EditProfileScreen(
                         MyIcon(MyIcons.Edit)
                     }
                 }
+
                 val name by viewModel.name.collectAsState()
                 MyTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = if(name == null) user.name else name.orEmpty(),
                     placeholder = { Text(user.name) },
                     onValueChange = { viewModel.updateName(it) },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.name_label)) },
                     supportingText = {}
                 )
                 val nickname by viewModel.nickname.collectAsState()
@@ -114,7 +117,7 @@ fun EditProfileScreen(
                     value = if(nickname == null) user.nickname else nickname.orEmpty(),
                     placeholder = { Text(user.nickname) },
                     onValueChange = { viewModel.updateNickname(it) },
-                    label = { Text("Nickname") },
+                    label = { Text(stringResource(R.string.nickname_label)) },
                     supportingText = {}
                 )
                 val username by viewModel.username.collectAsState()
@@ -124,7 +127,7 @@ fun EditProfileScreen(
                     value = if(username == null) user.username else username.orEmpty(),
                     placeholder = { Text(user.username) },
                     onValueChange = { viewModel.updateUsername(it) },
-                    label = { Text("Username") },
+                    label = { Text(stringResource(R.string.username_label)) },
                     isError = usernameErrorMessage != null,
                     supportingText = {
                         ErrorSupportingText(
@@ -141,14 +144,14 @@ fun EditProfileScreen(
                     value = if(bio == null) user.bio.orEmpty() else bio.orEmpty(),
                     placeholder = { Text(user.bio.orEmpty()) },
                     onValueChange = { viewModel.updateBio(it) },
-                    label = { Text("Bio") },
+                    label = { Text(stringResource(R.string.bio_label)) },
                     supportingText = {}
                 )
                 Button(
                     onClick = { viewModel.saveChanges(onBack) },
                     enabled = usernameErrorMessage == null && viewModel.isEditing.collectAsState().value
                 ) {
-                    Text("Save Changes")
+                    Text(stringResource(R.string.save_changes))
                 }
             }
         }

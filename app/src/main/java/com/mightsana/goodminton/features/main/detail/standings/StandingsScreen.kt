@@ -15,7 +15,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
 import com.mightsana.goodminton.features.main.model.LeagueStatus
 import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
@@ -52,7 +54,16 @@ fun StandingsScreen(
                 pointsDifference = it.pointsScored - it.pointsConceded
             )
         }
-    val tableColumns = listOf("No", "Name", "M", "W", "L", "PS", "PC", "PD")
+    val tableColumns = listOf(
+        stringResource(R.string.standings_number),
+        stringResource(R.string.standings_name),
+        stringResource(R.string.standings_matches),
+        stringResource(R.string.standings_wins),
+        stringResource(R.string.standings_losses),
+        stringResource(R.string.standings_points_scored),
+        stringResource(R.string.standings_points_conceded),
+        stringResource(R.string.standings_points_difference)
+    )
 
     Column(
         modifier = Modifier

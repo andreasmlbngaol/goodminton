@@ -37,9 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.ext.onTap
 import com.mightsana.goodminton.model.repository.friends.FriendJoint
 import com.mightsana.goodminton.model.values.Size
@@ -75,7 +77,9 @@ fun FriendListScreen(
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
-                    title = { Text("${otherUser.username}'s Friends") },
+                    title = {
+                        Text(stringResource(R.string.friend_list_title, otherUser.username))
+                    },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             MyIcon(MyIcons.Back)
@@ -90,10 +94,10 @@ fun FriendListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(top = Size.padding)
+                    .padding(horizontal = Size.padding),
+                horizontalArrangement = Arrangement.spacedBy(Size.padding),
+                verticalArrangement = Arrangement.spacedBy(Size.padding)
             ) {
                 val sortedFriends = otherFriends
                     .sortedWith(
@@ -135,7 +139,7 @@ fun FriendListScreen(
                                     modifier = Modifier.weight(1f),
                                     verticalArrangement = Arrangement.Center
                                 ) {
-                                    val name = "${it.user.name}${if(me) " (Me)" else ""}"
+                                    val name = "${it.user.name}${if(me) " (${stringResource(R.string.me)})" else ""}"
                                     Text(
                                         text = name,
                                         style = MaterialTheme.typography.titleMedium,
@@ -172,7 +176,7 @@ fun FriendListScreen(
                                                     Text(
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis,
-                                                        text = "Accept"
+                                                        text = stringResource(R.string.accept_button_label)
                                                     )
                                                 }
                                                 OutlinedButton(
@@ -183,7 +187,7 @@ fun FriendListScreen(
                                                     Text(
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis,
-                                                        text = "Decline"
+                                                        text = stringResource(R.string.decline_button_label)
                                                     )
                                                 }
                                             }
@@ -211,7 +215,7 @@ fun FriendListScreen(
                                                             verticalAlignment = Alignment.CenterVertically
                                                         ) {
                                                             MyIcon(MyIcons.Cancel)
-                                                            Text(text = "Cancel")
+                                                            Text(text = stringResource(R.string.cancel))
                                                         }
                                                     }
                                                 else
@@ -226,7 +230,7 @@ fun FriendListScreen(
                                                             verticalAlignment = Alignment.CenterVertically
                                                         ) {
                                                             MyIcon(MyIcons.Plus)
-                                                            Text(text = "Request Friend")
+                                                            Text(text = stringResource(R.string.request_friend))
                                                         }
                                                     }
                                             }
@@ -252,7 +256,7 @@ fun FriendListScreen(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 MyIcon(MyIcons.Delete)
-                                                Text(text = "Unfriend")
+                                                Text(text = stringResource(R.string.unfriend))
                                             }
                                         }
                                     }
@@ -266,10 +270,12 @@ fun FriendListScreen(
         AnimatedVisibility(dialogVisible) {
             AlertDialog(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = Size.padding),
                 onDismissRequest = { viewModel.dismissDialog() },
                 text = {
-                    Text("Are you sure you want to unfriend ${unfriendUserId?.username}?")
+                    Text(
+                        stringResource(R.string.unfrined_description, unfriendUserId?.username.orEmpty())
+                    )
                 },
                 confirmButton = {
                     Button(
@@ -284,14 +290,14 @@ fun FriendListScreen(
                             disabledContentColor = MaterialTheme.colorScheme.onErrorContainer
                         )
                     ) {
-                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Unfriend")
+                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.unfriend))
                     }
                 },
                 dismissButton = {
                     Button(
                         onClick = { viewModel.dismissDialog() }
                     ) {
-                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = "Cancel")
+                        Text(maxLines = 1, overflow = TextOverflow.Ellipsis, text = stringResource(R.string.cancel))
                     }
                 }
             )

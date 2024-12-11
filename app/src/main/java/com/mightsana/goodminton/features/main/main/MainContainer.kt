@@ -50,22 +50,16 @@ import com.mightsana.goodminton.features.profile.model.Profile
 import com.mightsana.goodminton.model.component_model.NavigationItem
 import com.mightsana.goodminton.model.ext.navigateAndPopUpTo
 import com.mightsana.goodminton.model.ext.navigateSingleTop
+import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable object Home
-const val HOME = "Home"
-
 @Serializable object Notifications
-const val NOTIFICATIONS = "Notifications"
-
 @Serializable object Social
-const val SOCIAL = "Social"
-
 @Serializable object Settings
-const val SETTINGS = "Settings"
 
 @Composable
 fun MainContainer(
@@ -81,20 +75,20 @@ fun MainContainer(
             NavigationItem(
                 iconSelected = Icons.Filled.Home,
                 iconUnselected = Icons.Outlined.Home,
-                label = HOME,
+                label = stringResource(R.string.home_label),
                 route = Home
             ),
             NavigationItem(
                 iconSelected = MyIcons.SocialSelected,
                 iconUnselected = MyIcons.SocialUnselected,
-                label = SOCIAL,
+                label = stringResource(R.string.social_label),
                 route = Social,
                 badgeCount = viewModel.friendRequestReceived.collectAsState().value.size
             ),
             NavigationItem(
                 iconSelected = Icons.Filled.Notifications,
                 iconUnselected = Icons.Outlined.Notifications,
-                label = NOTIFICATIONS,
+                label = stringResource(R.string.notifications_label),
                 route = Notifications,
                 badgeCount = viewModel.invitationReceived.collectAsState().value.size
             )
@@ -104,7 +98,7 @@ fun MainContainer(
             NavigationItem(
                 iconSelected = Icons.Filled.Settings,
                 iconUnselected = Icons.Outlined.Settings,
-                label = SETTINGS,
+                label = stringResource(R.string.settings_label),
                 route = Settings
             )
         )
@@ -115,9 +109,7 @@ fun MainContainer(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(
-                drawerState = drawerState,
-            ) {
+            ModalDrawerSheet(drawerState) {
                 Column(
                     modifier = Modifier
                         .verticalScroll(rememberScrollState())
@@ -130,7 +122,7 @@ fun MainContainer(
                             R.drawable.ic_launcher_foreground),
                             modifier = Modifier.height(100.dp)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(Size.padding))
                         Text(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.titleLarge,
@@ -138,15 +130,13 @@ fun MainContainer(
                     }
                     navigationGroups.forEach { group ->
                         HorizontalDivider()
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Size.smallPadding))
                         group.forEach{ item ->
                             val selected = selectedNavigationItem == item.route
                             NavigationDrawerItem(
                                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
                                 badge = item.badgeCount?.let {
-                                    {
-                                        Text(item.badgeCount.toString())
-                                    }
+                                    { Text(item.badgeCount.toString()) }
                                 },
                                 icon = {
                                     Icon(
@@ -166,7 +156,7 @@ fun MainContainer(
                                     }
                                 }
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(Size.smallPadding))
                         }
                     }
                 }

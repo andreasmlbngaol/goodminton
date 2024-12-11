@@ -9,6 +9,7 @@ import com.mightsana.goodminton.features.main.model.LeagueJoint
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
 import com.mightsana.goodminton.features.main.model.Match
 import com.mightsana.goodminton.features.main.model.ParticipantStatsJoint
+import com.mightsana.goodminton.model.ext.clip
 import com.mightsana.goodminton.model.ext.sorted
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.repository.friends.FriendJoint
@@ -221,6 +222,68 @@ class DetailViewModel @Inject constructor(
         _participantsSheetExpanded.value = true
     }
 
+    private val _guestParticipantSheetExpanded = MutableStateFlow(false)
+    val guestParticipantSheetExpanded = _guestParticipantSheetExpanded.asStateFlow()
+
+    fun dismissGuestParticipantSheet() {
+        _guestParticipantSheetExpanded.value = false
+    }
+
+    fun showGuestParticipantSheet() {
+        _guestParticipantSheetExpanded.value = true
+    }
+
+    private val _guestFullName = MutableStateFlow("")
+    val guestFullName = _guestFullName.asStateFlow()
+
+    private val _fullNameErrorMessage = MutableStateFlow<String?>(null)
+    val fullNameErrorMessage = _fullNameErrorMessage.asStateFlow()
+
+    fun changeGuestFullName(newName: String) {
+        if(newName.length <= 24) _guestFullName.value = newName
+    }
+
+    private val _guestNickname = MutableStateFlow("")
+    val guestNickname = _guestNickname.asStateFlow()
+
+    private val _nicknameErrorMessage = MutableStateFlow<String?>(null)
+    val nicknameErrorMessage = _nicknameErrorMessage.asStateFlow()
+
+    fun changeGuestNickname(newName: String) {
+        if(newName.length <= 10 && !newName.contains(' ')) _guestNickname.value = newName
+    }
+
+    private fun resetGuestFormErrors() {
+        _fullNameErrorMessage.value = null
+        _nicknameErrorMessage.value = null
+    }
+
+    fun resetGuestForm() {
+        _guestFullName.value = ""
+        _guestNickname.value = ""
+        resetGuestFormErrors()
+    }
+
+    fun validateGuestForm(
+        onValidated: () -> Unit
+    ) {
+        resetGuestFormErrors()
+        when {
+            _guestFullName.value.isEmpty() -> _fullNameErrorMessage.value = "Full name is required!"
+            _guestNickname.value.isEmpty() -> _nicknameErrorMessage.value = "Nickname is required!"
+            else -> onValidated()
+        }
+    }
+
+    fun createGuestParticipant() {
+        viewModelScope.launch {
+            appRepository.createGuestParticipant(
+                _leagueJoint.value.id,
+                _guestFullName.clip(),
+                _guestNickname.clip()
+            )
+        }
+    }
 
     // League Info
     fun updateLeagueDiscipline(newDouble: Boolean) {
@@ -349,7 +412,8 @@ class DetailViewModel @Inject constructor(
         onNavigateToHome: () -> Unit
     ) {
         viewModelScope.launch {
-            appRepository.deleteLeague(_leagueJoint.value.id)
+            val guestIds = _leagueParticipantsJoint.value.filter { it.user.uid.contains("GUEST") }.map { it.user.uid }
+            appRepository.deleteLeague(_leagueJoint.value.id, guestIds)
             onNavigateToHome()
             appLoading()
             dismissDeleteLeagueDialog()
