@@ -293,7 +293,7 @@ fun DetailContainer(
                 }
             },
             floatingActionButton = {
-                if(notParticipant) {
+                if(notParticipant && league.status != LeagueStatus.Finished) {
                     ExtendedFloatingActionButton(
                         text = { Text(stringResource(R.string.join)) },
                         icon = { MyIcon(MyIcons.Join) },
@@ -387,7 +387,7 @@ fun DetailContainer(
                                 if(it.user.uid !in invitationReceiverIds) {
                                     if(it.user.openToAdd) {
                                         Button(onClick = { viewModel.addParticipant(it.user.uid) }) {
-                                            Text("Add")
+                                            Text(stringResource(R.string.add))
                                         }
                                     } else {
                                         Button(
@@ -399,13 +399,13 @@ fun DetailContainer(
                                                 disabledContentColor = MaterialTheme.colorScheme.onTertiary
                                             )
                                         ) {
-                                            Text("Invite")
+                                            Text(stringResource(R.string.invite))
                                         }
                                     }
                                 } else {
                                     val invitationId = invitationSent.find { inv -> inv.receiver.uid == it.user.uid }!!.id
                                     TextButton(onClick = { viewModel.cancelInvitation(invitationId) }) {
-                                        Text("Invited")
+                                        Text(stringResource(R.string.invited))
                                     }
                                 }
                             }

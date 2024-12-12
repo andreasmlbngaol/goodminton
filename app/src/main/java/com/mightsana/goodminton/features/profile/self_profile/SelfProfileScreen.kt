@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,7 +46,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -205,7 +203,7 @@ fun SelfProfileScreen(
                     }
                 }
                 item {
-                    val containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    val containerColor = MaterialTheme.colorScheme.surfaceVariant
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -215,20 +213,15 @@ fun SelfProfileScreen(
                             contentColor = contentColorFor(containerColor)
                         )
                     ) {
-                        Box(
+                        Text(
+                            text = user.bio ?: stringResource(R.string.no_bio),
+                            minLines = 3,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
-                                .fillMaxSize()
-                                .heightIn(min = 150.dp)
                                 .padding(horizontal = Size.padding)
-                                .padding(vertical = Size.smallPadding),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                textAlign = TextAlign.Center,
-                                text = user.bio ?: stringResource(R.string.no_bio),
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                        }
+                                .padding(top = Size.smallPadding),
+                            lineHeight = MaterialTheme.typography.titleLarge.lineHeight
+                        )
                     }
                 }
             }

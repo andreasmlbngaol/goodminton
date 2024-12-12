@@ -264,7 +264,7 @@ fun AppTheme(
     weatherTheme: Boolean = false,
     dynamicColor: Boolean = true,
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable() () -> Unit
+    content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
     val colorScheme = when {
@@ -272,12 +272,17 @@ fun AppTheme(
             fetchUserLocation(context) { lat, long ->
                 fetchWeatherData(lat, long) { response ->
                     when(response.weather[0].main) {
-                        WeatherCondition.Clear -> lightScheme
-                        else -> darkScheme
+                        WeatherCondition.Thunderstorm -> darkScheme
+                        WeatherCondition.Drizzle -> darkScheme
+                        WeatherCondition.Rain -> darkScheme
+                        WeatherCondition.Snow -> darkScheme
+                        WeatherCondition.Atmosphere -> darkScheme
+                        WeatherCondition.Clear -> darkScheme
+                        WeatherCondition.Clouds -> darkScheme
                     }
                 }
             }
-            lightScheme
+            darkScheme
         }
         (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) -> {
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)

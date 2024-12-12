@@ -428,6 +428,16 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
         leaguesCollection
             .document(leagueId)
             .update("status", LeagueStatus.Finished)
+            .await()
+
+        val invitationsQuery = invitationsCollection.whereEqualTo("leagueId", leagueId).get().await()
+
+        db.runBatch { batch ->
+            // Hapus semua undangan
+            for (document in invitationsQuery.documents) {
+                batch.delete(document.reference)
+            }
+        }.await()
     }
 
     // Retrieve League Participant Data

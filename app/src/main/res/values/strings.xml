@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Goodminton</string>
+    <string name="app_name" translatable="false">Goodminton</string>
     <string name="email_blank">Email is Blank</string>
     <string name="email_invalid">Email Invalid</string>
     <string name="password_blank">Password Blank</string>
@@ -9,7 +9,7 @@
     <string name="password_uppercase_invalid">Password must contain uppercase</string>
     <string name="password_lowercase_invalid">Password must contain lowercase</string>
     <string name="sign_in_title">Sign In</string>
-    <string name="email_label">Email</string>
+    <string name="email_label" translatable="false">Email</string>
     <string name="password_label">Password</string>
     <string name="or_continue_with">or continue with</string>
     <string name="dont_have_account">Don\'t have an account? Register now</string>
@@ -18,7 +18,7 @@
     <string name="open_email_app">Open email</string>
     <string name="back_to_sign_in">Back to Sign In</string>
     <string name="confirm_password_label">Confirm Password</string>
-    <string name="confirm_password_blank">Confirm password is Blank</string>
+    <string name="confirm_password_blank">Confirm password is blank</string>
     <string name="confirm_password_not_match">Password doesn\'t match</string>
     <string name="sign_up_error">Email is already in use</string>
     <string name="sign_up_title">Sign Up</string>
@@ -48,10 +48,10 @@
     <string name="no_league_found">No League Found</string>
     <string name="add_new_league">Add New League</string>
     <string name="league_name_label">League Name</string>
-    <string name="match_points_label">Match Points</string>
-    <string name="match_points_placeholder">21</string>
+    <string name="match_points_label" translatable="false">Match Points</string>
+    <string name="match_points_placeholder" translatable="false">21</string>
     <string name="public_text">Public</string>
-    <string name="private_league_label">Private</string>
+    <string name="private_league_label" translatable="false">Private</string>
     <string name="enabled_deuce_label">Enable Deuce</string>
     <string name="single_label">Single</string>
     <string name="double_label">Double</string>
@@ -81,9 +81,9 @@
     <string name="match_card_label">Match %d</string>
     <string name="match_card_duration_label">Duration: %s</string>
     <string name="not_enough_participants">Not enough players</string>
-    <string name="no_matches">No Matches Found.</string>
+    <string name="no_matches">No Matches Yet.</string>
     <string name="add_participants_button_label">Add Participant</string>
-    <string name="standings_number">No</string>
+    <string name="standings_number" translatable="false">No</string>
     <string name="standings_name">Name</string>
     <string name="standings_matches">M</string>
     <string name="standings_wins">W</string>
@@ -98,7 +98,7 @@
     <string name="no">No</string>
     <string name="deuce">Deuce</string>
     <string name="visibility_label">Visibility</string>
-    <string name="league_id_label">ID</string>
+    <string name="league_id_label" translatable="false">ID</string>
     <string name="created_at_label">Created At</string>
     <string name="created_by_label">Creator</string>
     <string name="end_league">End League</string>
@@ -112,7 +112,7 @@
     <string name="join">Join</string>
     <string name="select_player">Select Player %d</string>
     <string name="change_label">Change</string>
-    <string name="vs">VS</string>
+    <string name="vs" translatable="false">VS</string>
     <string name="create_button_label">Create</string>
     <string name="join_league">Join League</string>
     <string name="join_league_description">Are you sure you want to join this league?</string>
@@ -131,4 +131,7 @@
     <string name="save_changes">Save Changes</string>
     <string name="friend_list_title">%s\'s Friends</string>
     <string name="me">Me</string>
+    <string name="loading_screen_text">Wait…</string>
+    <string name="invite">Invite</string>
+    <string name="invited">Invited</string>
 </resources>

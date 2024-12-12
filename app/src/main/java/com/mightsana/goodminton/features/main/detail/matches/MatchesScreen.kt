@@ -182,12 +182,10 @@ fun MatchesScreen(
                                 modifier = Modifier.fillMaxWidth().padding(start = Size.padding),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(
-//                                    verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
-                                ) {
+                                Column {
                                     match.team1Ids.forEach { id ->
                                         val participant = participants.find { it.id == id }
-                                        val textColor = if(participant?.user?.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
+                                        val textColor = if(participant?.user?.uid == user.uid) MaterialTheme.colorScheme.primaryContainer else contentColorFor(cardContainerColor)
                                         Text(
                                             text = participant?.user?.name.orEmpty(),
                                             overflow = TextOverflow.Ellipsis,
@@ -244,12 +242,10 @@ fun MatchesScreen(
                                 modifier = Modifier.fillMaxWidth().padding(start = Size.padding),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(
-//                                    verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
-                                ) {
+                                Column {
                                     match.team2Ids.forEach { id ->
                                         val participant = participants.find { it.id == id }
-                                        val textColor = if(participant?.user?.uid == user.uid) MaterialTheme.colorScheme.primary else contentColorFor(cardContainerColor)
+                                        val textColor = if(participant?.user?.uid == user.uid) MaterialTheme.colorScheme.primaryContainer else contentColorFor(cardContainerColor)
                                         Text(
                                             text = participant?.user?.name ?: "",
                                             overflow = TextOverflow.Ellipsis,
