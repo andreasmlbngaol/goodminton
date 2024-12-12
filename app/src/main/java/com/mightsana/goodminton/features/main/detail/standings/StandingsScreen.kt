@@ -87,7 +87,7 @@ fun StandingsScreen(
             columnToIndexIncreaseWidth = 1,
             columnToFontWeightModified = mapOf(3 to FontWeight.ExtraBold),
             columnToColorModified = mapOf(
-                2 to MaterialTheme.colorScheme.secondaryContainer,
+                2 to MaterialTheme.colorScheme.secondary,
                 3 to MaterialTheme.colorScheme.primaryContainer,
                 7 to MaterialTheme.colorScheme.tertiary
             ),

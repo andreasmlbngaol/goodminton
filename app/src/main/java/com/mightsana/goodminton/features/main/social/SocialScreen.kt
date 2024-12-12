@@ -162,7 +162,7 @@ fun SocialScreen(
                                         .filter {
                                             (it.name.contains(query, ignoreCase = true)
                                                     || it.username.contains(query, ignoreCase = true)
-                                                    ) && it.uid != user.uid
+                                            ) && it.uid != user.uid && !it.uid.contains("GUEST")
                                         }
                                         .sortedWith(
                                             compareBy<MyUser> {
