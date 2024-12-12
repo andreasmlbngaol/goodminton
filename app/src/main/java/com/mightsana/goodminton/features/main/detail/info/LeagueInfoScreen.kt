@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
+import com.mightsana.goodminton.features.main.model.LeagueStatus
 import com.mightsana.goodminton.features.main.model.MatchStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.ext.onTap
@@ -189,14 +190,14 @@ fun LeagueInfoScreen(
             Row {
                 if(!viewModel.matches.collectAsState().value.any { match ->
                     match.status == MatchStatus.Scheduled || match.status == MatchStatus.Playing
-                }) {
+                } && leagueJoint.status != LeagueStatus.Finished) {
                     Button(
                         onClick = { viewModel.showEndLeagueDialog() }
                     ) {
                         Text(stringResource(R.string.end_league))
                     }
+                    Spacer(Modifier.width(Size.padding))
                 }
-                Spacer(Modifier.width(Size.padding))
                 Button(
                     onClick = { viewModel.showDeleteLeagueDialog() },
                     colors = ButtonDefaults.buttonColors().copy(

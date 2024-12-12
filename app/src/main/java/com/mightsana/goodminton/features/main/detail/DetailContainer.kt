@@ -46,6 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -258,6 +259,7 @@ fun DetailContainer(
             },
             bottomBar = {
                 NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .clip(RoundedCornerShape(
                             topStart = Size.padding,
@@ -268,7 +270,12 @@ fun DetailContainer(
                 ) {
                     navItems.forEachIndexed { index, item ->
                         val selected = index == selectedItem
+                        val indicatorColor = MaterialTheme.colorScheme.primary
                         NavigationBarItem(
+                            colors = NavigationBarItemDefaults.colors().copy(
+                                selectedIndicatorColor = indicatorColor,
+                                selectedIconColor = MaterialTheme.colorScheme.contentColorFor(indicatorColor)
+                            ),
                             selected = selected,
                             icon = {
                                 Icon(
@@ -628,12 +635,18 @@ fun MatchDropdownButton(
             val itemsLeft = items
                 .filter { item -> item.id !in selectedItemMap.values }
             if(itemsLeft.isNotEmpty()) {
-                Box {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
                     val isDropdownExpanded = dropdownExpandedMap[order] == true
-                    OutlinedButton(onClick = { onToggle(order) }) {
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onToggle(order) }
+                    ) {
                         Text(if (selected == null) selectLabel else changeLabel)
                     }
                     DropdownMenu(
+                        modifier = Modifier.fillMaxWidth(),
                         expanded = isDropdownExpanded,
                         onDismissRequest = { onDismiss(order) }
                     ) {

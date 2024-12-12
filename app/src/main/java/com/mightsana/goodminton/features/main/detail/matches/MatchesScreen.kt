@@ -104,7 +104,7 @@ fun MatchesScreen(
                             // Header
                             val headerBackgroundColor = when (match.status) {
                                 MatchStatus.Scheduled -> MaterialTheme.colorScheme.secondaryContainer
-                                MatchStatus.Playing -> MaterialTheme.colorScheme.errorContainer
+                                MatchStatus.Playing -> MaterialTheme.colorScheme.error
                                 MatchStatus.Finished -> MaterialTheme.colorScheme.surfaceVariant
                             }
                             Box(
@@ -183,7 +183,7 @@ fun MatchesScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(
-                                    verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
+//                                    verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
                                 ) {
                                     match.team1Ids.forEach { id ->
                                         val participant = participants.find { it.id == id }
@@ -245,7 +245,7 @@ fun MatchesScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(
-                                    verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
+//                                    verticalArrangement = Arrangement.spacedBy(Size.extraSmallPadding)
                                 ) {
                                     match.team2Ids.forEach { id ->
                                         val participant = participants.find { it.id == id }
