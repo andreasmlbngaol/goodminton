@@ -2,6 +2,7 @@ package com.mightsana.goodminton
 
 import android.app.Application
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
@@ -79,6 +80,13 @@ abstract class MyViewModel(
 
     fun comingSoon() {
         toast("Coming Soon 😊")
+    }
+
+    fun openUrl(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        application.startActivity(intent)
     }
 }
 

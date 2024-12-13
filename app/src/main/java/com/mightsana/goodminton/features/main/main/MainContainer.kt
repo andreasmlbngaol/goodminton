@@ -119,8 +119,8 @@ fun MainContainer(
                         verticalAlignment = CenterVertically,
                     ) {
                         MyImage(painterResource(
-                            R.drawable.ic_launcher_foreground),
-                            modifier = Modifier.height(100.dp)
+                            R.drawable.ic_launcher_round),
+                            modifier = Modifier.height(70.dp)
                         )
                         Spacer(modifier = Modifier.width(Size.padding))
                         Text(

@@ -22,7 +22,8 @@ data class LeagueParticipantJoint(
 )
 
 enum class Role {
-    Creator, Admin, Player, Spectator
+    Creator, Admin, Player
+//    , Spectator
 }
 
 @Suppress("unused")

@@ -126,4 +126,6 @@
     <string name="loading_screen_text">Sebentar…</string>
     <string name="invite">Undang</string>
     <string name="invited">Diundang</string>
+    <string name="update_screen_text">Versi aplikasimu %s.\nVersi terbaru adalah %s.\nPerbarui untuk tetap menggunakan %s</string>
+    <string name="update_screen_button">Unduh versi terbaru</string>
 </resources>

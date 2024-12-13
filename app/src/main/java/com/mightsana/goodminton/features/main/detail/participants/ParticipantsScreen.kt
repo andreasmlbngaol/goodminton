@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import com.mightsana.goodminton.features.main.detail.DetailViewModel
+import com.mightsana.goodminton.features.main.model.LeagueStatus
 import com.mightsana.goodminton.features.main.model.Role
 import com.mightsana.goodminton.model.values.Size
 import com.mightsana.goodminton.view.MyIcon
@@ -37,6 +38,7 @@ import com.mightsana.goodminton.view.MyImage
 @Suppress("unused")
 fun ParticipantsScreen(viewModel: DetailViewModel) {
     val uid = viewModel.user.collectAsState().value.uid
+    val league by viewModel.leagueJoint.collectAsState()
     val participantJoint by viewModel.leagueParticipantsJoint.collectAsState()
     val currentUserRole = participantJoint.find { it.user.uid == uid }?.role
     val roleDropdownExpanded by viewModel.participantsRoleExpanded.collectAsState()
@@ -79,7 +81,7 @@ fun ParticipantsScreen(viewModel: DetailViewModel) {
                             )
                         },
                         trailingContent = {
-                            if (currentUserRole == Role.Creator && participant.role != Role.Creator && !participant.user.uid.contains("GUEST")) {
+                            if (currentUserRole == Role.Creator && participant.role != Role.Creator && !participant.user.uid.contains("GUEST") && league.status != LeagueStatus.Finished) {
                                 OutlinedButton(
                                     onClick = { viewModel.toggleParticipantsRoleExpanded(participant.user.uid) },
                                     contentPadding = PaddingValues(start = Size.padding, end = Size.smallPadding),

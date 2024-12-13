@@ -45,14 +45,14 @@ fun NavGraphBuilder.authGraph(
         composable<EmailVerification> {
             EmailVerificationScreen(
                 onSignOut = { navController.navigateAndPopUpTo(SignIn, EmailVerification) },
-                onEmailVerified = { navController.navigateAndPopUpTo(mainRoute, EmailVerification) }
+                onEmailVerified = { navController.navigateAndPopUpTo(Register, EmailVerification) }
             )
         }
 
         composable<Register> {
             RegisterScreen(
                 onNavigateToSignIn = { navController.navigateAndPopUpTo(SignIn, AuthGraph) },
-                onRegister = { navController.navigateAndPopUpTo(mainRoute, AuthGraph) }
+                onRegister = { navController.navigateAndPopUpTo(mainRoute, Register) }
             )
         }
     }

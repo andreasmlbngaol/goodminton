@@ -23,6 +23,8 @@ interface AppRepository {
 
     // App Checking
     suspend fun isMaintenance(): Boolean
+    suspend fun getAppLatestVersionName(): String
+    suspend fun getAppLatestVersionCode(): Int
 
     // Register
     suspend fun createNewUser(user: MyUser)

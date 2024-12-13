@@ -11,10 +11,12 @@ import com.mightsana.goodminton.features.auth.model.authGraph
 import com.mightsana.goodminton.features.main.detail.DetailContainer
 import com.mightsana.goodminton.features.main.main.MainContainer
 import com.mightsana.goodminton.features.maintenance.MaintenanceScreen
+import com.mightsana.goodminton.features.maintenance.update.UpdateScreen
 import com.mightsana.goodminton.features.profile.model.profileGraph
 import kotlinx.serialization.Serializable
 
 @Serializable object Maintenance
+@Serializable object Update
 @Serializable object Main
 @Serializable data class League(val id: String)
 
@@ -33,6 +35,10 @@ fun MyNavHost(
         composable<Maintenance> {
             MaintenanceScreen()
 //            WeatherApp()
+        }
+
+        composable<Update> {
+            UpdateScreen()
         }
 
         authGraph(

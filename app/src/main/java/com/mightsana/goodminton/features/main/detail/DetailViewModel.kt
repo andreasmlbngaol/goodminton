@@ -592,10 +592,12 @@ class DetailViewModel @Inject constructor(
 
             val sortedParticipants  = if(matchCounts > 1) {
                 _participantsStats.value.sortedBy { it.matches }.take(playerPerTeam * 2).sorted()
-            } else if(_participantsStats.value.count() == playerPerTeam * 2) {
-                _participantsStats.value.shuffled().take(playerPerTeam * 2)
-            } else {
+//            } else if(_participantsStats.value.count() == playerPerTeam * 2) {
+//                _participantsStats.value.shuffled().take(playerPerTeam * 2)
+            } else if(_leagueJoint.value.double) {
                 _participantsStats.value.sorted().let { it.take(playerPerTeam) + it.takeLast(playerPerTeam) }
+            } else {
+                _participantsStats.value.shuffled().take(playerPerTeam * 2)
             }
 
             val sortedUserIds = sortedParticipants.map { it.user.uid }
@@ -606,9 +608,12 @@ class DetailViewModel @Inject constructor(
 
             val team1Ids = mutableListOf<String>()
             val team2Ids = mutableListOf<String>()
-            for (i in 0 until playerPerTeam) {
-                team1Ids.add(sortedPlayers[i])
-                team2Ids.add(sortedPlayers[sortedPlayers.size - 1 - i])
+
+            team1Ids.add(sortedPlayers[0])
+            team2Ids.add(sortedPlayers[1])
+            if(team1Ids.size != playerPerTeam) {
+                team1Ids.add(sortedPlayers[3])
+                team2Ids.add(sortedPlayers[2])
             }
             appRepository.createNewMatch(_leagueJoint.value.id, team1Ids, team2Ids)
         }

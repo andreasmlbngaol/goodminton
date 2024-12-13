@@ -42,8 +42,7 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
     // Initiate
     override val db: FirebaseFirestore
         get() = Firebase.firestore
-    private val appDataCollection = db.collection("appData")
-    private val maintenanceDoc = appDataCollection.document("maintenance")
+    private val appDataDoc = db.collection("appData").document("appData")
     private val usersCollection = db.collection("users")
     private val friendRequestsCollection = db.collection("friendRequests")
     private val friendsCollection = db.collection("friends")
@@ -57,10 +56,21 @@ class AppRepositoryImpl @Inject constructor(): AppRepository {
 
     // App Checking
     override suspend fun isMaintenance(): Boolean =
-        maintenanceDoc
+        appDataDoc
             .get()
             .await()
-            .getBoolean("isMaintenance") == true
+            .getBoolean("maintenance") == true
+    override suspend fun getAppLatestVersionName(): String =
+        appDataDoc
+            .get()
+            .await()
+            .getString("versionName") ?: ""
+
+    override suspend fun getAppLatestVersionCode(): Int =
+        appDataDoc
+            .get()
+            .await()
+            .getLong("versionCode")?.toInt() ?: 0
 
     // Register
     override suspend fun createNewUser(user: MyUser) {

@@ -17,8 +17,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.1.1"
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -110,10 +110,6 @@ dependencies {
 
     // Access Request
     implementation(libs.accompanist.permissions)
-
-    // PDF
-    implementation(libs.capturable)
-    implementation(libs.itext7.core)
 }
 
 kapt {

@@ -74,7 +74,7 @@ fun SignInScreen(
                 ) {
                     // Title Image
                     MyImage(
-                        painter = painterResource(R.drawable.ic_launcher_foreground),
+                        painter = painterResource(R.drawable.ic_launcher_round),
                         modifier = Modifier
                             .width(100.dp)
                             .aspectRatio(1f)
