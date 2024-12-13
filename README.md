@@ -9,7 +9,7 @@ Goodminton lets you create, manage, and track your badminton matches effortlessl
 
 - **Badminton Leagues**: Create and manage your own badminton leagues with ease. 🏆
 - **Leaderboard**: See who's the champion and who needs to practice more! 💪
-- **Participants & Roles**: Manage participants with different roles, like **super_user** who has extra access! 🔑
+- **Participants & Roles**: Manage participants with different roles, like **creator** who has extra access! 🔑
 - **Random or Fixed Matches**: Decide if match pairs will be **random** or **fixed**! 🤝
 - **Statistics**: Track players' wins, losses, and performance stats! 📊
 - **Dynamic Color**: Enjoy a vibrant and dynamic UI! 🎨
