@@ -53,10 +53,7 @@ fun SignInScreen(
     val isEmailError = viewModel.isEmailError.collectAsState().value
     val isPasswordError = viewModel.isPasswordError.collectAsState().value
 
-    Loader(
-        viewModel.isLoading.collectAsState().value,
-        alpha = 0.7f
-    ) {
+    Loader(viewModel.isLoading.collectAsState().value, 0.7f) {
         Scaffold { innerPadding ->
             Box(
                 contentAlignment = Alignment.Center,
@@ -72,6 +69,7 @@ fun SignInScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Size.smallPadding)
                 ) {
+
                     // Title Image
                     MyImage(
                         painter = painterResource(R.drawable.ic_launcher_round),
@@ -79,6 +77,8 @@ fun SignInScreen(
                             .width(100.dp)
                             .aspectRatio(1f)
                     )
+
+                    // SignInForm
                     Card {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(Size.smallPadding),
@@ -87,37 +87,33 @@ fun SignInScreen(
                                 .padding(Size.padding)
                                 .fillMaxWidth()
                         ) {
-//                            title()
+                            // Title
                             Text(
                                 stringResource(R.string.sign_in_title),
                                 style = MaterialTheme.typography.headlineMedium
                             )
-//                            emailTextField()
+
+                            // Email
                             MyTextField(
                                 isError = isEmailError,
-                                leadingIcon = {
-                                    MyIcon(MyIcons.Email)
-                                },
+                                leadingIcon = { MyIcon(MyIcons.Email) },
                                 value = viewModel.email.collectAsState().value,
                                 onValueChange = { viewModel.updateEmail(it) },
                                 label = { Text(stringResource(R.string.email_label)) },
                                 supportingText = {
                                     ErrorSupportingText(
-                                        isEmailError,
-                                        viewModel.emailErrorMessage.collectAsState().value ?: ""
+                                        message = viewModel.emailErrorMessage.collectAsState().value ?: "",
+                                        visible = isEmailError
                                     )
                                 },
                                 modifier = Modifier.fillMaxSize(),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Email
-                                )
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                             )
-//                            passwordTextField()
+
+                            // Password
                             MyTextField(
                                 isError = isPasswordError,
-                                leadingIcon = {
-                                    MyIcon(MyIcons.Password)
-                                },
+                                leadingIcon = { MyIcon(MyIcons.Password) },
                                 trailingIcon = {
                                     IconButton(
                                         onClick = {

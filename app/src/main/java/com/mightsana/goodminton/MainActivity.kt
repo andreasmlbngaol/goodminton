@@ -32,33 +32,29 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val sharedPreferences = getSharedPreferences(SharedPreference.PREF_NAME, MODE_PRIVATE)
-        val isDynamicColorEnabled = sharedPreferences.getBoolean(SharedPreference.PREF_DYNAMIC_COLOR, false)
-        val isWeatherThemeEnabled = sharedPreferences.getBoolean(SharedPreference.PREF_WEATHER_THEME, false)
-//        val language = sharedPreferences.getString(SharedPreference.PREF_LANGUAGE, "en")
+        val dynamicColor = sharedPreferences.getBoolean(SharedPreference.PREF_DYNAMIC_COLOR, false)
+        val weatherTheme = sharedPreferences.getBoolean(SharedPreference.PREF_WEATHER_THEME, false)
 
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
-            var navStart: Any? by remember { mutableStateOf(null) }
-            var authStart: Any by remember { mutableStateOf(SignIn) }
+            var startDestination: Any? by remember { mutableStateOf(null) }
+            var authStartDestination: Any by remember { mutableStateOf(SignIn) }
 
-            AuthCheck(Main, accountService, appRepository) { nav, auth ->
-                navStart = nav
-                authStart = auth
+            AuthCheck(Main, accountService, appRepository) { navStart, authStart ->
+                startDestination = navStart
+                authStartDestination = authStart
             }
 
-            AppTheme(
-                weatherTheme = isWeatherThemeEnabled,
-                dynamicColor = isDynamicColorEnabled
-            ) {
+            AppTheme(weatherTheme, dynamicColor) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Loader(navStart == null) {
+                    Loader(startDestination == null) {
                         ExitWithDoublePress()
-                        navStart?.let { startDestination ->
-                            MyNavHost(navController, startDestination, authStart)
+                        startDestination?.let { startDestination ->
+                            MyNavHost(navController, startDestination, authStartDestination)
                         }
                     }
                 }

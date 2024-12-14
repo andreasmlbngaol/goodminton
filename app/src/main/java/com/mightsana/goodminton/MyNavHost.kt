@@ -2,6 +2,7 @@ package com.mightsana.goodminton
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat.getString
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,7 +27,7 @@ fun MyNavHost(
     startDestination: Any,
     authStartDestination: Any
 ) {
-    val context = LocalContext.current
+    val defaultWebClientId = stringResource(R.string.default_web_client_id)
 
     NavHost(
         navController = navController,
@@ -45,7 +46,7 @@ fun MyNavHost(
             navController = navController,
             startDestination = authStartDestination,
             mainRoute = Main,
-            defaultWebClientId = getString(context, R.string.default_web_client_id)
+            defaultWebClientId = defaultWebClientId
         )
 
 

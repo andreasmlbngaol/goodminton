@@ -3,6 +3,7 @@ package com.mightsana.goodminton.features.maintenance.update
 import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.mightsana.goodminton.MyViewModel
+import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.repository.AppRepository
 import com.mightsana.goodminton.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,6 +31,6 @@ class UpdateViewModel @Inject constructor(
     }
 
     fun openUrl() {
-        openUrl(RELEASES_URL)
+        openUrl(application.getString(R.string.releases_url))
     }
 }

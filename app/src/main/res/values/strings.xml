@@ -136,4 +136,5 @@
     <string name="invited">Invited</string>
     <string name="update_screen_text">Your app version is %s.\nLatest version is %s.\nUpdate to keep using %s</string>
     <string name="update_screen_button">Download latest version</string>
+    <string name="releases_url" translatable="false">https://github.com/andreasmlbngaol/Goodminton/releases</string>
 </resources>

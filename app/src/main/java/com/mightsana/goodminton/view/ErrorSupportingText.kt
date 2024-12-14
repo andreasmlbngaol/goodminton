@@ -12,7 +12,7 @@ fun ErrorSupportingText(
 ) {
     AnimatedVisibility(visible) {
         Text(
-            message,
+            text = message,
             color = MaterialTheme.colorScheme.error
         )
     }

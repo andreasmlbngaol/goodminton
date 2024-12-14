@@ -18,7 +18,7 @@ fun ExitWithDoublePress() {
     BackHandler {
         val currentTime = SystemClock.elapsedRealtime()
         if (currentTime - lastBackPressTime.longValue < delay) {
-            (context as? Activity)?.finishAndRemoveTask()
+            (context as? Activity)?.finish()
         } else {
             Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
             lastBackPressTime.longValue = currentTime

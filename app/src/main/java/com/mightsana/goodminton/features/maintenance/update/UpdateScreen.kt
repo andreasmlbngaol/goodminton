@@ -18,8 +18,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.model.values.Size
 
-const val RELEASES_URL = "https://github.com/andreasmlbngaol/Goodminton/releases"
-
 @Composable
 fun UpdateScreen(viewModel: UpdateViewModel = hiltViewModel()) {
     Box(
@@ -45,9 +43,7 @@ fun UpdateScreen(viewModel: UpdateViewModel = hiltViewModel()) {
                 )
             )
             Button(onClick = { viewModel.openUrl() }) {
-                Text(
-                    text = stringResource(R.string.update_screen_button)
-                )
+                Text(stringResource(R.string.update_screen_button))
             }
         }
     }
