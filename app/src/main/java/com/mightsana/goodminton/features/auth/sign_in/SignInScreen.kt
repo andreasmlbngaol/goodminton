@@ -115,34 +115,27 @@ fun SignInScreen(
                                 isError = isPasswordError,
                                 leadingIcon = { MyIcon(MyIcons.Password) },
                                 trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            viewModel.togglePasswordVisibility()
-                                        }
-                                    ) {
+                                    IconButton( { viewModel.togglePasswordVisibility() }) {
                                         AnimatedContent(passwordVisible, label = "") {
-                                            MyIcon(
-                                                if (!it) MyIcons.PasswordVisible else MyIcons.PasswordNotVisible
-                                            )
+                                            MyIcon(if (!it) MyIcons.PasswordVisible else MyIcons.PasswordNotVisible)
                                         }
                                     }
                                 },
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Password
-                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                 visualTransformation = if (!passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
                                 value = viewModel.password.collectAsState().value,
                                 onValueChange = { viewModel.updatePassword(it) },
                                 label = { Text(stringResource(R.string.password_label)) },
                                 supportingText = {
                                     ErrorSupportingText(
-                                        isPasswordError,
-                                        viewModel.passwordErrorMessage.collectAsState().value ?: ""
+                                        message = viewModel.passwordErrorMessage.collectAsState().value ?: "",
+                                        visible = isPasswordError,
                                     )
                                 },
                                 modifier = Modifier.fillMaxSize()
                             )
-//                            signInButton()
+
+                            // Sign In
                             Button(
                                 modifier = Modifier.fillMaxWidth(),
                                 onClick = {
@@ -152,27 +145,18 @@ fun SignInScreen(
                                         }
                                     }
                                 }
-                            ) {
-                                Text(stringResource(R.string.sign_in_title))
-                            }
-//                            authOptions()
-                            SurfaceVariantTextHorizontalDivider(
-                                text = stringResource(R.string.or_continue_with)
-                            )
+                            ) { Text(stringResource(R.string.sign_in_title)) }
 
-                            GoogleAuthButton(
-                                defaultWebClientId = defaultWebClientId,
-                                onGetCredentialResponse = { credential ->
-                                    viewModel.appLoading()
-                                    viewModel.onSignInWithGoogle(credential) { destination ->
-                                        onCheckRegisterStatusAndNavigate(destination)
-                                    }
+                            SurfaceVariantTextHorizontalDivider(stringResource(R.string.or_continue_with))
+
+                            GoogleAuthButton(defaultWebClientId) { credential ->
+                                viewModel.onSignInWithGoogle(credential) { destination ->
+                                    onCheckRegisterStatusAndNavigate(destination)
                                 }
-                            )
+                            }
 
-                            TextButton(
-                                onClick = onNavigateToSignUp
-                            ) { Text(stringResource(R.string.dont_have_account)) }
+                            // Navigate To Sign Up Button
+                            TextButton(onNavigateToSignUp) { Text(stringResource(R.string.dont_have_account)) }
 
                         }
                     }

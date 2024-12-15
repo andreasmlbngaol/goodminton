@@ -125,6 +125,7 @@ abstract class AuthViewModel(
         onSuccess: (Any?) -> Unit
     ) {
         viewModelScope.launch {
+            appLoading()
             try {
                 if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)

@@ -76,51 +76,41 @@ fun RegisterScreen(
                             .fillMaxWidth()
                     ) {
 
-//                        title()
+                        // Title
                         Text(
                             stringResource(R.string.register_title),
                             style = MaterialTheme.typography.headlineMedium,
                         )
-//                        subtitle()
+
+                        // Subtitle
                         Text(
                             stringResource(R.string.register_subtitle),
                             style = MaterialTheme.typography.titleMedium
                         )
-//                        nameTextField()
+
+                        // Name
                         MyTextField(
                             isError = isFullNameError,
                             value = viewModel.fullName.collectAsState().value,
                             onValueChange = { viewModel.updateFullName(it) },
                             label = { Text(stringResource(R.string.name_label)) },
-                            supportingText = {
-                                ErrorSupportingText(
-                                    isFullNameError,
-                                    viewModel.fullNameErrorMessage.collectAsState().value ?: ""
-                                )
-                            },
+                            supportingText = { ErrorSupportingText(viewModel.fullNameErrorMessage.collectAsState().value ?: "", isFullNameError) },
                             modifier = Modifier.fillMaxSize(),
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Words
-                            )
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
                         )
-//                        nicknameTextField()
+
+                        // Nickname
                         MyTextField(
                             isError = isNicknameError,
                             value = viewModel.nickname.collectAsState().value,
                             onValueChange = { viewModel.updateNickname(it) },
                             label = { Text(stringResource(R.string.nickname_label)) },
-                            supportingText = {
-                                ErrorSupportingText(
-                                    isNicknameError,
-                                    viewModel.nicknameErrorMessage.collectAsState().value ?: ""
-                                )
-                            },
+                            supportingText = { ErrorSupportingText(viewModel.nicknameErrorMessage.collectAsState().value ?: "", isNicknameError) },
                             modifier = Modifier.fillMaxSize(),
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Words
-                            )
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
                         )
-//                        usernameTextField()
+
+                        // Username
                         MyTextField(
                             isError = isUsernameError,
                             value = viewModel.username.collectAsState().value,
@@ -128,21 +118,15 @@ fun RegisterScreen(
                             label = { Text(stringResource(R.string.username_label)) },
                             supportingText = {
                                 AnimatedContent(isUsernameError, label = "") {
-                                    if(it)
-                                        Text(viewModel.usernameErrorMessage.collectAsState().value ?: "")
-                                    else if(viewModel.username.collectAsState().value.isNotBlank())
-                                        Text(
-                                            stringResource(R.string.username_available),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
+                                    if(it) Text(viewModel.usernameErrorMessage.collectAsState().value ?: "")
+                                    else if(viewModel.username.collectAsState().value.isNotBlank()) Text(stringResource(R.string.username_available),)
                                 }
                             },
                             modifier = Modifier.fillMaxSize(),
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.None
-                            )
+                            keyboardOptions = KeyboardOptions(KeyboardCapitalization.None)
                         )
-//                        registerButton()
+
+                        // Register Button
                         Button(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
@@ -152,19 +136,10 @@ fun RegisterScreen(
                                     }
                                 }
                             }
-                        ) {
-                            Text(stringResource(R.string.register_title))
-                        }
+                        ) { Text(stringResource(R.string.register_title)) }
 
-//                        additionalContent()
-                        TextButton(
-                            onClick = {
-                                viewModel.onSignOut {
-                                    onNavigateToSignIn()
-                                }
-                            }
-                        ) { Text(stringResource(R.string.back_to_sign_in)) }
-
+                        // Back to Sign In Button
+                        TextButton( { viewModel.onSignOut { onNavigateToSignIn() } }) { Text(stringResource(R.string.back_to_sign_in)) }
                     }
                 }
             }

@@ -1,10 +1,8 @@
 package com.mightsana.goodminton.features.main.detail
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,33 +13,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Leaderboard
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Leaderboard
-import androidx.compose.material.icons.outlined.People
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
@@ -51,7 +34,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
@@ -66,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
@@ -78,6 +59,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mightsana.goodminton.R
 import com.mightsana.goodminton.features.main.detail.info.LeagueInfoScreen
 import com.mightsana.goodminton.features.main.detail.matches.MatchesScreen
+import com.mightsana.goodminton.features.main.detail.participants.AddParticipantSheet
 import com.mightsana.goodminton.features.main.detail.participants.ParticipantsScreen
 import com.mightsana.goodminton.features.main.detail.standings.StandingsScreen
 import com.mightsana.goodminton.features.main.model.LeagueParticipantJoint
@@ -93,8 +75,8 @@ import com.mightsana.goodminton.view.MyIcons
 import com.mightsana.goodminton.view.MyImage
 import com.mightsana.goodminton.view.MyTextField
 import com.mightsana.goodminton.view.PullToRefreshScreen
+import com.mightsana.goodminton.view.SingleLineText
 import kotlinx.coroutines.launch
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,119 +86,84 @@ fun DetailContainer(
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     LaunchedEffect(Unit) { viewModel.observeLeague(leagueId) }
+
     val user by viewModel.user.collectAsState()
     val friends by viewModel.friends.collectAsState()
     val invitationSent by viewModel.invitationSent.collectAsState()
     val matches by viewModel.matches.collectAsState()
     val league by viewModel.leagueJoint.collectAsState()
     val participants by viewModel.leagueParticipantsJoint.collectAsState()
-    val sheetState = rememberModalBottomSheetState()
     val playerDropdownExpanded by viewModel.matchPlayersExpanded.collectAsState()
     val playerSelected by viewModel.playerSelected.collectAsState()
-    val scope = rememberCoroutineScope()
+    val selectedItem by viewModel.selectedItem.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
     val playerPerMatch = if(league.double) 4 else 2
     val notParticipant = user.uid !in participants.map { it.user.uid }
+    val role = participants.find { it.user.uid == user.uid }?.role
+    val roleCreator = role == Role.Creator
+    val roleAdmin = role == Role.Admin
+    val leagueFinished = league.status == LeagueStatus.Finished
+    val enoughParticipant =  participants.size >= playerPerMatch
+    val anyNotFinished = matches.any { it.status == MatchStatus.Scheduled || it.status == MatchStatus.Playing }
+    val userInvited = user.uid in invitationSent.map { it.receiver.uid }
+    val fabPosition = if(userInvited || notParticipant) FabPosition.Center else FabPosition.End
+    val invitationId = invitationSent.find { it.receiver.uid == user.uid }?.id
+
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     val navItems = listOf(
         NavigationItem(
             label = stringResource(R.string.matches_label),
             route = stringResource(R.string.matches_label),
-            iconSelected = Icons.Filled.Schedule,
-            iconUnselected = Icons.Outlined.Schedule,
+            iconSelected = MyIcons.MatchesSelected,
+            iconUnselected = MyIcons.MatchesUnselected,
             content = {
-                MatchesScreen(
-                    onNavigateToParticipant = {
-                        viewModel.onSelectItem(2)
-                        viewModel.resetPlayerSelected()
-                    },
-                    viewModel = viewModel
-                )
+                MatchesScreen(viewModel) {
+                    viewModel.onSelectItem(2)
+                    viewModel.resetPlayerSelected()
+                }
             },
             fab = {
-                val role = participants.find { it.user.uid == user.uid }?.role
-                if ((role == Role.Creator || role == Role.Admin) && league.status != LeagueStatus.Finished) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        if(participants.size >= playerPerMatch) {
-                            FloatingActionButton(
-                                onClick = {
-                                    scope.launch {
-                                        viewModel.showMatchSheet()
-                                        sheetState.show()
-                                    }
-                                }
-                            ) {
-                                MyIcon(MyIcons.Plus)
+                if (roleCreator || roleAdmin && !leagueFinished && enoughParticipant) {
+                    MatchesFab(
+                        anyNotFinished = anyNotFinished,
+                        onAddMatch = {
+                            scope.launch {
+                                viewModel.showMatchSheet()
+                                sheetState.show()
                             }
-                            val anyNotFinished =
-                                matches.any { it.status == MatchStatus.Scheduled || it.status == MatchStatus.Playing }
-                            val containerColor =
-                                if (anyNotFinished) MaterialTheme.colorScheme.surfaceVariant
-                                else MaterialTheme.colorScheme.primary
-                            val contentColor =
-                                contentColorFor(containerColor).copy(if (anyNotFinished) 0.38f else 1f)
-                            ExtendedFloatingActionButton(
-                                text = {
-                                    Text(stringResource(R.string.generate_match))
-                                },
-                                icon = {
-                                    MyIcon(MyIcons.Generate)
-                                },
-                                containerColor = containerColor,
-                                contentColor = contentColor,
-                                expanded = !anyNotFinished,
-                                onClick = {
-                                    if (anyNotFinished) {
-                                        viewModel.toast(R.string.error_generate_match)
-                                    } else {
-                                        viewModel.autoGenerateMatch()
-                                    }
-                                }
-                            )
+                        },
+                        onAutoGenerateMatch = {
+                            if(!anyNotFinished) viewModel.autoGenerateMatch()
+                            else viewModel.toast(R.string.error_generate_match)
                         }
-                    }
+                    )
                 }
             }
         ),
         NavigationItem(
             label = stringResource(R.string.standings_label),
             route = stringResource(R.string.standings_label),
-            iconSelected = Icons.Filled.Leaderboard,
-            iconUnselected = Icons.Outlined.Leaderboard,
+            iconSelected = MyIcons.StandingsSelected,
+            iconUnselected = MyIcons.StandingsUnselected,
             content = { StandingsScreen(viewModel = viewModel) }
         ),
         NavigationItem(
             label = stringResource(R.string.participants_label),
             route = stringResource(R.string.participants_label),
-            iconSelected = Icons.Filled.People,
-            iconUnselected = Icons.Outlined.People,
+            iconSelected = MyIcons.ParticipantsSelected,
+            iconUnselected = MyIcons.ParticipantsUnselected,
             content = { ParticipantsScreen(viewModel = viewModel) },
             fab = {
-                val myRole = participants.find { it.user.uid == user.uid }?.role
-                if ((myRole == Role.Creator || myRole == Role.Admin) && league.status != LeagueStatus.Finished) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        FloatingActionButton(onClick = { viewModel.showGuestParticipantSheet() }) {
-                            MyIcon(MyIcons.Plus)
+                if ((roleCreator || roleAdmin) && !leagueFinished) {
+                    ParticipantsFab({ viewModel.showGuestParticipantSheet() }) {
+                        scope.launch {
+                            viewModel.showParticipantsSheet()
+                            sheetState.show()
                         }
-                        ExtendedFloatingActionButton(
-                            text = {
-                                Text(stringResource(R.string.add_friends))
-                            },
-                            icon = {
-                                MyIcon(MyIcons.Invitation)
-                            },
-                            onClick = {
-                                scope.launch {
-                                    viewModel.showParticipantsSheet()
-                                    sheetState.show()
-                                }
-                            }
-                        )
                     }
                 }
             }
@@ -224,36 +171,20 @@ fun DetailContainer(
         NavigationItem(
             label = stringResource(R.string.info_label),
             route = stringResource(R.string.info_label),
-            iconSelected = Icons.Filled.Info,
-            iconUnselected = Icons.Outlined.Info,
-            content = {
-                LeagueInfoScreen(
-                    viewModel,
-                    onBack
-                )
-            }
+            iconSelected = MyIcons.InfoSelected,
+            iconUnselected = MyIcons.InfoUnselected,
+            content = { LeagueInfoScreen(viewModel, onBack) }
         )
     )
-    val selectedItem by viewModel.selectedItem.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    Loader(viewModel.isLoading.collectAsState().value || participants.isEmpty() ) {
-        val userInvited = user.uid in invitationSent.map { it.receiver.uid }
+    Loader(isLoading || participants.isEmpty()) {
         Scaffold(
-            floatingActionButtonPosition = if(userInvited || (notParticipant))
-                FabPosition.Center else FabPosition.End,
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            floatingActionButtonPosition = fabPosition,
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
-                    title = { Text(league.name, overflow = Ellipsis, maxLines = 1) },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onBack
-                        ) {
-                            MyIcon(MyIcons.Back)
-                        }
-                    },
+                    title = { SingleLineText(league.name) },
+                    navigationIcon = { IconButton( onBack) { MyIcon(MyIcons.Back) } },
                     scrollBehavior = scrollBehavior
                 )
             },
@@ -293,47 +224,22 @@ fun DetailContainer(
                 }
             },
             floatingActionButton = {
-                if(notParticipant && league.status != LeagueStatus.Finished) {
-                    ExtendedFloatingActionButton(
-                        text = { Text(stringResource(R.string.join)) },
-                        icon = { MyIcon(MyIcons.Join) },
-                        onClick = { viewModel.showJoinDialog() }
-                    )
-                } else if(userInvited) {
-                    val invitationId = invitationSent.find { it.receiver.uid == user.uid }!!.id
-                    Row {
-                        Button(
-                            onClick = {
-                                viewModel.acceptInvitation(
-                                    invitationId = invitationId,
-                                    leagueId = league.id
-                                )
-                            }
-                        ) {
-                            Text(stringResource(R.string.accept_button_label))
-                        }
-                        Spacer(Modifier.width(Size.padding))
-                        OutlinedButton(
-                            onClick = {
-                                viewModel.declineInvitation(invitationId)
-                            }
-                        ) {
-                            Text(stringResource(R.string.decline_button_label))
-                        }
-                    }
-                } else {
-                    AnimatedContent(selectedItem, label = "") { selected ->
-                        navItems[selected].fab?.let { fab ->
-                            fab()
-                        }
-                    }
-                }
+                DetailFab(
+                    notParticipant = notParticipant,
+                    leagueFinished = leagueFinished,
+                    userInvited = userInvited,
+                    selectedItem = selectedItem,
+                    navItems = navItems,
+                    invitationId = invitationId,
+                    leagueId = leagueId,
+                    onShowJoinDialog = { viewModel.showJoinDialog() },
+                    onAcceptInvitation = { inv, lg -> viewModel.acceptInvitation(inv, lg) },
+                    onDeclineInvitation = { viewModel.declineInvitation(it) }
+                )
             }
         ) { innerPadding ->
             Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+                modifier = Modifier.fillMaxSize().padding(innerPadding)
             ) {
                 PullToRefreshScreen( { viewModel.observeLeague(leagueId) } ) {
                     navItems[selectedItem].content()
@@ -342,77 +248,22 @@ fun DetailContainer(
         }
 
         if(viewModel.participantsSheetExpanded.collectAsState().value) {
-            ModalBottomSheet(
-                onDismissRequest = {
+            AddParticipantSheet(
+                onDismiss = {
                     scope.launch {
                         sheetState.hide()
                         viewModel.dismissParticipantsSheet()
                     }
                 },
-                sheetState = sheetState
-            ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    val invitationReceiverIds = invitationSent.map { it.receiver.uid }
-                    val participantIds = participants.map { it.user.uid }
-                    val friendsAvailable = friends
-                        .filter { it.user.uid !in participantIds }
-                    if(friendsAvailable.isEmpty())
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(Size.padding),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "No Friends Can Be Invited")
-                            }
-                        }
-                    items(friendsAvailable) {
-                        ListItem(
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            leadingContent = {
-                                MyImage(
-                                    it.user.profilePhotoUrl,
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .size(40.dp)
-                                )
-                            },
-                            headlineContent = { Text(it.user.name) },
-                            supportingContent = { Text(it.user.username) },
-                            trailingContent = {
-                                if(it.user.uid !in invitationReceiverIds) {
-                                    if(it.user.openToAdd) {
-                                        Button(onClick = { viewModel.addParticipant(it.user.uid) }) {
-                                            Text(stringResource(R.string.add))
-                                        }
-                                    } else {
-                                        Button(
-                                            onClick = { viewModel.inviteFriend(it.user.uid) },
-                                            colors = ButtonDefaults.buttonColors().copy(
-                                                containerColor = MaterialTheme.colorScheme.tertiary,
-                                                contentColor = MaterialTheme.colorScheme.onTertiary,
-                                                disabledContainerColor = MaterialTheme.colorScheme.tertiary,
-                                                disabledContentColor = MaterialTheme.colorScheme.onTertiary
-                                            )
-                                        ) {
-                                            Text(stringResource(R.string.invite))
-                                        }
-                                    }
-                                } else {
-                                    val invitationId = invitationSent.find { inv -> inv.receiver.uid == it.user.uid }!!.id
-                                    TextButton(onClick = { viewModel.cancelInvitation(invitationId) }) {
-                                        Text(stringResource(R.string.invited))
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
+                sheetState = sheetState,
+                friends = friends,
+                participants = participants,
+                invitationSent = invitationSent,
+                invitationId = invitationId,
+                onAddFriend = { viewModel.addParticipant(it) },
+                onInviteFriend = { viewModel.inviteFriend(it) },
+                onCancelInvitation = { viewModel.cancelInvitation(it) }
+            )
         }
         if(viewModel.matchSheetExpanded.collectAsState().value) {
             ModalBottomSheet(
@@ -541,7 +392,7 @@ fun DetailContainer(
                             label = { Text(stringResource(R.string.name_label)) },
                             supportingText = {
                                 val error = viewModel.fullNameErrorMessage.collectAsState().value
-                                error?.let { ErrorSupportingText(true, error) }
+                                error?.let { ErrorSupportingText(error) }
                             }
                         )
                     }
@@ -555,7 +406,7 @@ fun DetailContainer(
                             label = { Text(stringResource(R.string.nickname_label)) },
                             supportingText = {
                                 val error = viewModel.nicknameErrorMessage.collectAsState().value
-                                error?.let { ErrorSupportingText(true, error) }
+                                error?.let { ErrorSupportingText(error) }
                             }
                         )
                     }
@@ -592,6 +443,9 @@ fun DetailContainer(
     }
 }
 
+
+const val UNSELECT = "Unselect"
+
 @Composable
 fun MatchDropdownButton(
     dropdownExpandedMap: Map<Int, Boolean>,
@@ -605,8 +459,6 @@ fun MatchDropdownButton(
     onSelected: (String?) -> Unit
 ) {
     val selectedItem = items.find {
-        Log.d("DetailContainer", "user.uid: ${it.user.uid}")
-        Log.d("DetailContainer", "selectedItemId: ${selectedItemMap[order]}")
         it.id == selectedItemMap[order]
     }
     AnimatedContent(selectedItem, label = "") { selected ->
@@ -687,5 +539,3 @@ fun MatchDropdownButton(
         }
     }
 }
-
-const val UNSELECT = "Unselect"

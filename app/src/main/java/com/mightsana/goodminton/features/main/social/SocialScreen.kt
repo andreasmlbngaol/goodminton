@@ -87,8 +87,7 @@ fun SocialScreen(
 
     Loader(viewModel.isLoading.collectAsState().value) {
         Scaffold(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             topBar = {
                 Box(
                     modifier = Modifier

@@ -17,11 +17,11 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SurfaceVariantTextHorizontalDivider(
-    modifier: Modifier = Modifier,
     text: String,
     thickness: Dp = 1.dp,
     lineColor: Color = contentColorFor(MaterialTheme.colorScheme.surfaceVariant),
-    style: TextStyle = MaterialTheme.typography.bodyMedium
+    style: TextStyle = MaterialTheme.typography.bodyMedium,
+    modifier: Modifier = Modifier,
 ) {
     MyTextHorizontalDivider(
         modifier = modifier,

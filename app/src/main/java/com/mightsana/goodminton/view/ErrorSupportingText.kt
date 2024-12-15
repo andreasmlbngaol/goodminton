@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun ErrorSupportingText(
-    visible: Boolean = true,
     message: String,
+    visible: Boolean = true
 ) {
     AnimatedVisibility(visible) {
         Text(

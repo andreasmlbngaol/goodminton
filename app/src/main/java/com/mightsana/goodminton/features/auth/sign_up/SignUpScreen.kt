@@ -56,10 +56,7 @@ fun SignUpScreen(
     val isPasswordError = viewModel.isPasswordError.collectAsState().value
     val isConfirmPasswordError = viewModel.isConfirmPasswordError.collectAsState().value
 
-    Loader(
-        viewModel.isLoading.collectAsState().value,
-        alpha = 0.7f
-    ) {
+    Loader(viewModel.isLoading.collectAsState().value, 0.7f) {
         Scaffold { innerPadding ->
             Box(
                 contentAlignment = Alignment.Center,
@@ -75,6 +72,7 @@ fun SignUpScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Size.smallPadding)
                 ) {
+
                     // Title Image
                     MyImage(
                         painter = painterResource(R.drawable.ic_launcher_round),
@@ -90,12 +88,14 @@ fun SignUpScreen(
                                 .padding(Size.padding)
                                 .fillMaxWidth()
                         ) {
-//                            title()
+
+                            // Title
                             Text(
                                 stringResource(R.string.sign_up_title),
                                 style = MaterialTheme.typography.headlineMedium,
                             )
-//                            emailTextField()
+
+                            // Email
                             MyTextField(
                                 isError = isEmailError,
                                 leadingIcon = {
@@ -104,87 +104,52 @@ fun SignUpScreen(
                                 value = viewModel.email.collectAsState().value,
                                 onValueChange = { viewModel.updateEmail(it) },
                                 label = { Text(stringResource(R.string.email_label)) },
-                                supportingText = {
-                                    ErrorSupportingText(
-                                        isEmailError,
-                                        viewModel.emailErrorMessage.collectAsState().value ?: ""
-                                    )
-                                },
+                                supportingText = { ErrorSupportingText(viewModel.emailErrorMessage.collectAsState().value ?: "", isEmailError) },
                                 modifier = Modifier.fillMaxSize(),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Email
-                                )
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                             )
-//                            passwordTextField()
+
+                            // Password
                             MyTextField(
                                 isError = isPasswordError,
-                                leadingIcon = {
-                                    MyIcon(MyIcons.Password)
-                                },
+                                leadingIcon = { MyIcon(MyIcons.Password) },
                                 trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            viewModel.togglePasswordVisibility()
-                                        }
-                                    ) {
+                                    IconButton( { viewModel.togglePasswordVisibility() } ) {
                                         AnimatedContent(passwordVisible, label = "") {
-                                            MyIcon(
-                                                if (!it) MyIcons.PasswordVisible else MyIcons.PasswordNotVisible
-                                            )
+                                            MyIcon(if (!it) MyIcons.PasswordVisible else MyIcons.PasswordNotVisible)
                                         }
                                     }
                                 },
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Password
-                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                 visualTransformation = if (!passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
                                 value = viewModel.password.collectAsState().value,
                                 onValueChange = { viewModel.updatePassword(it) },
                                 label = { Text(stringResource(R.string.password_label)) },
-                                supportingText = {
-                                    ErrorSupportingText(
-                                        isPasswordError,
-                                        viewModel.passwordErrorMessage.collectAsState().value ?: ""
-                                    )
-                                },
+                                supportingText = { ErrorSupportingText(viewModel.passwordErrorMessage.collectAsState().value ?: "", isPasswordError) },
                                 modifier = Modifier.fillMaxSize()
                             )
-//                            confirmPasswordTextField()
+
+                            // Confirm Password
                             MyTextField(
                                 isError = isConfirmPasswordError,
-                                leadingIcon = {
-                                    MyIcon(MyIcons.Password)
-                                },
+                                leadingIcon = { MyIcon(MyIcons.Password) },
                                 trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            viewModel.toggleConfirmPasswordVisibility()
-                                        }
-                                    ) {
+                                    IconButton( { viewModel.toggleConfirmPasswordVisibility() }) {
                                         AnimatedContent(confirmPasswordVisible, label = "") {
-                                            MyIcon(
-                                                if (!it) MyIcons.PasswordVisible else MyIcons.PasswordNotVisible
-                                            )
+                                            MyIcon(if (!it) MyIcons.PasswordVisible else MyIcons.PasswordNotVisible)
                                         }
                                     }
                                 },
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Password
-                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                 visualTransformation = if (!confirmPasswordVisible) PasswordVisualTransformation() else VisualTransformation.None,
                                 value = viewModel.confirmPassword.collectAsState().value,
                                 onValueChange = { viewModel.updateConfirmPassword(it) },
                                 label = { Text(stringResource(R.string.confirm_password_label)) },
-                                supportingText = {
-                                    ErrorSupportingText(
-                                        isConfirmPasswordError,
-                                        viewModel.confirmPasswordErrorMessage.collectAsState().value
-                                            ?: ""
-                                    )
-                                },
+                                supportingText = { ErrorSupportingText(viewModel.confirmPasswordErrorMessage.collectAsState().value ?: "", isConfirmPasswordError) },
                                 modifier = Modifier.fillMaxSize()
                             )
-//                            signUpButton()
+
+                            // Sign Up Button
                             Button(
                                 modifier = Modifier.fillMaxWidth(),
                                 onClick = {
@@ -194,27 +159,17 @@ fun SignUpScreen(
                                         }
                                     }
                                 }
-                            ) {
-                                Text(stringResource(R.string.sign_up_title))
-                            }
-//                            additionalContent()
-                            SurfaceVariantTextHorizontalDivider(
-                                text = stringResource(R.string.or_continue_with)
-                            )
+                            ) { Text(stringResource(R.string.sign_up_title)) }
 
-                            GoogleAuthButton(
-                                defaultWebClientId = defaultWebClientId,
-                                onGetCredentialResponse = { credential ->
-                                    viewModel.appLoading()
-                                    viewModel.onSignInWithGoogle(credential) { destination ->
-                                        onSignInWithGoogle(destination)
-                                    }
+                            SurfaceVariantTextHorizontalDivider(stringResource(R.string.or_continue_with))
+
+                            GoogleAuthButton(defaultWebClientId) { credential ->
+                                viewModel.onSignInWithGoogle(credential) { destination ->
+                                    onSignInWithGoogle(destination)
                                 }
-                            )
-
-                            TextButton(onClick = onNavigateToSignIn) {
-                                Text(stringResource(R.string.already_have_account))
                             }
+
+                            TextButton(onNavigateToSignIn) { Text(stringResource(R.string.already_have_account)) }
                         }
                     }
                 }

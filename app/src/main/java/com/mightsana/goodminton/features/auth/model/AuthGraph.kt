@@ -34,8 +34,7 @@ fun NavGraphBuilder.authGraph(
 
         composable<SignUp> {
             SignUpScreen(
-                onSignUpWithEmailAndPassword = { navController.navigateAndPopUpTo(EmailVerification,
-                    SignUp) },
+                onSignUpWithEmailAndPassword = { navController.navigateAndPopUpTo(EmailVerification, SignUp) },
                 onSignInWithGoogle = { navController.navigateAndPopUpTo(it ?: mainRoute, SignUp) },
                 onNavigateToSignIn = { navController.navigateAndPopUpTo(SignIn, SignUp) },
                 defaultWebClientId = defaultWebClientId
@@ -56,5 +55,4 @@ fun NavGraphBuilder.authGraph(
             )
         }
     }
-
 }

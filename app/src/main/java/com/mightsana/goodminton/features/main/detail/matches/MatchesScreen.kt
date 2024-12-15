@@ -59,8 +59,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun MatchesScreen(
-    onNavigateToParticipant: () -> Unit,
-    viewModel: DetailViewModel
+    viewModel: DetailViewModel,
+    onNavigateToParticipant: () -> Unit
 ) {
     val league by viewModel.leagueJoint.collectAsState()
     val participants by viewModel.leagueParticipantsJoint.collectAsState()

@@ -128,4 +128,5 @@
     <string name="invited">Diundang</string>
     <string name="update_screen_text">Versi aplikasimu %s.\nVersi terbaru adalah %s.\nPerbarui untuk tetap menggunakan %s</string>
     <string name="update_screen_button">Unduh versi terbaru</string>
+    <string name="no_available_friends">Tidak Ada Teman yang Bisa Diundang</string>
 </resources>

@@ -33,9 +33,7 @@ fun EmailVerificationScreen(
     onEmailVerified: () -> Unit,
     viewModel: EmailVerificationViewModel = hiltViewModel()
 ) {
-    viewModel.checkEmailVerification {
-        onEmailVerified()
-    }
+    viewModel.checkEmailVerification { onEmailVerified() }
 
     Scaffold { innerPadding ->
         Box(
@@ -56,27 +54,20 @@ fun EmailVerificationScreen(
                         .width(100.dp)
                         .aspectRatio(1f)
                 )
+
+                // Description
                 Text(
                     text = stringResource(R.string.email_verification_message, viewModel.authEmail.censoredEmail()),
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center
                 )
+
+                // Buttons
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Button(
-                        onClick = { viewModel.openEmailApp()}
-                    ) {
-                        Text(text = stringResource(R.string.open_email_app))
-                    }
-
-                    TextButton(
-                        onClick = {
-                            viewModel.onSignOut { onSignOut() }
-                        }
-                    ) {
-                        Text(text = stringResource(R.string.back_to_sign_in))
-                    }
+                    Button( { viewModel.openEmailApp()}) { Text(text = stringResource(R.string.open_email_app)) }
+                    TextButton( { viewModel.onSignOut { onSignOut() } }) { Text(text = stringResource(R.string.back_to_sign_in)) }
                 }
             }
         }
