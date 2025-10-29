@@ -10,13 +10,13 @@ plugins {
 
 android {
     namespace = "com.mightsana.goodminton"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mightsana.goodminton"
         minSdk = 29
         //noinspection OldTargetApi
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 

@@ -131,8 +131,8 @@ fun EditProfileScreen(
                     isError = usernameErrorMessage != null,
                     supportingText = {
                         ErrorSupportingText(
-                            usernameErrorMessage != null,
-                            usernameErrorMessage.orEmpty()
+                            usernameErrorMessage.orEmpty(),
+                            usernameErrorMessage != null
                         )
                     }
                 )
